@@ -384,12 +384,12 @@ private fun UpNextBox(p: EpgProgrammeEntity, width: Dp = CARD_W.mpx) {
     ) {
         Text(
             stringResource(R.string.content_live_time_range_plain, formatTime(p.startMs), formatTime(p.stopMs)) +
-                "  ·  " + stringResource(R.string.player_duration_minutes, minutes),
+                stringResource(R.string.content_epg_bits_separator) + stringResource(R.string.player_duration_minutes, minutes),
             style = stageText(14, 600), color = StageColors.Muted, maxLines = 1,
         )
         Text(p.title, style = stageText(17, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (bits.isNotEmpty()) {
-            Text(bits.joinToString(" · "), style = stageText(14, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(bits.joinToString(stringResource(R.string.content_epg_bits_separator)), style = stageText(14, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
