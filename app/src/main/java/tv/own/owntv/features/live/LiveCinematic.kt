@@ -79,6 +79,7 @@ private const val CARD_W = 400
 private const val CARD_H = 225
 private const val WINDOW_HOURS = 6L
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun LiveCinematicPane(
     channels: LazyPagingItems<ChannelEntity>,
