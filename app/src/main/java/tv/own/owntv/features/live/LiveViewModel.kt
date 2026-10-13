@@ -2,6 +2,7 @@
 
 package tv.own.owntv.features.live
 
+import org.koin.core.component.inject
 import tv.own.owntv.core.epg.displayLogoUrl
 import android.content.Context
 import android.util.Log
@@ -134,7 +135,18 @@ class LiveViewModel(
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
     private val externalPlayerLauncher: tv.own.owntv.core.player.ExternalPlayerLauncher,
     private val recordings: tv.own.owntv.core.recording.RecordingManager,
-) : ViewModel() {
+) : ViewModel(), org.koin.core.component.KoinComponent {
+
+    // glcn: the Cinematic layout's cards read a window of the stored guide for the channels on screen
+    // (now + what follows, with the programme pictures), through the same reader the Guide uses.
+    private val guideReader: tv.own.owntv.core.live.GuideReader by inject()
+
+    suspend fun cardProgrammesFor(
+        channels: List<ChannelEntity>,
+        from: Long,
+        to: Long,
+    ): Map<Long, List<tv.own.owntv.core.database.entity.EpgProgrammeEntity>> =
+        guideReader.slice(channels, custom.value, epgOffset.value, from, to)
 
     // --- "Record what I'm watching" (Plan D, D3 mode b) -----------------------------------------
 

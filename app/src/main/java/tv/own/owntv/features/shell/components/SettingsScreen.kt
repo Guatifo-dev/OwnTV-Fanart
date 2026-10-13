@@ -1628,9 +1628,11 @@ private fun liveLayoutSearchEntry(settingsVm: SettingsViewModel, onClick: () -> 
     )
 }
 
-private fun liveLayoutLabelRes(layout: tv.own.owntv.core.settings.SettingsRepository.LiveLayout): Int =
-    if (layout == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.SEPARATE) R.string.settings_vod_layout_separate
-    else R.string.settings_live_layout_stage
+private fun liveLayoutLabelRes(layout: tv.own.owntv.core.settings.SettingsRepository.LiveLayout): Int = when (layout) {
+    tv.own.owntv.core.settings.SettingsRepository.LiveLayout.SEPARATE -> R.string.settings_vod_layout_separate
+    tv.own.owntv.core.settings.SettingsRepository.LiveLayout.CINEMATIC -> R.string.settings_vod_layout_cinematic
+    else -> R.string.settings_live_layout_stage
+}
 
 @Composable
 private fun LiveLayoutDialog(settingsVm: SettingsViewModel, onClose: () -> Unit) {
@@ -1642,8 +1644,11 @@ private fun LiveLayoutDialog(settingsVm: SettingsViewModel, onClose: () -> Unit)
         options = layouts.map { it.name to stringResource(liveLayoutLabelRes(it)) },
         descriptions = layouts.associate {
             it.name to stringResource(
-                if (it == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.SEPARATE) R.string.settings_live_layout_separate_description
-                else R.string.settings_live_layout_stage_description,
+                when (it) {
+                    tv.own.owntv.core.settings.SettingsRepository.LiveLayout.SEPARATE -> R.string.settings_live_layout_separate_description
+                    tv.own.owntv.core.settings.SettingsRepository.LiveLayout.CINEMATIC -> R.string.settings_live_layout_cinematic_description
+                    else -> R.string.settings_live_layout_stage_description
+                },
             )
         },
         selected = current.name,
@@ -3291,7 +3296,7 @@ private fun stageRowExtras(
             recommended = 1,
         ),
         "live_layout" to RowExtra(
-            SettingValue.Segmented(liveLayouts.map { stringResource(if (it == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.STAGE) R.string.settings_live_layout_stage else R.string.settings_seg_separate) }, liveLayouts.indexOf(liveLayout)),
+            SettingValue.Segmented(liveLayouts.map { stringResource(when (it) { tv.own.owntv.core.settings.SettingsRepository.LiveLayout.STAGE -> R.string.settings_live_layout_stage; tv.own.owntv.core.settings.SettingsRepository.LiveLayout.CINEMATIC -> R.string.settings_vod_layout_cinematic; else -> R.string.settings_seg_separate }) }, liveLayouts.indexOf(liveLayout)),
             onStep = { vm.setLiveLayout(cycle(liveLayouts, liveLayout, it)) },
             onClick = { vm.setLiveLayout(cycle(liveLayouts, liveLayout, 1)) },
         ),

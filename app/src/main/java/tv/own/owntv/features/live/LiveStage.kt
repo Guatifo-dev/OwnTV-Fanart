@@ -218,7 +218,7 @@ internal fun progressOf(p: XtEpgEntry): Float {
 
 /** "18:45 – 20:30 · Horror · 2026 · FSK 16": the time range, then only the details the feed carries (G1). */
 @Composable
-private fun detailsLine(now: XtEpgEntry, details: EpgDetails?): String {
+internal fun detailsLine(now: XtEpgEntry, details: EpgDetails?): String {
     val formatTime = rememberSystemTimeFormatter()
     val length = details?.lengthMin?.let { stringResource(R.string.player_duration_minutes, it) }
     return (
@@ -272,6 +272,15 @@ internal fun LiveStagePane(
                     modifier = Modifier.size(288.mpx),
                     fill = Color.Transparent,
                 ) { OwnTVIcon(OwnTVIcon.LIVE_TV, tint = StageColors.Dim, modifier = Modifier.size(56.mpx)) }
+            }
+            // glcn: the programme's own picture fills the frame until the video plays over it.
+            val art = nowNext?.nowDetails?.imageUrl
+            if (!playing && !art.isNullOrBlank()) {
+                coil3.compose.AsyncImage(
+                    model = art, contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
             if (playing) tv.own.owntv.player.ExoPreviewSurface(engine = previewEngine, modifier = Modifier.fillMaxSize())
             if (loading) OwnTVSpinner(sizeDp = 28)

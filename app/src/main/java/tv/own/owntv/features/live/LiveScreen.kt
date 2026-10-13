@@ -512,6 +512,8 @@ fun LiveScreen(
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
     // Separate panels keeps the categories on screen; the Stage layout opens them as a sheet on Left.
     val separate = liveLayout == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.SEPARATE && lockedKey == null
+    // glcn: the Cinematic layout — hero with the programme's picture over a row of channel cards.
+    val cinematic = liveLayout == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.CINEMATIC && lockedKey == null
     var categoriesOpen by remember { mutableStateOf(false) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     // The current channel's row. After a long-press that row carries contextFocus instead of selFocus
@@ -672,6 +674,81 @@ fun LiveScreen(
         }
         val targetChannelId by targetChannelIdState
 
+        if (cinematic) {
+            val toolsFocus = remember { FocusRequester() }
+            LiveCinematicPane(
+                channels = channels,
+                listState = effectiveListState,
+                previewChannel = previewChannel,
+                nowNext = nowNext,
+                previewEngine = vm.previewEngine,
+                showVideo = effectivePreview,
+                singleSessionBlocked = previewBlockedSingleSession,
+                loadProgrammes = { list, from, to -> vm.cardProgrammesFor(list, from, to) },
+                header = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.mpx)) {
+                        LiveHeader(category = headerLabel, count = count, showChevron = true, modifier = Modifier.weight(1f, fill = false))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.mpx),
+                            modifier = Modifier.focusGroup().onPreviewKeyEvent { e ->
+                                if (e.type == androidx.compose.ui.input.key.KeyEventType.KeyDown &&
+                                    e.key == androidx.compose.ui.input.key.Key.DirectionDown
+                                ) { focusChannelList(); true } else false
+                            },
+                        ) {
+                            tv.own.owntv.ui.stage.StageTool(
+                                text = stringResource(R.string.content_live_guide_view),
+                                icon = OwnTVIcon.GRID,
+                                onClick = onOpenGuide,
+                                modifier = Modifier.focusRequester(toolsFocus),
+                            )
+                            tv.own.owntv.ui.stage.StageTool(
+                                text = null,
+                                icon = OwnTVIcon.SORT,
+                                value = if (sortMode == tv.own.owntv.core.settings.SettingsRepository.SortMode.ALPHA) stringResource(R.string.settings_sort_alpha) else stringResource(R.string.content_epg_sort_provider),
+                                onClick = vm::toggleSort,
+                            )
+                        }
+                    }
+                },
+                cardModifier = { index, channel ->
+                    val isTarget = targetChannelId == channel.id
+                    Modifier.gridFocusTarget(
+                        itemId = channel.id, index = index,
+                        contextId = contextChannelId, contextFocus = contextFocus,
+                        selectedId = if (isTarget) channel.id else null, selectedFocus = selFocus,
+                        firstItemFocus = firstItemFocus,
+                    ).focusRequester(rowFocus(index)).onPreviewKeyEvent { e ->
+                        if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        when (e.key) {
+                            androidx.compose.ui.input.key.Key.Menu -> { contextChannel = channel; contextChannelId = channel.id; true }
+                            // ◀ from the first card opens the categories sheet; otherwise one card back.
+                            androidx.compose.ui.input.key.Key.DirectionLeft -> (stepTarget ?: index).let { from ->
+                                if (from > 0) { stepTo(from - 1); true } else { categoriesOpen = true; true }
+                            }
+                            androidx.compose.ui.input.key.Key.DirectionRight -> (stepTarget ?: index).let { from ->
+                                from + 1 < channels.itemCount && run { stepTo(from + 1); true }
+                            }
+                            androidx.compose.ui.input.key.Key.DirectionUp -> { runCatching { toolsFocus.requestFocus() }; true }
+                            androidx.compose.ui.input.key.Key.DirectionDown -> true
+                            else -> false
+                        }
+                    }
+                },
+                onFocus = { channel ->
+                    vm.onChannelFocused(channel)
+                    if (rememberLive) perCategoryChannelIds[selectedKey] = channel.id
+                },
+                onClick = { channel ->
+                    vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
+                    if (!externalPlayerOn) onFullscreen()
+                },
+                onLongClick = { channel -> contextChannel = channel; contextChannelId = channel.id },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.4f } else Modifier),
+            )
+        } else
         // The list side, dimmed to 40% while the sheet is over it (P3-02).
         Box(
             Modifier
