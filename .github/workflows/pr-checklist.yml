@@ -3,9 +3,9 @@ name: PR checklist
 # Fails the PR until the mandatory acknowledgement boxes in the PR template are ticked.
 # GitHub only enforces required checkboxes on *issue forms*, not PRs — so we enforce it here.
 
+# glcn fork: upstream workflow, manual only (the fork builds with glcn.yml).
 on:
-  pull_request_target:
-    types: [opened, edited, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: read

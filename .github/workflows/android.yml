@@ -6,12 +6,8 @@ name: Android CI
 #   build      — assembles the APK, and publishes a GitHub Release on v* tags. Never runs for a PR,
 #                so PR branches still don't produce APKs (the restriction added in ac33c65 is
 #                unchanged); they only get the test/lint verdict.
+# glcn fork: upstream workflow, manual only (the fork builds with glcn.yml).
 on:
-  push:
-    branches: [ main ]
-    tags: [ "v*" ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:

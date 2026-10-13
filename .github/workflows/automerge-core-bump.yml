@@ -22,10 +22,9 @@ name: Auto-merge core pin bumps
 # "success" — so the i18n run can no longer trigger anything here. Android CI's success on such a
 # branch means exactly one thing: verify-pin passed. That is the gate.
 
+# glcn fork: upstream workflow, manual only (the fork builds with glcn.yml).
 on:
-  workflow_run:
-    workflows: [ "Android CI" ]
-    types: [ completed ]
+  workflow_dispatch:
 
 permissions:
   contents: write

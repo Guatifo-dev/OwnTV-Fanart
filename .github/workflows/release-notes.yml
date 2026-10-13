@@ -7,9 +7,9 @@ name: Release notes from CHANGELOG
 # Tag builds already set the same body in android.yml — a release published by GITHUB_TOKEN does
 # not trigger this workflow. This job covers releases published by hand from the GitHub UI.
 
+# glcn fork: upstream workflow, manual only (the fork builds with glcn.yml).
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write

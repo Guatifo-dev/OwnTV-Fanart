@@ -1,0 +1,108 @@
+name: Build glcn
+
+# Builds the glcn fork: this app + the forked core (carlosglcn/OwnTV_Core_glcn at the commit pinned
+# in glcn/core.ref), as a signed release APK with its own package id (tv.own.owntv.glcn) so it
+# installs next to the official OwnTV.
+#
+# Output:
+#   - Release "glcn-latest" with OwnTV-glcn.apk  →
+#     https://github.com/carlosglcn/OwnTV_glcn/releases/download/glcn-latest/OwnTV-glcn.apk
+#   - Branch "ci-status": status.txt + build.log (last lines), so the result can be read with git.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: glcn-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+
+      - name: Read core pin
+        id: pin
+        run: echo "ref=$(tr -d '[:space:]' < glcn/core.ref)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout core fork
+        uses: actions/checkout@v4
+        with:
+          repository: carlosglcn/OwnTV_Core_glcn
+          ref: ${{ steps.pin.outputs.ref }}
+          path: core-src
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed release APK (arm)
+        id: build
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/glcn/glcn.keystore
+          KEYSTORE_PASSWORD: owntvglcn
+          KEY_ALIAS: glcn
+          KEY_PASSWORD: owntvglcn
+          VERSION_NAME: 99.99.99-glcn
+          VERSION_CODE: '99999'
+        run: |
+          chmod +x ./gradlew
+          set -o pipefail
+          ./gradlew :app:assembleStandardRelease \
+            -Powntv.corePath="$GITHUB_WORKSPACE/core-src" \
+            -Pglcn.appIdSuffix=.glcn \
+            --stacktrace --console=plain 2>&1 | tee build.log
+
+      - name: Package APK
+        if: success()
+        run: |
+          APK=$(ls app/build/outputs/apk/standard/release/*.apk | head -1)
+          mkdir -p dist && cp "$APK" dist/OwnTV-glcn.apk
+          ls -la dist
+
+      - name: Publish release glcn-latest
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete glcn-latest --yes --cleanup-tag || true
+          gh release create glcn-latest dist/OwnTV-glcn.apk \
+            --title "OwnTV glcn (${GITHUB_SHA::7})" \
+            --notes "Build ${GITHUB_SHA::7} — core $(tr -d '[:space:]' < glcn/core.ref | cut -c1-7). Instalar: OwnTV-glcn.apk" \
+            --target "$GITHUB_SHA"
+
+      - name: Report status to ci-status branch
+        if: always()
+        run: |
+          STATUS="${{ steps.build.outcome }}"
+          mkdir -p /tmp/ci && cd /tmp/ci
+          git init -q && git checkout -q -b ci-status
+          {
+            echo "status=$STATUS"
+            echo "app=$GITHUB_SHA"
+            echo "core=$(tr -d '[:space:]' < "$GITHUB_WORKSPACE/glcn/core.ref")"
+            echo "run=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > status.txt
+          if [ -f "$GITHUB_WORKSPACE/build.log" ]; then
+            grep -nE '^e: |error:|FAILED|What went wrong' -A3 "$GITHUB_WORKSPACE/build.log" | head -400 > errors.txt || true
+            tail -n 400 "$GITHUB_WORKSPACE/build.log" > build.log
+          fi
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "ci $STATUS ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY" ci-status
