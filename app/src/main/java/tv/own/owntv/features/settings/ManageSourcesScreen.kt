@@ -398,7 +398,7 @@ private fun SourceRow(
             SourceType.STALKER -> R.string.settings_sources_type_stalker
             SourceType.LOCAL_BACKUP -> R.string.settings_sources_backup
         },
-        source.url,
+        source.url.replace(Regex("(://[^:/@]+):[^@/]*@"), "$1:••••@"),
     )
     val visibleCounts = if (activeSync == null) counts?.breakdownText() else activeCounts?.displayText()
     val sep = stringResource(R.string.settings_sources_details_separator)
