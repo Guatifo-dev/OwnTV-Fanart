@@ -1856,6 +1856,7 @@ fun OwnTVShell(
                             onSelect = { liveVm.ensurePlaying(it); showChannelList = false },
                             onDismiss = { showChannelList = false },
                             onOpenCategories = { liveVm.showCategories() },
+                            loadNow = { liveVm.nowFull(it) },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1875,6 +1876,7 @@ fun OwnTVShell(
                         alignEnd = true,
                         onSelect = { liveVm.ensurePlaying(it); showHistoryList = false },
                         onDismiss = { showHistoryList = false },
+                        loadNow = { liveVm.nowFull(it) },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

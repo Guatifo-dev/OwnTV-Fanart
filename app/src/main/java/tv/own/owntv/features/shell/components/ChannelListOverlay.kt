@@ -3,6 +3,9 @@ package tv.own.owntv.features.shell.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,6 +44,7 @@ import androidx.tv.material3.Text
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.i18n.HorizontalDirection
 import tv.own.owntv.core.i18n.horizontalDirection
 import tv.own.owntv.core.parser.XtEpgEntry
@@ -88,6 +92,8 @@ fun ChannelListOverlay(
     /** History only: channel id → when it was last watched, shown at the row's end. */
     watchedAt: Map<Long, Long>? = null,
     onOpenCategories: (() -> Unit)? = null,
+    /** glcn: the focused channel's programme on air, for the picture panel beside the list. */
+    loadNow: (suspend (ChannelEntity) -> EpgProgrammeEntity?)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
@@ -253,6 +259,61 @@ fun ChannelListOverlay(
                 textSize = 16,
                 modifier = Modifier.padding(start = 14.mpx, top = 14.mpx),
             )
+        }
+        if (loadNow != null) {
+            ZapPreviewPanel(
+                channel = channels.getOrNull(focusedIndex),
+                loadNow = loadNow,
+                modifier = Modifier
+                    .align(if (alignEnd) Alignment.CenterStart else Alignment.CenterEnd)
+                    .padding(horizontal = 40.mpx),
+            )
+        }
+    }
+}
+
+/**
+ * glcn: the focused channel's programme on air — picture, title, time and synopsis — opposite the
+ * zapping list, so browsing shows what is on before switching. Waits a moment while the D-pad is
+ * still moving so a fast scroll does not fetch every row.
+ */
+@Composable
+private fun ZapPreviewPanel(
+    channel: ChannelEntity?,
+    loadNow: suspend (ChannelEntity) -> EpgProgrammeEntity?,
+    modifier: Modifier = Modifier,
+) {
+    var programme by remember { mutableStateOf<EpgProgrammeEntity?>(null) }
+    LaunchedEffect(channel?.id) {
+        if (channel == null) { programme = null; return@LaunchedEffect }
+        kotlinx.coroutines.delay(180)
+        programme = runCatching { loadNow(channel) }.getOrNull()
+    }
+    val p = programme ?: return
+    val fmt = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
+    Column(
+        modifier
+            .width(620.mpx)
+            .stageGlass(StageRadii.Sheet, overContent = true)
+            .padding(18.mpx),
+        verticalArrangement = Arrangement.spacedBy(8.mpx),
+    ) {
+        p.imageUrl?.takeIf { it.isNotBlank() }?.let { url ->
+            tv.own.owntv.ui.components.ProgrammeArt(
+                url = url,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(StageRadii.Sheet)),
+            )
+        }
+        Text(p.title, style = stageText(24, 800), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(
+            fmt.format(java.util.Date(p.startMs)) + " – " + fmt.format(java.util.Date(p.stopMs)),
+            style = stageText(16, 500), color = StageColors.Muted, maxLines = 1,
+        )
+        p.description?.takeIf { it.isNotBlank() }?.let {
+            Text(it, style = stageText(16, 400), color = StageColors.Dim, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
     }
 }

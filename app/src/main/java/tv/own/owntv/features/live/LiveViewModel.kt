@@ -154,6 +154,13 @@ class LiveViewModel(
     ): Map<Long, List<tv.own.owntv.core.database.entity.EpgProgrammeEntity>> =
         guideReader.slice(channels, custom.value, epgOffset.value, from, to)
 
+    /** glcn: the programme on air now on [channel], with its picture — the zapping list's preview. */
+    suspend fun nowFull(channel: ChannelEntity): tv.own.owntv.core.database.entity.EpgProgrammeEntity? {
+        val now = System.currentTimeMillis()
+        return guideReader.slice(listOf(channel), custom.value, epgOffset.value, now, now + 1)[channel.id]
+            ?.firstOrNull { now in it.startMs until it.stopMs }
+    }
+
     // --- "Record what I'm watching" (Plan D, D3 mode b) -----------------------------------------
 
     /**
