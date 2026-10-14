@@ -1,5 +1,7 @@
 package tv.own.owntv.features.epg
 
+import tv.own.owntv.ui.stage.backdropLeftWash
+import tv.own.owntv.ui.theme.dissolveEdges
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
@@ -427,6 +429,9 @@ fun EpgScreen(
             value = topProgramme?.id?.takeIf { it > 0 }?.let { vm.programmeFull(it) }
         }
         val shown = full ?: topProgramme
+
+        // glcn: the programme's picture behind the top of the guide, fading into the page.
+        GuideBackdrop(shown?.imageUrl, Modifier.align(Alignment.TopEnd))
 
         Column(Modifier.fillMaxSize()) {
         // Top (44 → 404): the video, and beside it the programme under the cursor.
@@ -886,4 +891,38 @@ private fun GuideKeyHints(cellMode: Boolean) {
         )
     }
     tv.own.owntv.ui.stage.StageKeyHints(hints)
+}
+
+/**
+ * glcn: the focused programme's picture (XMLTV <programme><icon>) behind the guide's top area — the
+ * right 62% of the width, 470 high, dissolving into the page on its left and bottom so the title and
+ * the grid stay readable. A picture waits a moment before it swaps, so scrolling fast does not flash.
+ */
+@Composable
+private fun GuideBackdrop(url: String?, modifier: Modifier = Modifier) {
+    var settled by remember { mutableStateOf(url) }
+    LaunchedEffect(url) {
+        if (url != settled) { delay(260); settled = url }
+    }
+    Box(
+        modifier
+            .fillMaxWidth(0.62f)
+            .height(470.mpx)
+            .dissolveEdges(start = 0.40f, bottom = 0.40f),
+    ) {
+        androidx.compose.animation.Crossfade(targetState = settled, label = "guideBackdrop") { u ->
+            if (!u.isNullOrBlank()) {
+                coil3.compose.AsyncImage(
+                    model = u,
+                    contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    alignment = androidx.compose.ui.BiasAlignment(0f, -0.4f),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Box(
+            Modifier.fillMaxSize().backdropLeftWash(0f to 0.80f, 0.35f to 0.40f, 0.70f to 0.10f, 1f to 0f),
+        )
+    }
 }

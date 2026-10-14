@@ -276,11 +276,7 @@ internal fun LiveStagePane(
             // glcn: the programme's own picture fills the frame until the video plays over it.
             val art = nowNext?.nowDetails?.imageUrl
             if (!playing && !art.isNullOrBlank()) {
-                coil3.compose.AsyncImage(
-                    model = art, contentDescription = null,
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                tv.own.owntv.ui.components.ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
             }
             if (playing) tv.own.owntv.player.ExoPreviewSurface(engine = previewEngine, modifier = Modifier.fillMaxSize())
             if (loading) OwnTVSpinner(sizeDp = 28)

@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -41,7 +40,6 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import androidx.tv.material3.Text
-import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
@@ -282,7 +280,7 @@ private fun LiveCinematicVideo(
         contentAlignment = Alignment.Center,
     ) {
         if (!art.isNullOrBlank()) {
-            AsyncImage(model = art, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            tv.own.owntv.ui.components.ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
         } else if (channel != null) {
             ChannelLogoTile(logoUrl = channel.displayLogoUrl, modifier = Modifier.size(220.mpx), fill = Color.Transparent) {
                 OwnTVIcon(OwnTVIcon.LIVE_TV, tint = StageColors.Dim, modifier = Modifier.size(56.mpx))
@@ -326,7 +324,7 @@ private fun LiveChannelCard(
         Box(Modifier.fillMaxSize().clip(shape).background(Color(0xFF15191C))) {
             val art = programme?.imageUrl
             if (!art.isNullOrBlank()) {
-                AsyncImage(model = art, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                tv.own.owntv.ui.components.ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
             } else {
                 ChannelLogoTile(
                     logoUrl = channel.displayLogoUrl,
@@ -350,7 +348,8 @@ private fun LiveChannelCard(
                     style = stageText(21, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    ProviderTags.parse(channel.name).name, style = stageText(15, 600), color = Color(0xFFD5DDDA),
+                    if (programme != null) ProviderTags.parse(channel.name).name else stringResource(R.string.content_no_epg),
+                    style = stageText(15, 600), color = Color(0xFFD5DDDA),
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 if (programme != null) {

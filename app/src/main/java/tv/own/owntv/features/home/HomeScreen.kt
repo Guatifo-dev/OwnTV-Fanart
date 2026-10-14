@@ -1038,13 +1038,14 @@ private fun KeepWatchingRow(
                 val still = when (item) {
                     is HeroItem.MovieHero -> homeStill(meta?.backdropUrl, item.movie.backdropUrl, item.movie.posterUrl, null)
                     is HeroItem.SeriesHero -> homeStill(meta?.backdropUrl, item.series.backdropUrl, item.series.posterUrl, null)
-                    is HeroItem.LiveHero -> homeStill(null, null, null, item.channel.logoUrl)
+                    is HeroItem.LiveHero -> homeStill(null, item.now?.imageUrl, null, item.channel.logoUrl)
                 }
                 StageStill(
                     title = when (item) {
                         is HeroItem.MovieHero -> item.item.title
                         is HeroItem.SeriesHero -> item.series.name
-                        is HeroItem.LiveHero -> item.channel.name
+                        // glcn: what is on now, when the guide knows it.
+                        is HeroItem.LiveHero -> item.now?.title ?: item.channel.name
                     },
                     line = keepWatchingLine(item),
                     onClick = { onPlay(item) },
@@ -1080,14 +1081,15 @@ private fun keepWatchingLine(item: HeroItem): String? {
             stringResource(R.string.content_season_episode, item.episode.seasonNumber, item.episode.episodeNumber),
             left,
         ).joinToString(" · ")
-        is HeroItem.LiveHero -> relativeLastWatchedLabel(item.lastEngagementAt, System.currentTimeMillis())
+        is HeroItem.LiveHero -> if (item.now != null) item.channel.name
+            else relativeLastWatchedLabel(item.lastEngagementAt, System.currentTimeMillis())
     }
 }
 
 @Composable
 private fun StillArtwork(still: HomeStill) {
     when (still) {
-        is HomeStill.Picture -> AsyncImage(model = still.url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        is HomeStill.Picture -> tv.own.owntv.ui.components.ProgrammeArt(url = still.url, modifier = Modifier.fillMaxSize())
         is HomeStill.Logo -> Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
             tv.own.owntv.ui.components.ChannelLogoTile(
                 logoUrl = still.url,
