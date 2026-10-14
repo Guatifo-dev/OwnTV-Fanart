@@ -515,6 +515,8 @@ fun LiveScreen(
     // glcn: the Cinematic layout — hero with the programme's picture over a row of channel cards.
     val cinematic = liveLayout == tv.own.owntv.core.settings.SettingsRepository.LiveLayout.CINEMATIC && lockedKey == null
     var categoriesOpen by remember { mutableStateOf(false) }
+    // glcn: the "Sports now" overlay.
+    var sportsOpen by remember { mutableStateOf(false) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     // The current channel's row. After a long-press that row carries contextFocus instead of selFocus
     // (gridFocusTarget prefers it), so both are tried before falling back to the first row.
@@ -708,6 +710,11 @@ fun LiveScreen(
                                 value = if (sortMode == tv.own.owntv.core.settings.SettingsRepository.SortMode.ALPHA) stringResource(R.string.settings_sort_alpha) else stringResource(R.string.content_epg_sort_provider),
                                 onClick = vm::toggleSort,
                             )
+                            tv.own.owntv.ui.stage.StageTool(
+                                text = stringResource(R.string.glcn_sports_now),
+                                icon = OwnTVIcon.LIVE_DOT,
+                                onClick = { sportsOpen = true },
+                            )
                         }
                     }
                 },
@@ -862,6 +869,11 @@ fun LiveScreen(
                         icon = OwnTVIcon.GRID,
                         onClick = onOpenGuide,
                     )
+                    tv.own.owntv.ui.stage.StageTool(
+                        text = stringResource(R.string.glcn_sports_now),
+                        icon = OwnTVIcon.LIVE_DOT,
+                        onClick = { sportsOpen = true },
+                    )
                 }
                 Spacer(Modifier.height(20.mpx))
                 if (channels.itemCount == 0) {
@@ -994,6 +1006,17 @@ fun LiveScreen(
                         .width(stageW),
                 )
             }
+        }
+
+        if (sportsOpen) {
+            SportsNowDialog(
+                load = { vm.sportsNow() },
+                onPick = { channel, list ->
+                    vm.watchFullscreen(channel, list)
+                    if (!externalPlayerOn) onFullscreen()
+                },
+                onDismiss = { sportsOpen = false },
+            )
         }
 
         if (categoriesOpen) {

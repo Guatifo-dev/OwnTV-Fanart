@@ -1,5 +1,6 @@
 package tv.own.owntv.features.live
 
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -303,7 +304,7 @@ private fun LiveCinematicVideo(
 
 /** One channel: the picture of what is on, LIVE, the logo, the title, the channel, the time and progress. */
 @Composable
-private fun LiveChannelCard(
+internal fun LiveChannelCard(
     channel: ChannelEntity,
     programme: EpgProgrammeEntity?,
     now: Long,
@@ -394,3 +395,67 @@ private fun UpNextBox(p: EpgProgrammeEntity, width: Dp = CARD_W.mpx) {
     }
 }
 
+
+/**
+ * glcn: "Sports now" — every channel showing sport at this moment, as picture cards (live events
+ * first). OK plays the channel full screen.
+ */
+@Composable
+internal fun SportsNowDialog(
+    load: suspend () -> List<tv.own.owntv.core.live.SportsNow.Entry>,
+    onPick: (ChannelEntity, List<ChannelEntity>) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.activity.compose.BackHandler { onDismiss() }
+    var entries by remember { mutableStateOf<List<tv.own.owntv.core.live.SportsNow.Entry>?>(null) }
+    LaunchedEffect(Unit) { entries = runCatching { load() }.getOrDefault(emptyList()) }
+    val first = remember { androidx.compose.ui.focus.FocusRequester() }
+    LaunchedEffect(entries) {
+        if (!entries.isNullOrEmpty()) {
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { first.requestFocus() }
+        }
+    }
+    val now = System.currentTimeMillis()
+    tv.own.owntv.ui.components.OwnTVPopup(onDismissRequest = onDismiss, stageLayout = true) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.86f))
+                .padding(start = 64.mpx, end = 64.mpx, top = 48.mpx),
+        ) {
+            Column {
+                Text(stringResource(R.string.glcn_sports_now), style = stageText(40, 800), color = Color.White)
+                Spacer(Modifier.height(24.mpx))
+                val list = entries
+                when {
+                    list == null -> Box(Modifier.fillMaxWidth().height(300.mpx), contentAlignment = Alignment.Center) {
+                        OwnTVSpinner(sizeDp = 32)
+                    }
+                    list.isEmpty() -> Text(
+                        stringResource(R.string.glcn_sports_none), style = stageText(22, 500), color = StageColors.Muted,
+                    )
+                    else -> androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                        columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
+                        horizontalArrangement = Arrangement.spacedBy(26.mpx),
+                        verticalArrangement = Arrangement.spacedBy(26.mpx),
+                        contentPadding = PaddingValues(top = 12.mpx, bottom = 48.mpx),
+                        modifier = Modifier.fillMaxSize().focusGroup(),
+                    ) {
+                        items(list.size, key = { list[it].channel.id }) { i ->
+                            val e = list[i]
+                            LiveChannelCard(
+                                channel = e.channel,
+                                programme = e.programme,
+                                now = now,
+                                onClick = { onPick(e.channel, list.map { it.channel }); onDismiss() },
+                                onLongClick = {},
+                                modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
