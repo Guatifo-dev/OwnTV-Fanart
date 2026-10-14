@@ -431,7 +431,23 @@ fun EpgScreen(
         val shown = full ?: topProgramme
 
         // glcn: the programme's picture behind the top of the guide, fading into the page.
-        GuideBackdrop(shown?.imageUrl, Modifier.align(Alignment.TopEnd))
+        // The row read already carries the picture, so the backdrop no longer waits for the full programme.
+        GuideBackdrop(shown?.imageUrl ?: topProgramme?.imageUrl, Modifier.align(Alignment.TopEnd))
+        // glcn: warm the image cache with the pictures the cursor is about to reach — the rest of this
+        // row and what is on now in the rows above and below — so the backdrop swaps without a wait.
+        val prefetchContext = androidx.compose.ui.platform.LocalContext.current
+        LaunchedEffect(topChannel?.id, focusedRow) {
+            delay(150)
+            val loader = coil3.SingletonImageLoader.get(prefetchContext)
+            val urls = LinkedHashSet<String>()
+            topChannel?.let { ch -> vm.cachedProgrammes(ch)?.filter { it.stopMs > liveNow }?.take(6)?.forEach { p -> p.imageUrl?.let(urls::add) } }
+            for (d in listOf(-2, -1, 1, 2)) {
+                state.channels.getOrNull(focusedRow + d)?.let { ch -> programmeAt(vm.cachedProgrammes(ch), liveNow)?.imageUrl?.let(urls::add) }
+            }
+            urls.filter { it.isNotBlank() }.forEach { u ->
+                loader.enqueue(coil3.request.ImageRequest.Builder(prefetchContext).data(u).build())
+            }
+        }
 
         Column(Modifier.fillMaxSize()) {
         // Top (44 → 404): the video, and beside it the programme under the cursor.
@@ -902,7 +918,7 @@ private fun GuideKeyHints(cellMode: Boolean) {
 private fun GuideBackdrop(url: String?, modifier: Modifier = Modifier) {
     var settled by remember { mutableStateOf(url) }
     LaunchedEffect(url) {
-        if (url != settled) { delay(260); settled = url }
+        if (url != settled) { delay(120); settled = url }
     }
     Box(
         modifier
