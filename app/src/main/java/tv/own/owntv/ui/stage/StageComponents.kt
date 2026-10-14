@@ -891,6 +891,8 @@ fun StageStill(
     lineSize: Int,
     modifier: Modifier = Modifier,
     progress: Float? = null,
+    /** glcn: hold OK — the card's menu. */
+    onLongClick: (() -> Unit)? = null,
     artwork: @Composable BoxScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -901,7 +903,7 @@ fun StageStill(
         modifier
             .width(width)
             .stageLift(focused, StageFocus.POSTER)
-            .stageClickable(interaction, true, onClick, null),
+            .stageClickable(interaction, true, onClick, onLongClick),
     ) {
         Box(
             Modifier

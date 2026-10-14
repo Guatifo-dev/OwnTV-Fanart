@@ -230,6 +230,22 @@ class HomeViewModel(
         _previewEnabled.value = enabled
     }
 
+    /** glcn: take a card out of Keep watching — its resume point and history go, then Home reloads. */
+    fun removeFromContinue(item: tv.own.owntv.core.home.HeroItem) {
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            when (item) {
+                is tv.own.owntv.core.home.HeroItem.MovieHero -> {
+                    userDataWriter.clearProgress(pid, MediaType.MOVIE, item.movie.id)
+                    userDataWriter.removeHistory(pid, MediaType.MOVIE, item.movie.id)
+                }
+                is tv.own.owntv.core.home.HeroItem.SeriesHero -> userDataWriter.removeSeriesHistory(pid, item.series.id)
+                is tv.own.owntv.core.home.HeroItem.LiveHero -> userDataWriter.removeHistory(pid, MediaType.LIVE, item.channel.id)
+            }
+            refresh(pid)
+        }
+    }
+
     fun setHeroFocused(focused: Boolean) {
         _heroFocused.value = focused
     }

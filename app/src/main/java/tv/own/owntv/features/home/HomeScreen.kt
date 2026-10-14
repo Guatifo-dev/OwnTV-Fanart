@@ -1,5 +1,8 @@
 package tv.own.owntv.features.home
 
+import tv.own.owntv.ui.components.trapAllFocusExit
+import tv.own.owntv.ui.components.modalScrim
+import tv.own.owntv.ui.components.longPressMenuGuard
 import tv.own.owntv.ui.theme.stageTone
 import tv.own.owntv.ui.stage.backdropLeftWash
 import android.graphics.SurfaceTexture
@@ -502,6 +505,7 @@ fun HomeScreen(
                                 },
                                 track = track,
                                 modifier = rowModifier,
+                                onRemove = { vm.removeFromContinue(it) },
                             )
                         } else {
                             HeroFallbackPane(
@@ -1023,8 +1027,22 @@ private fun KeepWatchingRow(
     onPlay: (HeroItem) -> Unit,
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
+    onRemove: (HeroItem) -> Unit = {},
 ) {
     val w = if (big) 384 else 336
+    // glcn: hold OK on a card → "Remove from Keep watching".
+    var menuFor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<HeroItem?>(null) }
+    menuFor?.let { item ->
+        KeepWatchingMenu(
+            title = when (item) {
+                is HeroItem.MovieHero -> item.movie.name
+                is HeroItem.SeriesHero -> item.series.name
+                is HeroItem.LiveHero -> item.channel.name
+            },
+            onRemove = { onRemove(item) },
+            onDismiss = { menuFor = null },
+        )
+    }
     val h = if (big) 216 else 189
     Column(modifier) {
         HomeRowHeader(title, small = if (big) null else items.size.toString(), start = start, big = big)
@@ -1049,6 +1067,7 @@ private fun KeepWatchingRow(
                     },
                     line = keepWatchingLine(item),
                     onClick = { onPlay(item) },
+                    onLongClick = { menuFor = item },
                     width = w.mpx,
                     height = h.mpx,
                     titleSize = if (big) 20 else 19,
@@ -1441,3 +1460,30 @@ private fun AllRowsHiddenState(
     }
 }
 
+
+/** glcn: the hold-OK menu of a Keep watching card. */
+@Composable
+private fun KeepWatchingMenu(title: String, onRemove: () -> Unit, onDismiss: () -> Unit) {
+    androidx.activity.compose.BackHandler { onDismiss() }
+    val first = androidx.compose.runtime.remember { FocusRequester() }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        androidx.compose.runtime.withFrameNanos { }
+        runCatching { first.requestFocus() }
+    }
+    tv.own.owntv.ui.components.OwnTVPopup(onDismissRequest = onDismiss, stageLayout = true) {
+        Box(
+            Modifier.fillMaxSize().longPressMenuGuard().modalScrim().trapAllFocusExit().focusGroup(),
+            contentAlignment = Alignment.Center,
+        ) {
+            tv.own.owntv.ui.stage.StageMenu(Modifier.width(560.mpx)) {
+                tv.own.owntv.ui.stage.StageMenuHeader(title = title, subtitle = null)
+                tv.own.owntv.ui.stage.StageMenuItem(
+                    stringResource(R.string.glcn_remove_from_continue),
+                    onClick = { onRemove(); onDismiss() },
+                    icon = OwnTVIcon.CLOSE,
+                    modifier = Modifier.focusRequester(first),
+                )
+            }
+        }
+    }
+}
