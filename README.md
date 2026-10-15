@@ -1,3 +1,42 @@
+<p align="center"><img src="extras/glcn/banner.png" alt="OwnTV Fanart" width="640"></p>
+
+# OwnTV Fanart
+
+**An unofficial, modified version of [OwnTV](https://github.com/ahXN00/OwnTV) by [ahXN00](https://github.com/ahXN00)**,
+maintained by [Carlos (carlosglcn)](https://github.com/carlosglcn). It keeps everything OwnTV does and puts the
+pictures first: the guide's fanart across Home, Live TV and the guide, and a few extras on top.
+
+> Please report problems with this version **here**, not to the original author.
+
+## ⬇️ Download
+
+| Device | Latest release |
+|---|---|
+| Android TV (NVIDIA SHIELD, Google TV, Fire TV…) | [OwnTV-glcn.apk](https://github.com/carlosglcn/OwnTV_glcn/releases/latest/download/OwnTV-glcn.apk) |
+| Android phone / tablet | [OwnTV-Mobile-glcn.apk](https://github.com/carlosglcn/OwnTV_Mobile_glcn/releases/latest/download/OwnTV-Mobile-glcn.apk) |
+
+It installs **beside** the official app (its own package, `tv.own.owntv.glcn`), and tells you in-app when a new version is out.
+
+## ✨ What is different from OwnTV
+
+- **Fanart everywhere** — programme pictures from the guide (XMLTV `<icon>`) on Home, Live TV, the guide and the zap banner; wide TMDB pictures when a guide only has a poster.
+- **A new Home** — Featured billboard, Sports now, Tonight (with reminders), recently added films and series, and three backgrounds: *Classic*, *Cinema* and *Panel*.
+- **TMDB ratings** beside films and series on live TV.
+- **Calmer or livelier motion** — floating cards, a slow zoom and a light sweep, or a *Subtle* style.
+- **Seasonal themes** (optional) — Halloween, Christmas, New Year's Eve, Carnival and Valentine's touches, menu sounds and an opening chime.
+- **Sound** — the best audio track in your language, clearer dialogue, and (on SHIELD) Dolby/DTS passthrough from mpv too.
+- **Emby** libraries via M3U, Android Auto and a home-screen widget on the phone, a fanart screensaver on the TV.
+
+## 📄 Licence and credits
+
+GPLv3, like OwnTV. All credit for the app itself goes to **ahXN00** and the OwnTV contributors; the
+**owntv** wordmark is by [@m3th0d93](https://github.com/m3th0d93). The OwnTV Fanart icon is original to this fork.
+
+---
+
+<details><summary>The original OwnTV README</summary>
+
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="extras/brand/app-logos/logo_eggshell_light.png">
@@ -295,3 +334,6 @@ GPLv3 and its source made available.
 ---
 
 <sub>OwnTV is an open-source, player-only project, built with the help of AI.</sub>
+
+
+</details>

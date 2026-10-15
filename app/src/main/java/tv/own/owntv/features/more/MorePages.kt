@@ -70,6 +70,7 @@ import tv.own.owntv.features.home.OnNowCard
 import tv.own.owntv.features.home.timeLeftText
 import tv.own.owntv.features.shell.components.ClearHistoryDialog
 import tv.own.owntv.features.shell.components.GITHUB_REPO
+import tv.own.owntv.features.shell.components.GLCN_REPO
 import tv.own.owntv.features.shell.components.TELEGRAM_LINK
 import tv.own.owntv.features.shell.components.playbackDisplayName
 import tv.own.owntv.features.update.UpdateDialog
@@ -649,7 +650,10 @@ internal fun AboutPage(vm: MoreCountsViewModel, entry: FocusRequester, onOpenLan
             // The app's own icon (150) and the #227 wordmark (300).
             BrandMark(rememberAppliedIcon(), 150.mpx)
             Column {
-                Wordmark(300.mpx)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.mpx)) {
+                    Wordmark(300.mpx)
+                    Text("Fanart", style = stageText(46, 800), color = Color(0xFFFF966E))
+                }
                 Row(Modifier.padding(top = 16.mpx), horizontalArrangement = Arrangement.spacedBy(14.mpx), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME), style = stageText(22, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     // Only what a real check said: no tag before one has run.
@@ -675,8 +679,9 @@ internal fun AboutPage(vm: MoreCountsViewModel, entry: FocusRequester, onOpenLan
         }
         Text(stringResource(R.string.more_about_description), style = stageText(18, 500).copy(lineHeight = 29.mpxSp), color = stageTone(Color(0xFFD3DCD8), StageColors.Body),
             modifier = Modifier.padding(top = 26.mpx).widthIn(max = 860.mpx))
-        Text(stringResource(R.string.settings_contributions), style = stageText(16, 500), color = StageColors.Dim,
-            modifier = Modifier.padding(top = 10.mpx, bottom = 24.mpx).widthIn(max = 860.mpx))
+        // glcn: what this version is, whose work it builds on, and where its own problems go.
+        Text(stringResource(R.string.glcn_about_fork), style = stageText(17, 500).copy(lineHeight = 27.mpxSp), color = StageColors.Muted,
+            modifier = Modifier.padding(top = 12.mpx, bottom = 24.mpx).widthIn(max = 1000.mpx))
         StageTile(Modifier.width(640.mpx)) {
             Row(horizontalArrangement = Arrangement.spacedBy(20.mpx), verticalAlignment = Alignment.CenterVertically) {
                 Image(
@@ -691,15 +696,23 @@ internal fun AboutPage(vm: MoreCountsViewModel, entry: FocusRequester, onOpenLan
                 }
             }
         }
-        Row(Modifier.padding(top = 22.mpx), horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
-            // The link is for reading: a TV has no browser to open it in.
-            Row(
-                Modifier.height(44.mpx).background(StageColors.ControlFill, RoundedCornerShape(15.mpx)).padding(horizontal = 16.mpx),
-                horizontalArrangement = Arrangement.spacedBy(9.mpx), verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OwnTVIcon(OwnTVIcon.NETWORK, StageColors.Text, Modifier.size(18.mpx))
-                Text(GITHUB_REPO, style = stageText(16, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // The links are for reading: a TV has no browser to open them in.
+        Column(Modifier.padding(top = 22.mpx), verticalArrangement = Arrangement.spacedBy(10.mpx)) {
+            for ((label, repo) in listOf(
+                stringResource(R.string.glcn_about_original) + " · " + stringResource(R.string.glcn_about_by, "ahXN00") to GITHUB_REPO,
+                stringResource(R.string.glcn_about_this) + " · " + stringResource(R.string.glcn_about_by, "carlosglcn") to GLCN_REPO,
+            )) {
+                Row(
+                    Modifier.height(44.mpx).background(StageColors.ControlFill, RoundedCornerShape(15.mpx)).padding(horizontal = 16.mpx),
+                    horizontalArrangement = Arrangement.spacedBy(9.mpx), verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OwnTVIcon(OwnTVIcon.NETWORK, StageColors.Text, Modifier.size(18.mpx))
+                    Text(label, style = stageText(14, 600), color = StageColors.Muted, maxLines = 1)
+                    Text(repo, style = stageText(16, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
+        }
+        Row(Modifier.padding(top = 14.mpx), horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
             val languages = SupportedLocales.all.count { it.packaged }
             StageTool(pluralStringResource(R.plurals.more_about_languages, languages, languages), onClick = onOpenLanguage, icon = OwnTVIcon.LIST, boxed = true, modifier = Modifier.focusRequester(entry))
             StageTool(stringResource(R.string.settings_check_updates), onClick = { showUpdate = true }, icon = OwnTVIcon.REFRESH, boxed = true, modifier = Modifier.focusRequester(updateFocus))
