@@ -1,12 +1,12 @@
 name: Build glcn
 
-# Builds the glcn fork: this app + the forked core (carlosglcn/OwnTV_Core_glcn at the commit pinned
+# Builds the glcn fork: this app + the forked core (carlosglcn/OwnTV-Fanart-Core at the commit pinned
 # in glcn/core.ref), as a signed release APK with its own package id (tv.own.owntv.glcn) so it
 # installs next to the official OwnTV.
 #
 # Output:
 #   - Release "glcn-latest" with OwnTV-Fanart.apk  →
-#     https://github.com/carlosglcn/OwnTV_glcn/releases/download/glcn-latest/OwnTV-Fanart.apk
+#     https://github.com/carlosglcn/OwnTV-Fanart/releases/download/glcn-latest/OwnTV-Fanart.apk
 #   - Branch "ci-status": status.txt + build.log (last lines), so the result can be read with git.
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
       - name: Checkout core fork
         uses: actions/checkout@v4
         with:
-          repository: carlosglcn/OwnTV_Core_glcn
+          repository: carlosglcn/OwnTV-Fanart-Core
           ref: ${{ steps.pin.outputs.ref }}
           path: core-src
 
