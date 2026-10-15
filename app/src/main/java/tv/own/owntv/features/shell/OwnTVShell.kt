@@ -211,6 +211,7 @@ fun OwnTVShell(
     val ambientGlowEnabled by settingsRepo.ambientGlowEnabled.collectAsStateWithLifecycle(initialValue = false)
     // glcn: the animation style, and menu sounds silent while anything plays.
     val glcnAnimStyle by settingsRepo.animStyle.collectAsStateWithLifecycle(initialValue = 0)
+    val glcnZapPanel by settingsRepo.zapPanel.collectAsStateWithLifecycle(initialValue = 0)
     LaunchedEffect(glcnAnimStyle) { tv.own.owntv.ui.stage.GlcnMotion.subtle = glcnAnimStyle == 1 }
     LaunchedEffect(playerMode) { tv.own.owntv.glcn.UiSounds.suppressed = playerMode != PlayerMode.NONE }
     val ambientGlowPulse by settingsRepo.ambientGlowPulse.collectAsStateWithLifecycle(initialValue = true)
@@ -1886,6 +1887,7 @@ fun OwnTVShell(
                             onDismiss = { showChannelList = false },
                             onOpenCategories = { liveVm.showCategories() },
                             loadNow = { liveVm.nowFull(it) },
+                            loadSchedule = if (glcnZapPanel == 1) ({ liveVm.scheduleFor(it) }) else null,
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1906,6 +1908,7 @@ fun OwnTVShell(
                         onSelect = { liveVm.ensurePlaying(it); showHistoryList = false },
                         onDismiss = { showHistoryList = false },
                         loadNow = { liveVm.nowFull(it) },
+                        loadSchedule = if (glcnZapPanel == 1) ({ liveVm.scheduleFor(it) }) else null,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

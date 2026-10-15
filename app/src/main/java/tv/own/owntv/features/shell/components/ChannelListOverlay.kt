@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -94,6 +96,8 @@ fun ChannelListOverlay(
     onOpenCategories: (() -> Unit)? = null,
     /** glcn: the focused channel's programme on air, for the picture panel beside the list. */
     loadNow: (suspend (ChannelEntity) -> EpgProgrammeEntity?)? = null,
+    /** glcn: the focused channel's coming schedule; when set it takes the picture panel's place, right beside the list. */
+    loadSchedule: (suspend (ChannelEntity) -> List<EpgProgrammeEntity>)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
@@ -260,7 +264,19 @@ fun ChannelListOverlay(
                 modifier = Modifier.padding(start = 14.mpx, top = 14.mpx),
             )
         }
-        if (loadNow != null) {
+        if (loadSchedule != null) {
+            ZapSchedulePanel(
+                channel = channels.getOrNull(focusedIndex),
+                loadSchedule = loadSchedule,
+                modifier = Modifier
+                    .align(if (alignEnd) Alignment.CenterEnd else Alignment.CenterStart)
+                    .padding(vertical = 22.mpx)
+                    .padding(
+                        start = if (alignEnd) 0.mpx else (20 + (if (history) 760 else 720) + 4).mpx,
+                        end = if (alignEnd) (20 + (if (history) 760 else 720) + 4).mpx else 0.mpx,
+                    ),
+            )
+        } else if (loadNow != null) {
             ZapPreviewPanel(
                 channel = channels.getOrNull(focusedIndex),
                 loadNow = loadNow,
@@ -314,6 +330,73 @@ private fun ZapPreviewPanel(
         )
         p.description?.takeIf { it.isNotBlank() }?.let {
             Text(it, style = stageText(16, 400), color = StageColors.Dim, maxLines = 4, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/**
+ * glcn: the focused channel's coming schedule in a column right beside the list — now, then the next
+ * hours — so browsing reads like a small guide. Waits a moment while the D-pad is still moving.
+ */
+@Composable
+private fun ZapSchedulePanel(
+    channel: ChannelEntity?,
+    loadSchedule: suspend (ChannelEntity) -> List<EpgProgrammeEntity>,
+    modifier: Modifier = Modifier,
+) {
+    var rows by remember { mutableStateOf<List<EpgProgrammeEntity>>(emptyList()) }
+    LaunchedEffect(channel?.id) {
+        if (channel == null) { rows = emptyList(); return@LaunchedEffect }
+        kotlinx.coroutines.delay(180)
+        rows = runCatching { loadSchedule(channel) }.getOrDefault(emptyList())
+    }
+    val ch = channel ?: return
+    if (rows.isEmpty()) return
+    val fmt = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
+    val now = remember(rows) { System.currentTimeMillis() }
+    val accent = stageAccent.accent
+    Column(
+        modifier
+            .fillMaxHeight()
+            .width(560.mpx)
+            .stageGlass(StageRadii.Sheet, overContent = true)
+            .padding(horizontal = 22.mpx, vertical = 26.mpx),
+        verticalArrangement = Arrangement.spacedBy(4.mpx),
+    ) {
+        Text(
+            stringResource(R.string.glcn_zap_schedule_title, ProviderTags.parse(ch.name).name),
+            style = stageText(22, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(bottom = 12.mpx),
+        )
+        rows.forEach { p ->
+            val onAir = now in p.startMs until p.stopMs
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.mpx))
+                    .background(if (onAir) accent.copy(alpha = 0.16f) else Color.Transparent)
+                    .padding(horizontal = 12.mpx, vertical = 9.mpx),
+                horizontalArrangement = Arrangement.spacedBy(14.mpx),
+            ) {
+                Text(
+                    fmt.format(java.util.Date(p.startMs)),
+                    style = stageText(17, 700), color = if (onAir) accent else StageColors.Muted, maxLines = 1,
+                    modifier = Modifier.width(70.mpx),
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(p.title, style = stageText(18, if (onAir) 800 else 600), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (onAir) {
+                        val span = (p.stopMs - p.startMs).coerceAtLeast(1L)
+                        val f = ((now - p.startMs).toFloat() / span).coerceIn(0f, 1f)
+                        Box(Modifier.padding(top = 6.mpx).fillMaxWidth().height(4.mpx).clip(RoundedCornerShape(2.mpx)).background(StageColors.Ink.copy(alpha = 0.12f))) {
+                            Box(Modifier.fillMaxWidth(f).height(4.mpx).background(accent))
+                        }
+                        p.description?.takeIf { it.isNotBlank() }?.let {
+                            Text(it, style = stageText(15, 400), color = StageColors.Dim, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.mpx))
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1015,6 +1015,9 @@ class SettingsViewModel(
     val homeBackdropStyle: StateFlow<Int> = settings.homeBackdropStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun cycleHomeBackdropStyle() { viewModelScope.launch { settings.setHomeBackdropStyle((homeBackdropStyle.value + 1) % 3) } }
 
+    val zapPanel: StateFlow<Int> = settings.zapPanel.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleZapPanel() { viewModelScope.launch { settings.setZapPanel((zapPanel.value + 1) % 2) } }
+
     // glcn: Kodi-style extras.
     val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setDialogueBoost(on: Boolean) { viewModelScope.launch { settings.setDialogueBoost(on) } }

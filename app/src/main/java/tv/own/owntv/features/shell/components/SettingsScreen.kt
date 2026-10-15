@@ -367,6 +367,7 @@ fun SettingsScreen(
     val seasonMode by settingsVm.seasonMode.collectAsStateWithLifecycle()
     val animStyle by settingsVm.animStyle.collectAsStateWithLifecycle()
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
+    val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
@@ -667,6 +668,15 @@ fun SettingsScreen(
             ),
             chipTone = TileTone.PRIMARY,
             onClick = { settingsVm.cycleHomeBackdropStyle() },
+        ),
+        // glcn: beside the channel list over the player — the picture or the schedule.
+        RootRow(
+            "glcn_zap_panel", TileTone.SECONDARY, OwnTVIcon.EPG,
+            title = stringResource(R.string.glcn_zap_panel_title),
+            desc = stringResource(R.string.glcn_zap_panel_desc),
+            chip = stringResource(if (zapPanel == 1) R.string.glcn_zap_panel_schedule else R.string.glcn_zap_panel_preview),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleZapPanel() },
         ),
         // glcn: animation style (Full / Subtle), menu sounds (Off / Soft / Normal), opening chime.
         RootRow(
