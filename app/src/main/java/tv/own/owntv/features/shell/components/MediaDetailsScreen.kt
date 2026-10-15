@@ -110,7 +110,8 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
             tv.own.owntv.ui.components.ArtTint(details.backdropUrl ?: details.posterUrl, Modifier.matchParentSize(), strength = 0.7f, focusX = 0.5f, focusY = 0.45f)
             // glcn: the picture fills the screen and settles in — it opens a touch closer and eases
             // back, as if the card the user pressed had grown into the page.
-            val settle = remember { androidx.compose.animation.core.Animatable(if (tv.own.owntv.ui.theme.animationsOn) 0f else 1f) }
+            val animate = tv.own.owntv.ui.theme.animationsOn
+            val settle = remember { androidx.compose.animation.core.Animatable(if (animate) 0f else 1f) }
             LaunchedEffect(Unit) { settle.animateTo(1f, androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
             if (!details.backdropUrl.isNullOrBlank()) {
                 AsyncImage(
