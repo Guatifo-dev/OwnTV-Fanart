@@ -141,3 +141,16 @@ fun ArtTint(
         },
     )
 }
+
+/**
+ * glcn: "★ 7,4 TMDB" for a guide programme that TMDB knows as a film or a series; null otherwise
+ * (and while it is being looked up).
+ */
+@Composable
+fun rememberTmdbRating(title: String?): String? {
+    val resolver: tv.own.owntv.core.metadata.ProgrammeArtResolver = org.koin.compose.koinInject()
+    val rating by produceState<Double?>(null, title) {
+        value = title?.takeIf { it.isNotBlank() }?.let { runCatching { resolver.ratingFor(it) }.getOrNull() }
+    }
+    return rating?.let { "★ " + tv.own.owntv.core.metadata.ProgrammeArtResolver.format(it) + " TMDB" }
+}

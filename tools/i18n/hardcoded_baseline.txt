@@ -17,13 +17,14 @@
 1	app/src/main/java/tv/own/owntv/features/customize/CustomizeScreen.kt	hid:${entry.key}
 1	app/src/main/java/tv/own/owntv/features/customize/CustomizeViewModel.kt	Custom
 1	app/src/main/java/tv/own/owntv/features/customize/MoveToCategoryDialog.kt	new
+1	app/src/main/java/tv/own/owntv/features/epg/EpgScreen.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$startLabel · ${channel.name}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	${t.channel.id}:${t.programme.startMs}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	,
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	EEEE d MMMM
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	billboard
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFocusArt
-4	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
+5	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
@@ -53,7 +54,9 @@
 2	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	·
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	–
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	★ %.1f
+1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	TMDB
 1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	artTint
+1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	★
 1	app/src/main/java/tv/own/owntv/ui/components/ColorPicker.kt	#%06X
 1	app/src/main/java/tv/own/owntv/ui/components/TextInputDialog.kt	\0
 1	app/src/main/java/tv/own/owntv/ui/components/TvImeMetrics.kt	$trigger visible=${next.visible} source=${next.source} displayH=$displayHeight

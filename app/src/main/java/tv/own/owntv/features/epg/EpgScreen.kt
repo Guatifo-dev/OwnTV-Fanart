@@ -469,7 +469,11 @@ fun EpgScreen(
                 GuideProgrammeBlock(
                     eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
                     title = shown?.title ?: chName,
-                    details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
+                    details = if (shown == null) stringResource(R.string.content_epg_no_programme) else {
+                        // glcn: TMDB's rating beside a film or a series.
+                        val rating = tv.own.owntv.ui.components.rememberTmdbRating(shown.title)
+                        listOfNotNull(programmeDetailsLine(shown)?.takeIf { it.isNotBlank() }, rating).joinToString("  ·  ").ifBlank { null }
+                    },
                     synopsis = shown?.description,
                     modifier = Modifier.padding(start = 46.mpx, top = 76.mpx).widthIn(max = 1080.mpx),
                 )
