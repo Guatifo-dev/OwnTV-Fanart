@@ -390,6 +390,13 @@ fun HomeScreen(
             ) {
                 if (!fullBleed) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart) }
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
+                    // glcn: whichever row is first — the billboard, Keep watching or any other — reaching it
+                    // brings the top of the page (the greeting) back, not just the row itself.
+                    Box(
+                        if (row == renderRows.firstOrNull() && !fullBleed) Modifier.onFocusChanged {
+                            if (it.hasFocus) homeScope.launch { runCatching { listState.animateScrollToItem(0) } }
+                        } else Modifier,
+                    ) {
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
@@ -692,6 +699,7 @@ fun HomeScreen(
                             track = track,
                             modifier = rowModifier,
                         )
+                    }
                     }
                 }
             }
