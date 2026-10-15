@@ -145,7 +145,8 @@ internal fun LiveCinematicPane(
             previewEngine = previewEngine,
             showVideo = showVideo,
             singleSessionBlocked = singleSessionBlocked,
-            modifier = Modifier.padding(start = 64.mpx, top = 40.mpx, end = 64.mpx),
+            // glcn: low enough to clear the top bar's chips ("Last channel", the playlist picker).
+            modifier = Modifier.padding(start = 64.mpx, top = 100.mpx, end = 64.mpx),
         )
 
         Column(Modifier.padding(top = 470.mpx)) {
@@ -174,7 +175,7 @@ internal fun LiveCinematicPane(
                             if (channel != null) {
                                 val rows = programmes[channel.id].orEmpty()
                                 val current = rows.firstOrNull { now in it.startMs until it.stopMs }
-                                val next = rows.filter { it.startMs >= (current?.stopMs ?: now) }.take(2)
+                                val next = rows.filter { it.startMs >= (current?.stopMs ?: now) }.take(1)
                                 Column(Modifier.width(CARD_W.mpx)) {
                                     LiveChannelCard(
                                         channel = channel,
@@ -212,16 +213,20 @@ private fun LiveCinematicHero(
     modifier: Modifier = Modifier,
 ) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(44.mpx)) {
-        LiveCinematicVideo(
-            channel = channel,
-            art = art,
-            previewEngine = previewEngine,
-            showVideo = showVideo,
-            singleSessionBlocked = singleSessionBlocked,
-            modifier = Modifier.size(640.mpx, 360.mpx),
-        )
+        // glcn: the box is for the video. Without one the backdrop already shows the picture, so a
+        // second copy of it here only repeated it — the words take the room instead.
+        if (showVideo) {
+            LiveCinematicVideo(
+                channel = channel,
+                art = null,
+                previewEngine = previewEngine,
+                showVideo = showVideo,
+                singleSessionBlocked = singleSessionBlocked,
+                modifier = Modifier.size(560.mpx, 315.mpx),
+            )
+        }
         val now = nowNext?.now
-        Column(Modifier.width(980.mpx).padding(top = 6.mpx)) {
+        Column(Modifier.width(if (showVideo) 1000.mpx else 1100.mpx).padding(top = 6.mpx)) {
             if (channel != null) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.mpx)) {
                     LivePlate(channel.displayLogoUrl, 72.mpx, 52.mpx)
@@ -239,7 +244,7 @@ private fun LiveCinematicHero(
             }
             if (now != null) {
                 Text(
-                    now.title, style = stageText(44, 800, (-0.5).mpxSp), color = StageColors.Text,
+                    tv.own.owntv.core.live.SportsNow.displayTitle(now.title), style = stageText(44, 800, (-0.5).mpxSp), color = StageColors.Text,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
                 Text(
@@ -322,7 +327,7 @@ internal fun LiveChannelCard(
         focusStyle = StageFocus.POSTER,
         modifier = modifier.size(CARD_W.mpx, CARD_H.mpx),
         contentAlignment = Alignment.TopStart,
-    ) {
+    ) { focused ->
         Box(Modifier.fillMaxSize().clip(shape).background(Color(0xFF15191C))) {
             val art = programme?.imageUrl
             if (!art.isNullOrBlank()) {
@@ -340,13 +345,17 @@ internal fun LiveChannelCard(
                     Brush.verticalGradient(0.25f to Color.Transparent, 0.6f to Color.Black.copy(alpha = 0.7f), 1f to Color.Black.copy(alpha = 0.95f)),
                 ),
             )
+            // glcn: the focused card's picture is the backdrop already — its logo steps forward instead.
             Box(Modifier.align(Alignment.TopStart).padding(12.mpx)) {
-                LivePlate(channel.displayLogoUrl, 64.mpx, 44.mpx)
+                if (focused) LivePlate(channel.displayLogoUrl, 96.mpx, 66.mpx) else LivePlate(channel.displayLogoUrl, 64.mpx, 44.mpx)
             }
-            Box(Modifier.align(Alignment.TopEnd).padding(12.mpx)) { StageLiveBadge(stringResource(R.string.player_live)) }
+            // glcn: every channel here is on air; the badge is kept for real live events (a match, a gala).
+            if (programme != null && tv.own.owntv.core.live.SportsNow.isLive(programme)) {
+                Box(Modifier.align(Alignment.TopEnd).padding(12.mpx)) { StageLiveBadge(stringResource(R.string.player_live)) }
+            }
             Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 16.mpx, end = 16.mpx, bottom = 12.mpx)) {
                 Text(
-                    programme?.title ?: ProviderTags.parse(channel.name).name,
+                    programme?.title?.let(tv.own.owntv.core.live.SportsNow::displayTitle) ?: ProviderTags.parse(channel.name).name,
                     style = stageText(21, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 Text(
