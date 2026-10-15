@@ -32,6 +32,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.focus.FocusRequester
@@ -92,12 +93,18 @@ internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
                 .height(560.mpx)
                 .dissolveEdges(start = 0.45f, bottom = 0.45f),
         ) {
+            val animate = tv.own.owntv.ui.theme.animationsOn
             Crossfade(targetState = settled, label = "homeFocusArt") { u ->
                 if (!u.isNullOrBlank()) {
+                    // glcn: the backdrop drifts slowly closer too, in step with the focused card.
+                    val drift = remember(u) { androidx.compose.animation.core.Animatable(1f) }
+                    LaunchedEffect(u, animate) {
+                        if (animate) drift.animateTo(1.06f, androidx.compose.animation.core.tween(8_000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+                    }
                     AsyncImage(
                         model = u, contentDescription = null, contentScale = ContentScale.Crop,
                         alignment = androidx.compose.ui.BiasAlignment(0f, -0.4f),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = drift.value; scaleY = drift.value },
                     )
                 }
             }
@@ -133,6 +140,9 @@ internal fun HomeGreeting(name: String?, start: Dp) {
         )
     }
 }
+
+/** Room under a picture card for its title and line. */
+private val CAPTION_HEIGHT = 74.mpx
 
 /** "EN DIRECTO" in a red pill. */
 @Composable
@@ -174,42 +184,84 @@ internal fun ArtLiveCard(
         onClick = onClick,
         radius = StageRadii.Row,
         modifier = modifier
-            .size(width, width * 9f / 16f)
+            .size(width, width * 9f / 16f + CAPTION_HEIGHT)
             .onFocusChanged { if (it.hasFocus) setArt(art) },
         onLongClick = onLongClick,
         focusStyle = StageFocus.FX,
         idle = Modifier.background(StageColors.Ink.copy(alpha = 0.06f), RoundedCornerShape(StageRadii.Row)),
         contentAlignment = Alignment.TopStart,
-    ) {
-        Box(Modifier.fillMaxSize().clip(RoundedCornerShape(StageRadii.Row))) {
-            if (art != null) {
-                ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
-            } else {
-                ChannelPlate(channel, Modifier.align(Alignment.Center).size(150.mpx, 96.mpx))
-            }
+    ) { focused ->
+        val animate = tv.own.owntv.ui.theme.animationsOn
+        // glcn: a focused card's picture drifts slowly closer (a Ken Burns push-in)…
+        val zoom by androidx.compose.animation.core.animateFloatAsState(
+            targetValue = if (focused && animate) 1.08f else 1f,
+            animationSpec = androidx.compose.animation.core.tween(if (focused) 6_000 else 400, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            label = "cardZoom",
+        )
+        // …and a soft band of light crosses it once as focus lands.
+        val shine = remember { androidx.compose.animation.core.Animatable(-1f) }
+        LaunchedEffect(focused) {
+            if (focused && animate) {
+                shine.snapTo(-0.6f)
+                shine.animateTo(1.6f, androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+            } else shine.snapTo(-1f)
+        }
+        Column(Modifier.fillMaxSize().clip(RoundedCornerShape(StageRadii.Row))) {
             Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.25f to Color.Transparent, 0.6f to Color.Black.copy(alpha = 0.7f), 1f to Color.Black.copy(alpha = 0.95f)),
-                ),
-            )
-            if (art != null) ChannelPlate(channel, Modifier.padding(12.mpx).size(66.mpx, 44.mpx))
-            Row(
-                Modifier.align(Alignment.TopEnd).padding(12.mpx),
-                horizontalArrangement = Arrangement.spacedBy(8.mpx),
-                verticalAlignment = Alignment.CenterVertically,
+                Modifier
+                    .fillMaxWidth()
+                    .height(width * 9f / 16f)
+                    .clip(RoundedCornerShape(topStart = StageRadii.Row, topEnd = StageRadii.Row)),
             ) {
-                if (programme != null && startLabel == null && SportsNow.isLive(programme)) LiveBadge()
-                if (bell) {
+                Box(Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom }) {
+                    if (art != null) {
+                        ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
+                    } else {
+                        Box(Modifier.fillMaxSize().background(Color(0xFF14191F)))
+                        ChannelPlate(channel, Modifier.align(Alignment.Center).size(150.mpx, 96.mpx))
+                    }
+                }
+                if (shine.value > -0.9f && shine.value < 1.5f) {
                     Box(
-                        Modifier.size(34.mpx).clip(RoundedCornerShape(17.mpx)).background(a.accent),
-                        contentAlignment = Alignment.Center,
-                    ) { tv.own.owntv.ui.components.OwnTVIcon(OwnTVIcon.BELL, Color.White, Modifier.size(20.mpx)) }
+                        Modifier.fillMaxSize().drawBehind {
+                            val x = size.width * shine.value
+                            drawRect(
+                                Brush.linearGradient(
+                                    listOf(Color.Transparent, Color.White.copy(alpha = 0.22f), Color.Transparent),
+                                    start = androidx.compose.ui.geometry.Offset(x - size.width * 0.35f, 0f),
+                                    end = androidx.compose.ui.geometry.Offset(x + size.width * 0.05f, size.height),
+                                ),
+                            )
+                        },
+                    )
+                }
+                if (art != null) ChannelPlate(channel, Modifier.padding(12.mpx).size(66.mpx, 44.mpx))
+                Row(
+                    Modifier.align(Alignment.TopEnd).padding(12.mpx),
+                    horizontalArrangement = Arrangement.spacedBy(8.mpx),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (programme != null && startLabel == null && SportsNow.isLive(programme)) LiveBadge()
+                    if (bell) {
+                        Box(
+                            Modifier.size(34.mpx).clip(RoundedCornerShape(17.mpx)).background(a.accent),
+                            contentAlignment = Alignment.Center,
+                        ) { tv.own.owntv.ui.components.OwnTVIcon(OwnTVIcon.BELL, Color.White, Modifier.size(20.mpx)) }
+                    }
+                }
+                if (programme != null && startLabel == null) {
+                    val span = (programme.stopMs - programme.startMs).coerceAtLeast(1L)
+                    val p = ((now - programme.startMs).toFloat() / span).coerceIn(0f, 1f)
+                    Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(5.mpx).background(Color.Black.copy(alpha = 0.4f))) {
+                        Box(Modifier.fillMaxWidth(p).height(5.mpx).background(Brush.horizontalGradient(listOf(a.accent, a.focus))))
+                    }
                 }
             }
-            Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 16.mpx, vertical = 12.mpx)) {
+            // The words under the picture, never over it, where the picture's own lettering would fight them.
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.mpx, vertical = 10.mpx)) {
                 Text(
                     programme?.title?.let(SportsNow::displayTitle) ?: channel.name,
-                    style = stageText(20, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    style = stageText(20, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 val line = when {
                     startLabel != null -> "$startLabel · ${channel.name}"
@@ -217,15 +269,7 @@ internal fun ArtLiveCard(
                     else -> null
                 }
                 line?.let {
-                    Text(it, style = stageText(15, 500), color = Color.White.copy(alpha = 0.75f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                if (programme != null && startLabel == null) {
-                    val span = (programme.stopMs - programme.startMs).coerceAtLeast(1L)
-                    val p = ((now - programme.startMs).toFloat() / span).coerceIn(0f, 1f)
-                    Spacer(Modifier.height(8.mpx))
-                    Box(Modifier.fillMaxWidth().height(4.mpx).clip(RoundedCornerShape(2.mpx)).background(Color.White.copy(alpha = 0.2f))) {
-                        Box(Modifier.fillMaxWidth(p).height(4.mpx).background(Brush.horizontalGradient(listOf(a.accent, a.focus))))
-                    }
+                    Text(it, style = stageText(15, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

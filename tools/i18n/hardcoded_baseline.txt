@@ -23,6 +23,7 @@
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	,
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	EEEE d MMMM
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	billboard
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	cardZoom
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFocusArt
 5	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
