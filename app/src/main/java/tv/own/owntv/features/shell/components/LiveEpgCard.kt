@@ -79,7 +79,9 @@ fun LiveEpgCard(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         epg.now?.let { entry ->
-            Column(Modifier.widthIn(max = 300.dp)) {
+            // glcn: the now half gives way, never the next half — squeezed to nothing beside a long
+            // synopsis, "EN DIRECTO DESPUÉS" was drawn one syllable per line down the edge.
+            Column(Modifier.weight(1f, fill = false).widthIn(max = 300.dp)) {
                 SlotLabel(stringResource(if (archive) R.string.content_archive_playing else R.string.content_live_now), colors.primary)
                 Text(
                     entry.title,
@@ -145,7 +147,7 @@ fun LiveEpgCard(
             Box(Modifier.height(34.dp).widthIn(min = 1.dp, max = 1.dp).background(hudInk.copy(alpha = 0.18f)))
         }
         epg.next?.let { entry ->
-            Column(Modifier.widthIn(max = 240.dp)) {
+            Column(Modifier.widthIn(min = 120.dp, max = 240.dp)) {
                 SlotLabel(stringResource(if (archive) R.string.content_archive_then else R.string.content_live_next), hudInk.copy(alpha = 0.45f))
                 Text(
                     entry.title,
@@ -226,6 +228,8 @@ private fun SlotLabel(text: String, color: Color) {
         style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
         color = color,
         fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(bottom = 1.dp),
     )
 }

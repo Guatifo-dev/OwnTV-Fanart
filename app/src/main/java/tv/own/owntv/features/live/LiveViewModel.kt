@@ -1857,6 +1857,7 @@ class LiveViewModel(
 
     /** Jump back to the real-time live edge (back on the fast ExoPlayer engine). */
     fun goToLive() {
+        if (timeshift.goLiveOnCopy()) return
         clearTimeshift()
         _previewChannel.value?.let { ensurePlaying(it) }
     }
