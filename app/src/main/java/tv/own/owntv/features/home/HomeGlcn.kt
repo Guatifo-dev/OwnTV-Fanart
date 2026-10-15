@@ -32,6 +32,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -318,6 +320,9 @@ internal fun TonightRow(
 @Composable
 internal fun FeaturedBillboard(
     items: List<FeaturedItem>,
+    engine: tv.own.owntv.player.HeroPreviewEngine,
+    onStartPreview: (ChannelEntity) -> Unit,
+    onStopPreview: () -> Unit,
     onPlayChannel: (ChannelEntity) -> Unit,
     onOpenMovie: (tv.own.owntv.core.database.entity.MovieEntity) -> Unit,
     onOpenSeries: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit,
@@ -330,12 +335,22 @@ internal fun FeaturedBillboard(
     if (items.isEmpty()) return
     var index by remember(items) { mutableIntStateOf(0) }
     var focused by remember { mutableStateOf(false) }
+    val item = items[index.coerceIn(0, items.lastIndex)]
+    // A live slide with focus on it plays its channel, muted, after a moment — and then stays put.
+    val previewing = focused && item is FeaturedItem.Live
     LaunchedEffect(items, focused, index) {
-        if (items.size < 2) return@LaunchedEffect
+        if (items.size < 2 || previewing) return@LaunchedEffect
         delay(if (focused) 12_000 else 8_000)
         index = (index + 1) % items.size
     }
-    val item = items[index.coerceIn(0, items.lastIndex)]
+    LaunchedEffect(previewing, item.key) {
+        onStopPreview()
+        if (!previewing) return@LaunchedEffect
+        delay(2_500)
+        onStartPreview((item as FeaturedItem.Live).channel)
+    }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onStopPreview() } }
+    val engineState by engine.state.collectAsStateWithLifecycle()
     val setArt = LocalHomeFocusArt.current
     val a = stageAccent
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -353,6 +368,11 @@ internal fun FeaturedBillboard(
                     alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
                     modifier = Modifier.fillMaxSize(),
                 )
+            }
+            if (previewing) {
+                val shown = engineState == tv.own.owntv.player.HeroPreviewEngine.State.PLAYING
+                val alpha by androidx.compose.animation.core.animateFloatAsState(if (shown) 1f else 0f, label = "billboardVideo")
+                PreviewTexture(engine, Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha })
             }
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.85f), 0.55f to Color.Black.copy(alpha = 0.25f), 1f to Color.Transparent)))
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.7f))))

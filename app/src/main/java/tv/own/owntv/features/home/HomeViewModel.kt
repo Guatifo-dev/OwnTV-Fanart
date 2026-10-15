@@ -394,6 +394,12 @@ class HomeViewModel(
         resolveHeroMetadata(index)
     }
 
+    /** glcn: the featured billboard's muted live preview — only with the Home preview setting on. */
+    suspend fun startFeaturedPreview(channel: tv.own.owntv.core.database.entity.ChannelEntity) {
+        if (!settings.heroPreviewEnabled.first()) return
+        startPreview(tv.own.owntv.core.home.HeroItem.LiveHero(channel, System.currentTimeMillis()))
+    }
+
     fun stopPreview() {
         heroPreviewEngine.stop()
     }

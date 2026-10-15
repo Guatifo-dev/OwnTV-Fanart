@@ -600,6 +600,9 @@ fun HomeScreen(
 
                         HomeRow.FEATURED -> FeaturedBillboard(
                             items = state.featured,
+                            engine = heroPreviewEngine,
+                            onStartPreview = { ch -> homeScope.launch { vm.startFeaturedPreview(ch) } },
+                            onStopPreview = { heroPreviewEngine.stop() },
                             onPlayChannel = { ch -> onPlayChannel(ch.id, state.featured.filterIsInstance<tv.own.owntv.core.home.FeaturedItem.Live>().map { it.channel }) },
                             onOpenMovie = onOpenMovie,
                             onOpenSeries = onOpenSeries,
@@ -1231,7 +1234,7 @@ private fun StillArtwork(still: HomeStill) {
  * square behind it.
  */
 @Composable
-private fun PreviewTexture(engine: HeroPreviewEngine, modifier: Modifier = Modifier) {
+internal fun PreviewTexture(engine: HeroPreviewEngine, modifier: Modifier = Modifier) {
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
