@@ -1328,6 +1328,7 @@ private fun <T> FavoritePosterRow(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         LazyRow(
