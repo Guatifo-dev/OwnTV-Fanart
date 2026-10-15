@@ -174,6 +174,22 @@ open class MainActivity : ComponentActivity() {
         return error
     }
 
+    // glcn: with the app's own menu sounds on, Android TV's system clicks (Settings → Device
+    // preferences → Sound → System sounds) would play on top of them: the window stops asking for them.
+    private fun quietSystemClicks() {
+        val on = tv.own.owntv.glcn.UiSounds.level == 0
+        fun walk(v: android.view.View) {
+            v.isSoundEffectsEnabled = on
+            if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+        runCatching { walk(window.decorView) }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) quietSystemClicks()
+    }
+
     // glcn: menu sounds hear every key first; they never consume one.
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
         tv.own.owntv.glcn.UiSounds.onKey(event)
@@ -209,7 +225,10 @@ open class MainActivity : ComponentActivity() {
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
         // glcn: menu sounds follow the setting; the opening chime plays once per cold start.
         lifecycleScope.launch {
-            glcnSettings.uiSounds.collect { tv.own.owntv.glcn.UiSounds.level = it }
+            glcnSettings.uiSounds.collect {
+                tv.own.owntv.glcn.UiSounds.level = it
+                quietSystemClicks()
+            }
         }
         if (savedInstanceState == null) lifecycleScope.launch {
             if (glcnSettings.startupSound.first()) {
