@@ -845,7 +845,7 @@ fun StagePoster(
                 )
                 .clip(RoundedCornerShape(r)),
         ) {
-            artwork()
+            FocusArtFx(focused) { artwork() }
             if (rating != null) StageRatingChip(rating, Modifier.padding(8.mpx), small = compact)
             if (watched) {
                 Box(
@@ -921,7 +921,7 @@ fun StageStill(
                 )
                 .clip(RoundedCornerShape(r)),
         ) {
-            artwork()
+            FocusArtFx(focused) { artwork() }
             if (progress != null && progress > 0f) {
                 Box(
                     Modifier.align(Alignment.BottomStart).fillMaxWidth().height(6.mpx)
