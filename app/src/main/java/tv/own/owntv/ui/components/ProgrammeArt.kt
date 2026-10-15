@@ -55,21 +55,17 @@ fun ProgrammeArt(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            // Behind: the same picture filling the box, blurred (Android 12+) and darkened.
+            // glcn: a poster where a wide picture belongs. Ask TMDB for the show's own wide picture
+            // (by the programme's title); without one, the poster fills the box, cropped from the top.
+            val resolver: tv.own.owntv.core.metadata.ProgrammeArtResolver = org.koin.compose.koinInject()
+            val wide by androidx.compose.runtime.produceState<String?>(null, url) {
+                value = runCatching { resolver.landscapeFor(url) }.getOrNull()
+            }
             AsyncImage(
-                model = url,
+                model = wide ?: url,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(28.dp) else Modifier),
-            )
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) 0.35f else 0.6f)))
-            AsyncImage(
-                model = url,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                alignment = Alignment.Center,
+                alignment = if (wide != null) Alignment.Center else TopBias,
                 modifier = Modifier.fillMaxSize(),
             )
         }
