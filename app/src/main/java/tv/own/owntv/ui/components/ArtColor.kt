@@ -162,10 +162,10 @@ fun ArtTint(
  * (and while it is being looked up).
  */
 @Composable
-fun rememberTmdbRating(title: String?): String? {
+fun rememberTmdbRating(title: String?, categories: String? = null): String? {
     val resolver: tv.own.owntv.core.metadata.ProgrammeArtResolver = org.koin.compose.koinInject()
-    val rating by produceState<Double?>(null, title) {
-        value = title?.takeIf { it.isNotBlank() }?.let { runCatching { resolver.ratingFor(it) }.getOrNull() }
+    val rating by produceState<Double?>(null, title, categories) {
+        value = title?.takeIf { it.isNotBlank() }?.let { runCatching { resolver.ratingFor(it, categories) }.getOrNull() }
     }
     return rating?.let { "★ " + tv.own.owntv.core.metadata.ProgrammeArtResolver.format(it) + " TMDB" }
 }

@@ -248,7 +248,10 @@ private fun LiveCinematicHero(
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    detailsLine(now, nowNext.nowDetails),
+                    listOfNotNull(
+                        detailsLine(now, nowNext.nowDetails).takeIf { it.isNotBlank() },
+                        tv.own.owntv.ui.components.rememberTmdbRating(now.title, nowNext.nowDetails?.categories),
+                    ).joinToString("  ·  "),
                     style = stageText(19, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 8.mpx, bottom = 14.mpx),
                 )

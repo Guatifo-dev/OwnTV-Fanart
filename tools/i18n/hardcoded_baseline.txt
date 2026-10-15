@@ -29,6 +29,8 @@
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
+1	app/src/main/java/tv/own/owntv/features/live/LiveCinematic.kt	·
+1	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
 1	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w780
 8	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	${cfg.host}$p

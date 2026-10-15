@@ -317,7 +317,10 @@ internal fun LiveStagePane(
             if (now != null) {
                 Text(now.title, style = stageText(42, 800, (-0.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
-                    detailsLine(now, nowNext.nowDetails),
+                    listOfNotNull(
+                        detailsLine(now, nowNext.nowDetails).takeIf { it.isNotBlank() },
+                        tv.own.owntv.ui.components.rememberTmdbRating(now.title, nowNext.nowDetails?.categories),
+                    ).joinToString("  ·  "),
                     style = stageText(19, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 8.mpx, bottom = 16.mpx),
                 )
