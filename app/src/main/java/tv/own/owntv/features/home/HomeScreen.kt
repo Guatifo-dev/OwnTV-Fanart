@@ -603,7 +603,12 @@ fun HomeScreen(
                             onPlayChannel = { ch -> onPlayChannel(ch.id, state.featured.filterIsInstance<tv.own.owntv.core.home.FeaturedItem.Live>().map { it.channel }) },
                             onOpenMovie = onOpenMovie,
                             onOpenSeries = onOpenSeries,
-                            onFocus = onNonHeroFocused,
+                            onFocus = {
+                                onNonHeroFocused()
+                                // The billboard's button sits at its foot: bring the whole page top — the
+                                // greeting and the picture — back into view, not just the button.
+                                homeScope.launch { runCatching { listState.animateScrollToItem(0) } }
+                            },
                             firstItemFocusRequester = firstItemFocusRequester,
                             start = contentStart,
                             track = track,
