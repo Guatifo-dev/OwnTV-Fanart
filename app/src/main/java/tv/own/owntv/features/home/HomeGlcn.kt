@@ -202,6 +202,7 @@ internal fun ArtLiveCard(
                             plot = programme?.description,
                             rateTitle = programme?.title,
                             rateCategories = programme?.categories,
+                            channel = channel.takeIf { startLabel == null },
                         ),
                     )
                 }
@@ -526,6 +527,8 @@ internal data class HomeFocusInfo(
     /** A guide programme's own title and categories, for its TMDB rating; null for films and series. */
     val rateTitle: String? = null,
     val rateCategories: String? = null,
+    /** A channel on air now: the panels then read its programme in full (synopsis, progress, what's next). */
+    val channel: ChannelEntity? = null,
 )
 
 /** A card tells Home what it is when it takes focus (alongside [LocalHomeFocusArt]). */
@@ -563,20 +566,53 @@ private fun FullBackdrop(url: String?, modifier: Modifier = Modifier) {
     }
 }
 
-/** Title, a line (with TMDB's rating for a film or series on air) and two lines of synopsis. */
+/**
+ * Title, a line (with TMDB's rating for a film or series on air) and the synopsis. For a channel on air
+ * the programme is read in full: its synopsis, how far through it is, and what comes next.
+ */
 @Composable
 private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, modifier: Modifier = Modifier) {
+    val nowArt: tv.own.owntv.core.live.NowArt = org.koin.compose.koinInject()
+    val live by androidx.compose.runtime.produceState<Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>?>(null, info.channel?.id) {
+        value = info.channel?.let { ch -> runCatching { nowArt.nowAndNext(ch) }.getOrNull() }
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val fmt = remember { android.text.format.DateFormat.getTimeFormat(context) }
     Column(modifier) {
+        info.channel?.let { ch ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.mpx), modifier = Modifier.padding(bottom = 10.mpx)) {
+                ChannelPlate(ch, Modifier.size(78.mpx, 50.mpx))
+                Text(ch.name, style = stageText(18, 700), color = Color.White.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
         Text(info.title, style = stageText(titleSize, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
         val rating = info.rateTitle?.let { tv.own.owntv.ui.components.rememberTmdbRating(it, info.rateCategories) }
         val line = listOfNotNull(info.line?.takeIf { it.isNotBlank() }, rating).joinToString("  ·  ")
         if (line.isNotBlank()) {
             Text(line, style = stageText(19, 600), color = Color.White.copy(alpha = 0.82f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.mpx))
         }
-        info.plot?.takeIf { it.isNotBlank() }?.let {
+        live?.first?.let { p ->
+            val span = (p.stopMs - p.startMs).coerceAtLeast(1L)
+            val f = ((System.currentTimeMillis() - p.startMs).toFloat() / span).coerceIn(0f, 1f)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.mpx), modifier = Modifier.padding(top = 12.mpx)) {
+                Text(fmt.format(java.util.Date(p.startMs)), style = stageText(16, 600), color = Color.White.copy(alpha = 0.7f))
+                Box(Modifier.width(260.mpx).height(5.mpx).clip(RoundedCornerShape(3.mpx)).background(Color.White.copy(alpha = 0.2f))) {
+                    Box(Modifier.fillMaxWidth(f).height(5.mpx).background(stageAccent.accent))
+                }
+                Text(fmt.format(java.util.Date(p.stopMs)), style = stageText(16, 600), color = Color.White.copy(alpha = 0.7f))
+            }
+        }
+        (info.plot?.takeIf { it.isNotBlank() } ?: live?.first?.description?.takeIf { it.isNotBlank() })?.let {
             Text(
                 it, style = stageText(19, 400).copy(lineHeight = (19 * 1.45f).mpxSp), color = Color.White.copy(alpha = 0.72f),
                 maxLines = plotLines, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.mpx),
+            )
+        }
+        live?.second?.let { n ->
+            Text(
+                stringResource(R.string.content_live_next) + " · " + fmt.format(java.util.Date(n.startMs)) + "  " + SportsNow.displayTitle(n.title),
+                style = stageText(17, 600), color = Color.White.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 14.mpx),
             )
         }
     }
