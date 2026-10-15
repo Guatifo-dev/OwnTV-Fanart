@@ -40,6 +40,21 @@ object ArtColor {
     }
 
     private val plainCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+    private val widthCache = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** glcn: the picture's own width in pixels, or null when it does not load. */
+    suspend fun widthOf(context: android.content.Context, url: String): Int? {
+        widthCache[url]?.let { return it }
+        val w = withContext(Dispatchers.IO) {
+            runCatching {
+                val request = coil3.request.ImageRequest.Builder(context).data(url).build()
+                val result = coil3.SingletonImageLoader.get(context).execute(request)
+                (result as? coil3.request.SuccessResult)?.image?.width
+            }.getOrNull()
+        } ?: return null
+        widthCache[url] = w
+        return w
+    }
 
     /**
      * glcn: a picture with nothing in it — a white placeholder, a flat colour with a small logo — which
@@ -154,3 +169,26 @@ fun rememberTmdbRating(title: String?): String? {
     }
     return rating?.let { "★ " + tv.own.owntv.core.metadata.ProgrammeArtResolver.format(it) + " TMDB" }
 }
+
+/**
+ * glcn: the billboard's slides with a picture fit to fill a screen. A live slide whose guide picture is
+ * small (a channel's stock card) or blank takes TMDB's wide picture for the programme instead; without
+ * one the slide is dropped. Films and series keep their own backdrops.
+ */
+@Composable
+fun rememberBillboardSlides(items: List<tv.own.owntv.core.home.FeaturedItem>): List<Pair<tv.own.owntv.core.home.FeaturedItem, String>> {
+    val context = LocalContext.current
+    val resolver: tv.own.owntv.core.metadata.ProgrammeArtResolver = org.koin.compose.koinInject()
+    val slides by produceState(emptyList<Pair<tv.own.owntv.core.home.FeaturedItem, String>>(), items) {
+        value = items.mapNotNull { item ->
+            if (item !is tv.own.owntv.core.home.FeaturedItem.Live) return@mapNotNull item.art.takeIf { it.isNotBlank() }?.let { item to it }
+            val width = ArtColor.widthOf(context, item.art)
+            val good = width != null && width >= MIN_BILLBOARD_WIDTH && !ArtColor.isPlain(context, item.art)
+            if (good) item to item.art
+            else runCatching { resolver.infoFor(item.programme.title)?.backdropUrl }.getOrNull()?.let { item to it }
+        }
+    }
+    return slides
+}
+
+private const val MIN_BILLBOARD_WIDTH = 900

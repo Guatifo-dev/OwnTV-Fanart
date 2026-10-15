@@ -599,7 +599,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.FEATURED -> FeaturedBillboard(
-                            items = state.featured,
+                            allItems = state.featured,
                             onPlayChannel = { ch -> onPlayChannel(ch.id, state.featured.filterIsInstance<tv.own.owntv.core.home.FeaturedItem.Live>().map { it.channel }) },
                             onOpenMovie = onOpenMovie,
                             onOpenSeries = onOpenSeries,

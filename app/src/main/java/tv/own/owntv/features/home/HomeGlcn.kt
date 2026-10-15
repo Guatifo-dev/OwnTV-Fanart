@@ -321,7 +321,7 @@ internal fun TonightRow(
  */
 @Composable
 internal fun FeaturedBillboard(
-    items: List<FeaturedItem>,
+    allItems: List<FeaturedItem>,
     onPlayChannel: (ChannelEntity) -> Unit,
     onOpenMovie: (tv.own.owntv.core.database.entity.MovieEntity) -> Unit,
     onOpenSeries: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit,
@@ -331,10 +331,14 @@ internal fun FeaturedBillboard(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (items.isEmpty()) return
+    // glcn: only slides whose picture can fill the screen (see rememberBillboardSlides).
+    val slides = tv.own.owntv.ui.components.rememberBillboardSlides(allItems)
+    if (slides.isEmpty()) return
+    val items = slides.map { it.first }
     var index by remember(items) { mutableIntStateOf(0) }
     var focused by remember { mutableStateOf(false) }
     val item = items[index.coerceIn(0, items.lastIndex)]
+    val artUrl = slides[index.coerceIn(0, slides.lastIndex)].second
     // glcn: live slides never play by themselves — the billboard only shows pictures.
     LaunchedEffect(items, focused, index) {
         if (items.size < 2) return@LaunchedEffect
@@ -352,7 +356,7 @@ internal fun FeaturedBillboard(
             .padding(start = start, end = 64.mpx),
     ) {
         Box(Modifier.fillMaxSize().clip(RoundedCornerShape(28.mpx))) {
-            Crossfade(targetState = item.art, label = "billboard") { url ->
+            Crossfade(targetState = artUrl, label = "billboard") { url ->
                 AsyncImage(
                     model = url, contentDescription = null, contentScale = ContentScale.Crop,
                     alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
