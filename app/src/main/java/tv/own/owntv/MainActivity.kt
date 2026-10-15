@@ -1,5 +1,8 @@
 package tv.own.owntv
 
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -102,6 +105,7 @@ open class MainActivity : ComponentActivity() {
     private val shellViewModel: ShellViewModel by viewModel()
     // The sole locale authority (SharedPreferences-backed; see docs/internationalization.md 0b).
     private val localeStore: tv.own.owntv.core.i18n.LocaleStore by inject()
+    private val glcnSettings: tv.own.owntv.core.settings.SettingsRepository by inject()
     private var pendingDeepLink by mutableStateOf<LauncherDeepLink?>(null)
 
     /**
@@ -170,6 +174,12 @@ open class MainActivity : ComponentActivity() {
         return error
     }
 
+    // glcn: menu sounds hear every key first; they never consume one.
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        tv.own.owntv.glcn.UiSounds.onKey(event)
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // ST3 — must be installed BEFORE super.onCreate() per the library's contract. It also applies
         // postSplashScreenTheme (Theme.OwnTV), so the activity ends up in the same theme as before.
@@ -197,6 +207,17 @@ open class MainActivity : ComponentActivity() {
             return
         }
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
+        // glcn: menu sounds follow the setting; the opening chime plays once per cold start.
+        lifecycleScope.launch {
+            glcnSettings.uiSounds.collect { tv.own.owntv.glcn.UiSounds.level = it }
+        }
+        if (savedInstanceState == null) lifecycleScope.launch {
+            if (glcnSettings.startupSound.first()) {
+                val season = if (glcnSettings.seasonMode.first() > 0) tv.own.owntv.core.theme.Seasons.current()
+                else tv.own.owntv.core.theme.Season.NONE
+                tv.own.owntv.glcn.UiSounds.startup(season)
+            }
+        }
         setContent {
             // First composition pass — splits "process start → Compose is running" from
             // "Compose is running → the destination's data arrived".

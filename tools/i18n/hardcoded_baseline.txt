@@ -59,7 +59,10 @@
 2	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	#FFFFFF
 1	app/src/main/java/tv/own/owntv/features/shell/components/ChannelListOverlay.kt	–
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_anim_style
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_season
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_startup_sound
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	\0
 2	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	·
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	–

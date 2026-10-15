@@ -646,6 +646,8 @@ internal fun VideoPlayerGroupRows(
     val audioPassthrough by vm.audioPassthrough.collectAsStateWithLifecycle()
     val nightMode by vm.nightMode.collectAsStateWithLifecycle()
     val volumeLevelling by vm.volumeLevelling.collectAsStateWithLifecycle()
+    val dialogueBoost by vm.dialogueBoost.collectAsStateWithLifecycle()
+    val mpvPassthrough by vm.mpvPassthrough.collectAsStateWithLifecycle()
     val maxVideoHeight by vm.maxVideoHeight.collectAsStateWithLifecycle()
     val tunneledPlayback by vm.tunneledPlayback.collectAsStateWithLifecycle()
     val tunnelingFailed by vm.tunnelingFailed.collectAsStateWithLifecycle()
@@ -1260,6 +1262,19 @@ internal fun VideoPlayerGroupRows(
             desc = stringResource(R.string.settings_night_mode_description),
             chip = stringResource(if (nightMode) R.string.common_on else R.string.common_off), primaryChip = nightMode,
             onClick = { vm.setNightMode(!nightMode) },
+        )
+        // glcn: clearer speech, and Dolby/DTS untouched from mpv too (experimental).
+        Row2(
+            icon = OwnTVIcon.VOLUME_HIGH, title = stringResource(R.string.glcn_dialogue_title),
+            desc = stringResource(R.string.glcn_dialogue_desc),
+            chip = stringResource(if (dialogueBoost) R.string.common_on else R.string.common_off), primaryChip = dialogueBoost,
+            onClick = { vm.setDialogueBoost(!dialogueBoost) },
+        )
+        Row2(
+            icon = OwnTVIcon.AUDIO, title = stringResource(R.string.glcn_mpv_passthrough_title),
+            desc = stringResource(R.string.glcn_mpv_passthrough_desc),
+            chip = stringResource(if (mpvPassthrough) R.string.common_on else R.string.common_off), primaryChip = mpvPassthrough,
+            onClick = { vm.setMpvPassthrough(!mpvPassthrough) },
         )
         Row2(
             quickKey = "vp_volume_leveling",

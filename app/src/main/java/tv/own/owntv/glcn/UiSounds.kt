@@ -1,0 +1,203 @@
+package tv.own.owntv.glcn
+
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
+import android.os.SystemClock
+import android.view.KeyEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import tv.own.owntv.core.theme.Season
+import kotlin.math.PI
+import kotlin.math.exp
+import kotlin.math.sin
+
+/**
+ * glcn: menu sounds (Settings → Appearance → Menu sounds) and the opening chime. All of it synthesised
+ * here — a few milliseconds of sine and bell, no audio files — and played as system sonification, so it
+ * mixes under nothing: it is silent while anything plays (the player, the mini player, sound only),
+ * where it could disturb a receiver taking Dolby untouched.
+ */
+object UiSounds {
+
+    private const val RATE = 44_100
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** 0 off, 1 soft, 2 normal. */
+    @Volatile var level: Int = 0
+
+    /** True while something plays: no sounds then. */
+    @Volatile var suppressed: Boolean = false
+
+    private var move: AudioTrack? = null
+    private var select: AudioTrack? = null
+    private var back: AudioTrack? = null
+    private var lastMove = 0L
+
+    /** Called by the activity for every key: D-pad ticks, OK and Back. */
+    fun onKey(event: KeyEvent) {
+        if (level == 0 || suppressed) return
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    // A held key repeats fast: one tick every so often is enough.
+                    val now = SystemClock.uptimeMillis()
+                    if (now - lastMove < 70) return
+                    lastMove = now
+                    play(move ?: build { tick() }.also { move = it })
+                }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER ->
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(select ?: build { pop() }.also { select = it })
+            KeyEvent.KEYCODE_BACK ->
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(back ?: build { swoosh() }.also { back = it })
+        }
+    }
+
+    /** The opening chime — the season's own when a seasonal theme is on. */
+    fun startup(season: Season) {
+        scope.launch {
+            val pcm = when (season) {
+                Season.HALLOWEEN -> halloween()
+                Season.CHRISTMAS -> christmas()
+                Season.NEW_YEAR -> newYear()
+                Season.CARNIVAL -> carnival()
+                Season.VALENTINE -> valentine()
+                Season.NONE -> chime()
+            }
+            val track = trackOf(pcm, gain = 0.5f) ?: return@launch
+            runCatching { track.play() }
+            // Static tracks are released once played out.
+            kotlinx.coroutines.delay(pcm.size * 1000L / RATE + 500)
+            runCatching { track.release() }
+        }
+    }
+
+    // --- Playing ------------------------------------------------------------------------------------
+
+    private fun build(make: () -> ShortArray): AudioTrack? = trackOf(make(), gain = 1f)
+
+    private fun play(track: AudioTrack?) {
+        val t = track ?: return
+        val gain = if (level == 1) 0.35f else 0.7f
+        runCatching {
+            t.setVolume(gain)
+            if (t.playState == AudioTrack.PLAYSTATE_PLAYING) t.stop()
+            t.reloadStaticData()
+            t.play()
+        }
+    }
+
+    private fun trackOf(pcm: ShortArray, gain: Float): AudioTrack? = runCatching {
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build(),
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(RATE)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build(),
+            )
+            .setTransferMode(AudioTrack.MODE_STATIC)
+            .setBufferSizeInBytes(pcm.size * 2)
+            .build()
+        track.write(pcm, 0, pcm.size)
+        track.setVolume(gain)
+        track
+    }.getOrNull()
+
+    // --- Synthesis ----------------------------------------------------------------------------------
+
+    private class Mix(seconds: Double) {
+        val buf = FloatArray((seconds * RATE).toInt())
+
+        /** A bell-like note: a sine and a few soft partials, struck and decaying. */
+        fun bell(atSec: Double, freq: Double, durSec: Double, amp: Double, decay: Double = 5.0, partials: DoubleArray = doubleArrayOf(1.0, 0.35, 0.12)) {
+            val start = (atSec * RATE).toInt()
+            val n = (durSec * RATE).toInt()
+            for (i in 0 until n) {
+                val idx = start + i
+                if (idx >= buf.size) break
+                val t = i.toDouble() / RATE
+                val attack = (t / 0.004).coerceAtMost(1.0)
+                val env = attack * exp(-decay * t)
+                var v = 0.0
+                partials.forEachIndexed { k, a -> v += a * sin(2 * PI * freq * (k + 1) * t) }
+                buf[idx] += (amp * env * v).toFloat()
+            }
+        }
+
+        /** A sliding tone with vibrato — the theremin of an old horror film. */
+        fun glide(atSec: Double, from: Double, to: Double, durSec: Double, amp: Double) {
+            val start = (atSec * RATE).toInt()
+            val n = (durSec * RATE).toInt()
+            var phase = 0.0
+            for (i in 0 until n) {
+                val idx = start + i
+                if (idx >= buf.size) break
+                val t = i.toDouble() / RATE
+                val p = t / durSec
+                val f = (from + (to - from) * p) * (1 + 0.012 * sin(2 * PI * 5.5 * t))
+                phase += 2 * PI * f / RATE
+                val env = sin(PI * p).coerceAtLeast(0.0)
+                buf[idx] += (amp * env * sin(phase)).toFloat()
+            }
+        }
+
+        fun pcm(): ShortArray {
+            val peak = buf.maxOfOrNull { kotlin.math.abs(it) }?.coerceAtLeast(1f) ?: 1f
+            val norm = if (peak > 0.95f) 0.95f / peak else 1f
+            return ShortArray(buf.size) { (buf[it] * norm * Short.MAX_VALUE).toInt().toShort() }
+        }
+    }
+
+    private fun tick() = Mix(0.03).apply { bell(0.0, 1900.0, 0.03, 0.18, decay = 160.0, partials = doubleArrayOf(1.0)) }.pcm()
+    private fun pop() = Mix(0.09).apply { bell(0.0, 1250.0, 0.09, 0.3, decay = 45.0); bell(0.012, 1870.0, 0.07, 0.15, decay = 60.0) }.pcm()
+    private fun swoosh() = Mix(0.09).apply { glide(0.0, 1100.0, 650.0, 0.09, 0.22) }.pcm()
+
+    private fun note(semitonesFromA4: Int) = 440.0 * Math.pow(2.0, semitonesFromA4 / 12.0)
+
+    /** Every day: four soft rising bell notes (C E G C). */
+    private fun chime() = Mix(1.6).apply {
+        listOf(3, 7, 10, 15).forEachIndexed { i, s -> bell(i * 0.12, note(s), 1.3, 0.26, decay = 3.2) }
+    }.pcm()
+
+    /** Halloween: a low minor chord and a theremin that rises and wavers. */
+    private fun halloween() = Mix(2.2).apply {
+        bell(0.0, note(-24), 2.0, 0.22, decay = 1.6) // A2
+        bell(0.05, note(-21), 2.0, 0.16, decay = 1.6) // C3
+        bell(0.1, note(-17), 2.0, 0.14, decay = 1.6) // E3
+        glide(0.35, note(0), note(7), 1.6, 0.16) // A4 up to E5, wavering
+    }.pcm()
+
+    /** Christmas: the first notes of "Jingle Bells" on little bells, with a sleigh-bell shimmer. */
+    private fun christmas() = Mix(1.8).apply {
+        val bells = doubleArrayOf(1.0, 0.5, 0.25, 0.12)
+        listOf(0.0 to 7, 0.18 to 7, 0.36 to 7).forEach { (t, s) -> bell(t, note(s), 0.6, 0.24, decay = 5.0, partials = bells) }
+        listOf(0.62 to 7, 0.80 to 7, 0.98 to 7).forEach { (t, s) -> bell(t, note(s), 0.6, 0.24, decay = 5.0, partials = bells) }
+        repeat(10) { k -> bell(k * 0.11, 5200.0 + (k % 3) * 300, 0.06, 0.05, decay = 70.0, partials = doubleArrayOf(1.0)) }
+    }.pcm()
+
+    /** New Year's Eve: a quick sparkle rising to a bright chord. */
+    private fun newYear() = Mix(1.8).apply {
+        listOf(3, 7, 10, 15, 19, 22).forEachIndexed { i, s -> bell(i * 0.07, note(s), 0.9, 0.18, decay = 4.0) }
+        bell(0.5, note(15), 1.2, 0.18, decay = 2.5); bell(0.5, note(19), 1.2, 0.14, decay = 2.5); bell(0.5, note(22), 1.2, 0.12, decay = 2.5)
+    }.pcm()
+
+    /** Carnival: a bouncy little fanfare. */
+    private fun carnival() = Mix(1.3).apply {
+        listOf(0.0 to 3, 0.1 to 7, 0.2 to 10, 0.3 to 15, 0.45 to 10, 0.55 to 15).forEach { (t, s) -> bell(t, note(s), 0.5, 0.22, decay = 6.0) }
+    }.pcm()
+
+    /** Valentine's: two warm notes and a soft chord. */
+    private fun valentine() = Mix(1.8).apply {
+        bell(0.0, note(3), 1.4, 0.22, decay = 2.4); bell(0.2, note(10), 1.4, 0.2, decay = 2.4)
+        bell(0.45, note(7), 1.3, 0.14, decay = 2.0); bell(0.45, note(15), 1.3, 0.12, decay = 2.0)
+    }.pcm()
+}

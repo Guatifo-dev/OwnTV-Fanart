@@ -365,6 +365,9 @@ fun SettingsScreen(
     val vodLayout by settingsVm.vodLayout.collectAsStateWithLifecycle()
     val ambientGlowEnabled by settingsVm.ambientGlowEnabled.collectAsStateWithLifecycle()
     val seasonMode by settingsVm.seasonMode.collectAsStateWithLifecycle()
+    val animStyle by settingsVm.animStyle.collectAsStateWithLifecycle()
+    val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
+    val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
     LaunchedEffect(glassOn, themeMode) {
         if (glassOn || themeMode != ThemeMode.DARK) showAmbientGlow = false
@@ -649,6 +652,43 @@ fun SettingsScreen(
             focus = ambientGlowRowFocus,
             onClick = { saveScroll(); dialogReturn = ambientGlowRowFocus; showAmbientGlow = true },
         ) else null,
+        // glcn: animation style (Full / Subtle), menu sounds (Off / Soft / Normal), opening chime.
+        RootRow(
+            "glcn_anim_style", TileTone.SECONDARY, OwnTVIcon.GLOW,
+            title = stringResource(R.string.glcn_anim_style_title),
+            desc = stringResource(R.string.glcn_anim_style_desc),
+            chip = stringResource(if (animStyle == 1) R.string.glcn_anim_style_subtle else R.string.glcn_anim_style_full),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleAnimStyle() },
+        ),
+        RootRow(
+            "glcn_ui_sounds", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
+            title = stringResource(R.string.glcn_ui_sounds_title),
+            desc = stringResource(R.string.glcn_ui_sounds_desc),
+            chip = stringResource(
+                when (uiSounds) {
+                    1 -> R.string.glcn_ui_sounds_soft
+                    2 -> R.string.glcn_ui_sounds_normal
+                    else -> R.string.common_off
+                },
+            ),
+            chipTone = if (uiSounds > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleUiSounds() },
+        ),
+        RootRow(
+            "glcn_startup_sound", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
+            title = stringResource(R.string.glcn_startup_sound_title),
+            desc = stringResource(R.string.glcn_startup_sound_desc),
+            chip = stringResource(if (startupSound) R.string.common_on else R.string.common_off),
+            chipTone = if (startupSound) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = {
+                settingsVm.setStartupSound(!startupSound)
+                // Turning it on plays it, so the choice is heard straight away.
+                if (!startupSound) tv.own.owntv.glcn.UiSounds.startup(
+                    if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.current() else tv.own.owntv.core.theme.Season.NONE,
+                )
+            },
+        ),
         // glcn: seasonal themes — OK steps Off → Details → Animated.
         RootRow(
             "glcn_season", TileTone.SECONDARY, OwnTVIcon.THEME,

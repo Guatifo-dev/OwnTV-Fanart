@@ -100,8 +100,9 @@ internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
                 if (!u.isNullOrBlank()) {
                     // glcn: the backdrop drifts slowly closer too, in step with the focused card.
                     val drift = remember(u) { androidx.compose.animation.core.Animatable(1f) }
-                    LaunchedEffect(u, animate) {
-                        if (animate) drift.animateTo(1.06f, androidx.compose.animation.core.tween(8_000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+                    val driftOn = animate && !tv.own.owntv.ui.stage.GlcnMotion.subtle
+                    LaunchedEffect(u, driftOn) {
+                        if (driftOn) drift.animateTo(1.06f, androidx.compose.animation.core.tween(8_000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
                     }
                     AsyncImage(
                         model = u, contentDescription = null, contentScale = ContentScale.Crop,
@@ -198,14 +199,15 @@ internal fun ArtLiveCard(
         val animate = tv.own.owntv.ui.theme.animationsOn
         // glcn: a focused card's picture drifts slowly closer (a Ken Burns push-in)…
         val zoom by androidx.compose.animation.core.animateFloatAsState(
-            targetValue = if (focused && animate) 1.08f else 1f,
+            targetValue = if (focused && animate) (if (tv.own.owntv.ui.stage.GlcnMotion.subtle) 1.03f else 1.08f) else 1f,
             animationSpec = androidx.compose.animation.core.tween(if (focused) 6_000 else 400, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
             label = "cardZoom",
         )
         // …and a soft band of light crosses it once as focus lands.
         val shine = remember { androidx.compose.animation.core.Animatable(-1f) }
-        LaunchedEffect(focused) {
-            if (focused && animate) {
+        val sweep = animate && !tv.own.owntv.ui.stage.GlcnMotion.subtle
+        LaunchedEffect(focused, sweep) {
+            if (focused && sweep) {
                 shine.snapTo(-0.6f)
                 shine.animateTo(1.6f, androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing))
             } else shine.snapTo(-1f)

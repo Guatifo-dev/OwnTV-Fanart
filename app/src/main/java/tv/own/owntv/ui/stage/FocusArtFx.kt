@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -25,17 +26,26 @@ import kotlinx.coroutines.launch
  * soft band of light crosses it once as focus lands. Only the focused card animates, so a rail of a
  * hundred posters costs what one does; with animations off in Settings it stays still.
  */
+/**
+ * glcn: Settings → Appearance → Animation style. Subtle is the Apple TV way: the focused card leans and
+ * lifts, nothing else moves — no zoom drift, no light sweep, a still backdrop.
+ */
+object GlcnMotion {
+    var subtle by androidx.compose.runtime.mutableStateOf(false)
+}
+
 @Composable
 internal fun BoxScope.FocusArtFx(focused: Boolean, content: @Composable BoxScope.() -> Unit) {
     val animate = tv.own.owntv.ui.theme.animationsOn
     val zoom by animateFloatAsState(
-        targetValue = if (focused && animate) 1.08f else 1f,
+        targetValue = if (focused && animate) (if (GlcnMotion.subtle) 1.03f else 1.08f) else 1f,
         animationSpec = tween(if (focused) 6_000 else 400, easing = LinearOutSlowInEasing),
         label = "artZoom",
     )
     val shine = remember { Animatable(-1f) }
-    LaunchedEffect(focused) {
-        if (focused && animate) {
+    val sweep = animate && !GlcnMotion.subtle
+    LaunchedEffect(focused, sweep) {
+        if (focused && sweep) {
             shine.snapTo(-0.6f)
             shine.animateTo(1.6f, tween(900, easing = FastOutSlowInEasing))
         } else shine.snapTo(-1f)

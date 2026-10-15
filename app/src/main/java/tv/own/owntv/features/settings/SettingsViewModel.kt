@@ -1012,6 +1012,18 @@ class SettingsViewModel(
         viewModelScope.launch { settings.setLiveStageWidths(enabled, widths) }
     }
 
+    // glcn: Kodi-style extras.
+    val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setDialogueBoost(on: Boolean) { viewModelScope.launch { settings.setDialogueBoost(on) } }
+    val mpvPassthrough: StateFlow<Boolean> = settings.mpvPassthrough.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setMpvPassthrough(on: Boolean) { viewModelScope.launch { settings.setMpvPassthrough(on) } }
+    val animStyle: StateFlow<Int> = settings.animStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleAnimStyle() { viewModelScope.launch { settings.setAnimStyle((animStyle.value + 1) % 2) } }
+    val uiSounds: StateFlow<Int> = settings.uiSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleUiSounds() { viewModelScope.launch { settings.setUiSounds((uiSounds.value + 1) % 3) } }
+    val startupSound: StateFlow<Boolean> = settings.startupSound.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setStartupSound(on: Boolean) { viewModelScope.launch { settings.setStartupSound(on) } }
+
     // glcn: seasonal themes — 0 off, 1 details, 2 details and animations.
     val seasonMode: StateFlow<Int> =
         settings.seasonMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)

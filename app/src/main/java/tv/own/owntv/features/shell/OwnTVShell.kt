@@ -209,6 +209,10 @@ fun OwnTVShell(
     val miniSizePct by settingsRepo.miniPlayerSizePct.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.player.MiniPlayerSize.DEFAULT)
     val miniPosName by settingsRepo.miniPlayerPosition.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.player.MiniPlayerPosition.DEFAULT.name)
     val ambientGlowEnabled by settingsRepo.ambientGlowEnabled.collectAsStateWithLifecycle(initialValue = false)
+    // glcn: the animation style, and menu sounds silent while anything plays.
+    val glcnAnimStyle by settingsRepo.animStyle.collectAsStateWithLifecycle(initialValue = 0)
+    LaunchedEffect(glcnAnimStyle) { tv.own.owntv.ui.stage.GlcnMotion.subtle = glcnAnimStyle == 1 }
+    LaunchedEffect(playerMode) { tv.own.owntv.glcn.UiSounds.suppressed = playerMode != PlayerMode.NONE }
     val ambientGlowPulse by settingsRepo.ambientGlowPulse.collectAsStateWithLifecycle(initialValue = true)
     val shellAnimationLevel by settingsRepo.animationLevel.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.theme.AnimationLevel.FULL)
     val miniPos = tv.own.owntv.core.player.MiniPlayerPosition.fromName(miniPosName)
