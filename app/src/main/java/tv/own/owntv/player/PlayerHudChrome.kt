@@ -328,6 +328,8 @@ internal fun BottomBar(
     onInfo: (() -> Unit)? = null, infoOn: Boolean = false, onReport: (() -> Unit)? = null,
     favorite: Boolean = false, onToggleFavorite: (() -> Unit)? = null,
     onPreviousChannel: (() -> Unit)? = null,
+    onChannels: (() -> Unit)? = null,
+    onGuide: (() -> Unit)? = null,
     onOpenDialog: (HudDialog) -> Unit, onPip: (() -> Unit)?, onAudioMode: (() -> Unit)?,
     onMultiview: (() -> Unit)? = null, onRecordThis: (() -> Unit)? = null, recordingThis: Boolean = false,
     /** Given to whichever timeline is drawn, so Left/Right with the controls hidden can land on it (N6). */
@@ -426,6 +428,13 @@ internal fun BottomBar(
                         PlayerControl.INFO, PlayerControl.REPORT,
                         -> Unit
                     }
+                }
+                // glcn: the channel list and the guide, without leaving the channel.
+                if (onChannels != null) {
+                    CtrlButton(OwnTVIcon.LIST, label = stringResource(R.string.content_channel_overlay_title)) { onChannels() }
+                }
+                if (onGuide != null) {
+                    CtrlButton(OwnTVIcon.EPG, label = stringResource(R.string.common_nav_guide)) { onGuide() }
                 }
             }
             Spacer(Modifier.weight(1f))

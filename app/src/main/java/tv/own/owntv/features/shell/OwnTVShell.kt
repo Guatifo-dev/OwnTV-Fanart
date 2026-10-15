@@ -1668,6 +1668,8 @@ fun OwnTVShell(
                         ?.let { channel -> { liveVm.togglePlayerRecording(channel) } },
                     recordingThis = playerRecording != null,
                     onOpenHistoryList = if (isTunedLive) { { showHistoryList = true } } else null,
+                    // glcn: the guide with the channel still playing in the mini window.
+                    onOpenGuide = if (isTunedLive) { { openShortcutSection(MainSection.EPG) } } else null,
                     onRewindLive = if (isTunedLive && canRewindLive) liveVm::rewindLive else null,
                     onForwardLive = if (isTunedLive) liveVm::forwardLive else null,
                     onGoToLive = if (isTunedLive) liveVm::goToLive else null,

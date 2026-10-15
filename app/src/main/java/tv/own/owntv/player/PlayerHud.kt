@@ -164,6 +164,8 @@ fun PlayerHud(
     // Live: open the watch-history list (Right while the controls are hidden) — jump straight back to a
     // recent channel without leaving full-screen. Null = not a live channel.
     onOpenHistoryList: (() -> Unit)? = null,
+    /** glcn: the guide over the playing channel (the player docks into its mini window meanwhile). */
+    onOpenGuide: (() -> Unit)? = null,
     // Live rewind / timeshift (catch-up channels). onRewindLive non-null = this live channel can rewind;
     // timeshiftOffsetSec non-null = currently watching that many seconds behind the live edge.
     onRewindLive: (() -> Unit)? = null,
@@ -447,6 +449,7 @@ fun PlayerHud(
     val remoteShortcuts = LocalRemoteShortcuts.current
     var shortcutKeyCode by remember { mutableIntStateOf(android.view.KeyEvent.KEYCODE_UNKNOWN) }
     var shortcutPressedAt by remember { mutableStateOf(0L) }
+    var okHeldOpened by remember { mutableStateOf(false) }
     val dispatchPlayerShortcut: (RemoteShortcutAction) -> Unit = { action ->
         when (action) {
             RemoteShortcutAction.OPEN_SUBTITLE_CONTROLS -> { controlsVisible = true; dialog = HudDialog.SUBS }
@@ -541,6 +544,27 @@ fun PlayerHud(
                             return@onPreviewKeyEvent true
                         }
                     }
+                }
+            }
+            // ---- glcn: hold OK on a live channel (controls hidden) → the channel list over the video.
+            // A short press still brings the controls up, on release. Only OK, Back and the arrows reach
+            // the box from a TV's own remote over HDMI-CEC, so this is the one gesture always available.
+            if (isLive && onOpenChannelList != null && !controlsVisible && dialog == HudDialog.NONE &&
+                (e.key == Key.DirectionCenter || e.key == Key.Enter)
+            ) {
+                val native = e.nativeKeyEvent
+                if (e.type == KeyEventType.KeyDown) {
+                    if (native.repeatCount == 0) { okHeldOpened = false; return@onPreviewKeyEvent true }
+                    if (!okHeldOpened && (native.isLongPress || native.repeatCount >= 3)) {
+                        okHeldOpened = true
+                        onOpenChannelList()
+                    }
+                    return@onPreviewKeyEvent true
+                }
+                if (e.type == KeyEventType.KeyUp) {
+                    if (!okHeldOpened) controlsVisible = true
+                    okHeldOpened = false
+                    return@onPreviewKeyEvent true
                 }
             }
             // ---- Existing key handling (unchanged, but skip for digit KeyUp already consumed above) ----
@@ -693,6 +717,8 @@ fun PlayerHud(
                     liveGaps = liveGaps,
                     onOpenJumpBack = if (onJumpBack != null) { { dialog = HudDialog.JUMP_BACK } } else null,
                     onPreviousChannel = onPreviousChannel,
+                    onChannels = if (isLive) onOpenChannelList?.let { open -> { controlsVisible = false; open() } } else null,
+                    onGuide = if (isLive) onOpenGuide?.let { open -> { controlsVisible = false; open() } } else null,
                     compatMode = compatMode, onToggleCompatMode = toggleCompat,
                     vodOnExo = vodOnExo, onToggleVodEngine = toggleVod,
                     onInfo = { showInfo = !showInfo }, infoOn = showInfo,
