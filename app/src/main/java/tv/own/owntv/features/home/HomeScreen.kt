@@ -600,9 +600,6 @@ fun HomeScreen(
 
                         HomeRow.FEATURED -> FeaturedBillboard(
                             items = state.featured,
-                            engine = heroPreviewEngine,
-                            onStartPreview = { ch -> homeScope.launch { vm.startFeaturedPreview(ch) } },
-                            onStopPreview = { heroPreviewEngine.stop() },
                             onPlayChannel = { ch -> onPlayChannel(ch.id, state.featured.filterIsInstance<tv.own.owntv.core.home.FeaturedItem.Live>().map { it.channel }) },
                             onOpenMovie = onOpenMovie,
                             onOpenSeries = onOpenSeries,
@@ -716,6 +713,8 @@ fun HomeScreen(
         if (focusedHeroIndex != scheduledIndex || previewIndex != scheduledIndex) return@LaunchedEffect
         if (scheduledHero != state.heroItems.getOrNull(state.activeHeroIndex)) return@LaunchedEffect
 
+        // glcn: live channels never start by themselves on Home — only films and episodes preview.
+        if (scheduledHero is HeroItem.LiveHero) return@LaunchedEffect
         vm.startPreview(scheduledHero)
     }
 
