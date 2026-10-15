@@ -70,8 +70,15 @@ fun LiveEpgCard(
     val nowMs = if (archive) (atMs ?: wallNow) else wallNow
 
     Row(
-        modifier = if (!archive) modifier else modifier
+        // glcn: on a dark panel of its own — over a bright scene, or a channel's own on-screen graphics
+        // in the same corner, the guide lines could not be read on the top shade alone.
+        modifier = if (!archive) modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.Black.copy(alpha = 0.62f))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+        else modifier
             .clip(RoundedCornerShape(8.dp))
+            .background(Color.Black.copy(alpha = 0.62f))
             .background(colors.primary.copy(alpha = 0.09f))
             .border(1.dp, colors.primary.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 6.dp),

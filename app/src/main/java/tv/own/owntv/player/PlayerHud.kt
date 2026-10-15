@@ -672,8 +672,8 @@ fun PlayerHud(
             Box(Modifier.align(Alignment.TopStart).fillMaxWidth().height(210.dp)
                 .gradientWash(
                     vertical = true,
-                    0.0f to hudShade(0.72f),
-                    0.5f to hudShade(0.68f),
+                    0.0f to hudShade(0.8f),
+                    0.5f to hudShade(0.72f),
                     1.0f to Color.Transparent,
                 ))
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(260.dp)
