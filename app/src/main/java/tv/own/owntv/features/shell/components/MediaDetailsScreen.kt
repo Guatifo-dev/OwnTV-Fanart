@@ -101,6 +101,8 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
     tv.own.owntv.ui.components.OwnTVPopup(onDismissRequest = onExit, stageLayout = true, stageScaled = false) {
         LaunchedEffect(Unit) { kotlinx.coroutines.delay(60); runCatching { focus.requestFocus() } }
         Box(modifier.fillMaxSize().background(page).trapAllFocusExit()) {
+            // glcn: the page takes the tone of the backdrop.
+            tv.own.owntv.ui.components.ArtTint(details.backdropUrl ?: details.posterUrl, Modifier.matchParentSize(), strength = 0.7f, focusX = 0.5f, focusY = 0.45f)
             if (!details.backdropUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = details.backdropUrl, contentDescription = null, contentScale = ContentScale.Crop,

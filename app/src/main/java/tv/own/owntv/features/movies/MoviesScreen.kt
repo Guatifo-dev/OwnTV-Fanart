@@ -593,6 +593,7 @@ fun MoviesScreen(
             val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
+                tv.own.owntv.ui.components.ArtTint(titleInfo?.backdropUrl, Modifier.matchParentSize())
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = false, Modifier.align(Alignment.TopEnd))
                 VodHeader(
                     section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),

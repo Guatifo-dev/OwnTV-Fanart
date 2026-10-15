@@ -54,6 +54,7 @@ val appModule = module {
     // asking the provider the same question.
     singleOf(::LiveEpgReader)
     singleOf(::GuideReader)
+    single { tv.own.owntv.core.live.NowArt(get(), get(), get()) }
     singleOf(::SearchReader)
     singleOf(::HomeFeedReader)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).

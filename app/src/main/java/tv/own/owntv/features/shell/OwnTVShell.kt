@@ -1721,7 +1721,25 @@ fun OwnTVShell(
                     zapGuide = if (isLiveChannel) {
                         {
                             val guide by liveVm.zapGuide.collectAsStateWithLifecycle()
-                            tv.own.owntv.features.shell.components.ZapGuideLines(guide)
+                            // glcn: the programme's picture beside now/next — the banner as a TV operator draws it.
+                            val zapChannel = previewChannel
+                            val art by androidx.compose.runtime.produceState<String?>(null, zapChannel?.id, guide?.now?.startMs) {
+                                value = zapChannel?.let { runCatching { liveVm.nowFull(it)?.imageUrl }.getOrNull() }
+                            }
+                            androidx.compose.foundation.layout.Row(
+                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+                            ) {
+                                art?.takeIf { it.isNotBlank() }?.let { url ->
+                                    tv.own.owntv.ui.components.ProgrammeArt(
+                                        url = url,
+                                        modifier = Modifier
+                                            .padding(top = 10.dp)
+                                            .size(width = 192.dp, height = 108.dp)
+                                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp)),
+                                    )
+                                }
+                                tv.own.owntv.features.shell.components.ZapGuideLines(guide, Modifier.weight(1f, fill = false))
+                            }
                         }
                     } else null,
                     // Guide card for the playing channel (nowNext follows previewChannel = what's playing).

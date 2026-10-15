@@ -344,6 +344,17 @@
             </intent-filter>
         </activity>
 
+        <!-- glcn: screensaver with the fanart of what is on now and of the newest films/series. -->
+        <service
+            android:name=".glcn.FanartDream"
+            android:exported="true"
+            android:label="@string/glcn_screensaver_name"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

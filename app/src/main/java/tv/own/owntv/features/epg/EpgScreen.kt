@@ -432,6 +432,7 @@ fun EpgScreen(
 
         // glcn: the programme's picture behind the top of the guide, fading into the page.
         // The row read already carries the picture, so the backdrop no longer waits for the full programme.
+        tv.own.owntv.ui.components.ArtTint(shown?.imageUrl ?: topProgramme?.imageUrl, Modifier.matchParentSize(), strength = 0.45f)
         GuideBackdrop(shown?.imageUrl ?: topProgramme?.imageUrl, Modifier.align(Alignment.TopEnd))
         // glcn: warm the image cache with the pictures the cursor is about to reach — the rest of this
         // row and what is on now in the rows above and below — so the backdrop swaps without a wait.

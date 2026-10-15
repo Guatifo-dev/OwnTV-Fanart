@@ -712,7 +712,7 @@ fun LiveScreen(
                             )
                             tv.own.owntv.ui.stage.StageTool(
                                 text = stringResource(R.string.glcn_sports_now),
-                                icon = OwnTVIcon.LIVE_DOT,
+                                icon = OwnTVIcon.SPORTS,
                                 onClick = { sportsOpen = true },
                             )
                         }
@@ -871,7 +871,7 @@ fun LiveScreen(
                     )
                     tv.own.owntv.ui.stage.StageTool(
                         text = stringResource(R.string.glcn_sports_now),
-                        icon = OwnTVIcon.LIVE_DOT,
+                        icon = OwnTVIcon.SPORTS,
                         onClick = { sportsOpen = true },
                     )
                 }

@@ -633,6 +633,7 @@ private fun SeriesGrid(
             val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
+                tv.own.owntv.ui.components.ArtTint(titleInfo?.backdropUrl, Modifier.matchParentSize())
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
                 VodHeader(
                     section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
@@ -1594,7 +1595,7 @@ private fun EpisodeView(
                                 onLongClick = { openMenu(ep) },
                                 width = tileW, height = tileW * (189f / 336f),
                                 modifier = epModifierFor(index, ep),
-                            ) { filter -> EpisodeStill(episodeStillUrl(meta, series, "w780"), filter) }
+                            ) { filter -> EpisodeStill(episodeStillUrl(meta, series, "w780", ep.streamUrl), filter) }
                         }
                     }
                 }
@@ -1621,7 +1622,7 @@ private fun EpisodeView(
                                 modifier = epModifierFor(index, ep).fillMaxWidth(),
                             ) { focused ->
                                 Box(Modifier.size(224.mpx, 126.mpx).clip(RoundedCornerShape(14.mpx))) {
-                                    EpisodeStill(episodeStillUrl(meta, series, "w300"), null)
+                                    EpisodeStill(episodeStillUrl(meta, series, "w300", ep.streamUrl), null)
                                 }
                                 Column(Modifier.weight(1f)) {
                                     Text(
@@ -1714,7 +1715,7 @@ private fun EpisodeView(
         VodOptionsMenu(
             title = stringResource(R.string.content_episode_numbered, localizedInteger(ep.episodeNumber, grouping = false), title),
             subtitle = series.name + " · " + if (ep.seasonNumber == 0) stringResource(R.string.content_season_specials) else stringResource(R.string.content_season, ep.seasonNumber),
-            posterUrl = episodeStillUrl(seasonMeta[ep.id], series, "w300"),
+            posterUrl = episodeStillUrl(seasonMeta[ep.id], series, "w300", ep.streamUrl),
             x = 1290f,
             menu = ContentMenu.EPISODE,
             actions = actions,
@@ -1941,7 +1942,10 @@ private fun episodeStillUrl(
     meta: tv.own.owntv.core.database.entity.MetadataCacheEntity?,
     series: SeriesEntity,
     size: String,
+    streamUrl: String? = null,
 ): String? = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = size)
+    // glcn: an Emby episode has its own still on the server.
+    ?: tv.own.owntv.core.emby.EmbyPlayback.imageFor(streamUrl, if (size == "w780") 780 else 400)
     ?: series.backdropUrl?.takeIf { it.isNotBlank() } ?: series.posterUrl?.takeIf { it.isNotBlank() }
 
 @Composable

@@ -135,6 +135,7 @@ internal fun LiveCinematicPane(
 
     Box(modifier.fillMaxSize()) {
         // The picture fills the top right and dissolves into the page, as Movies' Cinematic does.
+        tv.own.owntv.ui.components.ArtTint(heroArt, Modifier.matchParentSize())
         VodCinematicBackdrop(heroArt, series = true, Modifier.align(Alignment.TopEnd))
 
         LiveCinematicHero(

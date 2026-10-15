@@ -50,6 +50,8 @@ enum class OwnTVIcon {
     EYE_OFF, MOVE, EXTERNAL, TRASH, MULTIVIEW, NOW, CALENDAR, TILES,
     // Audio mode's equaliser mark (the bar at rest, the rail's Now playing item).
     EQ,
+    // glcn: "Sports now" — a football.
+    SPORTS,
 }
 
 /** Parsed once: [StageGlyphPaths] in 24-unit coordinates. */
@@ -423,6 +425,19 @@ fun OwnTVIcon(
                 drawArc(tint, 60f, 90f, false, p(5.5f, 5.5f), Size(13f * s, 13f * s), style = stroke)
                 drawArc(tint, -125f, 100f, false, p(1.8f, 1.8f), Size(20.4f * s, 20.4f * s), style = stroke)
                 drawArc(tint, 55f, 100f, false, p(1.8f, 1.8f), Size(20.4f * s, 20.4f * s), style = stroke)
+            }
+            OwnTVIcon.SPORTS -> { // A football: the ring, the centre pentagon, and its five seams.
+                drawCircleStroke(p(12f, 12f), 9f * s, tint, stroke)
+                val pent = (0 until 5).map { i ->
+                    val a = Math.toRadians(-90.0 + i * 72.0)
+                    p(12f + 3.6f * kotlin.math.cos(a).toFloat(), 12f + 3.6f * kotlin.math.sin(a).toFloat())
+                }
+                drawPath(Path().apply { moveTo(pent[0].x, pent[0].y); pent.drop(1).forEach { lineTo(it.x, it.y) }; close() }, tint, style = Fill)
+                (0 until 5).forEach { i ->
+                    val a = Math.toRadians(-90.0 + i * 72.0)
+                    val c = kotlin.math.cos(a).toFloat(); val sn = kotlin.math.sin(a).toFloat()
+                    drawLineStroke(p(12f + 3.6f * c, 12f + 3.6f * sn), p(12f + 9f * c, 12f + 9f * sn), tint, stroke)
+                }
             }
             else -> Unit // drawn from StagePaths above
     }
