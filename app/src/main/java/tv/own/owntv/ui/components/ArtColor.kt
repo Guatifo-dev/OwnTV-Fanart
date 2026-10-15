@@ -39,6 +39,36 @@ object ArtColor {
         return Color(argb)
     }
 
+    private val plainCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+
+    /**
+     * glcn: a picture with nothing in it — a white placeholder, a flat colour with a small logo — which
+     * makes a card look broken. Judged on a 24-pixel copy: almost no variation, or near-white almost
+     * everywhere.
+     */
+    suspend fun isPlain(context: android.content.Context, url: String): Boolean {
+        plainCache[url]?.let { return it }
+        val plain = withContext(Dispatchers.IO) {
+            runCatching {
+                val request = coil3.request.ImageRequest.Builder(context).data(url).size(24, 24).allowHardware(false).build()
+                val result = coil3.SingletonImageLoader.get(context).execute(request)
+                val bmp = ((result as? coil3.request.SuccessResult)?.image as? coil3.BitmapImage)?.bitmap ?: return@runCatching false
+                var sum = 0.0; var sum2 = 0.0; var n = 0
+                for (y in 0 until bmp.height) for (x in 0 until bmp.width) {
+                    val c = bmp.getPixel(x, y)
+                    val l = (0.299 * android.graphics.Color.red(c) + 0.587 * android.graphics.Color.green(c) + 0.114 * android.graphics.Color.blue(c)) / 255.0
+                    sum += l; sum2 += l * l; n++
+                }
+                if (n == 0) return@runCatching false
+                val mean = sum / n
+                val std = kotlin.math.sqrt((sum2 / n - mean * mean).coerceAtLeast(0.0))
+                std < 0.06 || (mean > 0.82 && std < 0.14)
+            }.getOrDefault(false)
+        }
+        plainCache[url] = plain
+        return plain
+    }
+
     private fun dominant(bmp: android.graphics.Bitmap): Int? {
         var r = 0L; var g = 0L; var b = 0L; var weight = 0L
         val hsv = FloatArray(3)
@@ -58,6 +88,16 @@ object ArtColor {
         hsv[2] = 0.32f
         return android.graphics.Color.HSVToColor(hsv)
     }
+}
+
+/** glcn: true once [url] is known to be a blank placeholder picture. */
+@Composable
+fun rememberPlainArt(url: String?): Boolean {
+    val context = LocalContext.current
+    val plain by produceState(false, url) {
+        value = !url.isNullOrBlank() && ArtColor.isPlain(context, url)
+    }
+    return plain
 }
 
 /** The tone of [url]'s picture, or null while it loads or when there is none. */

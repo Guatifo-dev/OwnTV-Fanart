@@ -337,7 +337,7 @@ internal fun LiveChannelCard(
             // Bottom shade so the text reads on any picture.
             Box(
                 Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.88f)),
+                    Brush.verticalGradient(0.25f to Color.Transparent, 0.6f to Color.Black.copy(alpha = 0.7f), 1f to Color.Black.copy(alpha = 0.95f)),
                 ),
             )
             Box(Modifier.align(Alignment.TopStart).padding(12.mpx)) {

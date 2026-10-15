@@ -167,7 +167,9 @@ internal fun ArtLiveCard(
 ) {
     val a = stageAccent
     val setArt = LocalHomeFocusArt.current
-    val art = programme?.imageUrl?.takeIf { it.isNotBlank() }
+    val rawArt = programme?.imageUrl?.takeIf { it.isNotBlank() }
+    // A blank placeholder picture reads as a broken card: the channel's logo stands in for it.
+    val art = rawArt?.takeUnless { tv.own.owntv.ui.components.rememberPlainArt(it) }
     StageSurface(
         onClick = onClick,
         radius = StageRadii.Row,
@@ -187,7 +189,7 @@ internal fun ArtLiveCard(
             }
             Box(
                 Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.88f)),
+                    Brush.verticalGradient(0.25f to Color.Transparent, 0.6f to Color.Black.copy(alpha = 0.7f), 1f to Color.Black.copy(alpha = 0.95f)),
                 ),
             )
             if (art != null) ChannelPlate(channel, Modifier.padding(12.mpx).size(66.mpx, 44.mpx))
@@ -206,7 +208,7 @@ internal fun ArtLiveCard(
             }
             Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 16.mpx, vertical = 12.mpx)) {
                 Text(
-                    programme?.title ?: channel.name,
+                    programme?.title?.let(SportsNow::displayTitle) ?: channel.name,
                     style = stageText(20, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 val line = when {
@@ -357,8 +359,8 @@ internal fun FeaturedBillboard(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.85f), 0.55f to Color.Black.copy(alpha = 0.25f), 1f to Color.Transparent)))
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.7f))))
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.92f), 0.5f to Color.Black.copy(alpha = 0.55f), 1f to Color.Black.copy(alpha = 0.1f))))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.4f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))))
         }
         Column(
             Modifier.align(Alignment.BottomStart).padding(start = 48.mpx, bottom = 40.mpx).widthIn(max = 900.mpx),
@@ -377,7 +379,7 @@ internal fun FeaturedBillboard(
             }
             Text(
                 when (item) {
-                    is FeaturedItem.Live -> item.programme.title
+                    is FeaturedItem.Live -> SportsNow.displayTitle(item.programme.title)
                     is FeaturedItem.Movie -> item.movie.name
                     is FeaturedItem.Series -> item.series.name
                 },
