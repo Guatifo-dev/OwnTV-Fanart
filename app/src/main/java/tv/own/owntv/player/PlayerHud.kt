@@ -456,6 +456,26 @@ fun PlayerHud(
             RemoteShortcutAction.OPEN_AUDIO_CONTROLS -> { controlsVisible = true; dialog = HudDialog.AUDIO }
             RemoteShortcutAction.OPEN_ASPECT_CONTROLS -> { controlsVisible = true; dialog = HudDialog.ZOOM }
             RemoteShortcutAction.TOGGLE_PLAYBACK_INFO -> showInfo = !showInfo
+            // glcn: the SHIELD remote's one-touch actions.
+            RemoteShortcutAction.CHANNEL_NEXT -> if (canZap) zap(1)
+            RemoteShortcutAction.CHANNEL_PREVIOUS -> if (canZap) zap(-1)
+            RemoteShortcutAction.OPEN_CHANNEL_LIST -> onOpenChannelList?.invoke() ?: remoteShortcuts.dispatch(action)
+            RemoteShortcutAction.TOGGLE_FAVORITE -> onToggleFavorite?.invoke()
+            RemoteShortcutAction.RECORD -> onRecordThis?.invoke()
+            RemoteShortcutAction.SLEEP_TIMER -> { controlsVisible = true; dialog = HudDialog.SLEEP_TIMER }
+            RemoteShortcutAction.TOGGLE_ENGINE -> (onToggleCompatMode ?: onToggleVodEngine)?.invoke()
+            RemoteShortcutAction.NEXT_AUDIO_TRACK -> {
+                val tracks = player.audioTracks()
+                if (tracks.size > 1) {
+                    val i = tracks.indexOfFirst { it.selected }
+                    player.selectAudio(tracks[(i + 1).mod(tracks.size)].mpvId)
+                }
+            }
+            RemoteShortcutAction.TOGGLE_SUBTITLES -> {
+                val subs = player.textTracks()
+                if (subs.any { it.selected }) player.disableSubtitles()
+                else subs.firstOrNull { !it.image } ?.let { player.selectSubtitle(it.mpvId) } ?: subs.firstOrNull()?.let { player.selectSubtitle(it.mpvId) }
+            }
             else -> remoteShortcuts.dispatch(action)
         }
     }
@@ -520,7 +540,9 @@ fun PlayerHud(
                         it.action != RemoteShortcutAction.PAGE_TOWARD_FIRST &&
                         it.action != RemoteShortcutAction.PAGE_TOWARD_LAST &&
                         it.action != RemoteShortcutAction.JUMP_TO_FIRST &&
-                        it.action != RemoteShortcutAction.JUMP_TO_LAST
+                        it.action != RemoteShortcutAction.JUMP_TO_LAST &&
+                        // glcn: a live-TV action leaves the button to its own job elsewhere (⏪ ⏩ seek a film).
+                        (canZap || it.action !in tv.own.owntv.core.settings.RemoteShortcutBindings.liveOnly)
                 }
                 if (keyBindings.isNotEmpty()) {
                     when (e.type) {

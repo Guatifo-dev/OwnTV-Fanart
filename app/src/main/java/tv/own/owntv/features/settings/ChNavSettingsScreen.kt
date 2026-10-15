@@ -392,6 +392,15 @@ private fun remoteActionLabel(action: RemoteShortcutAction): String = stringReso
         RemoteShortcutAction.OPEN_AUDIO_CONTROLS -> R.string.player_tool_audio
         RemoteShortcutAction.OPEN_ASPECT_CONTROLS -> R.string.player_tool_aspect
         RemoteShortcutAction.TOGGLE_PLAYBACK_INFO -> R.string.player_tool_info
+        RemoteShortcutAction.CHANNEL_NEXT -> R.string.glcn_remote_channel_next
+        RemoteShortcutAction.CHANNEL_PREVIOUS -> R.string.glcn_remote_channel_previous
+        RemoteShortcutAction.OPEN_CHANNEL_LIST -> R.string.glcn_remote_channel_list
+        RemoteShortcutAction.TOGGLE_FAVORITE -> R.string.glcn_remote_favorite
+        RemoteShortcutAction.RECORD -> R.string.glcn_remote_record
+        RemoteShortcutAction.SLEEP_TIMER -> R.string.player_sleep_timer
+        RemoteShortcutAction.TOGGLE_ENGINE -> R.string.glcn_remote_engine
+        RemoteShortcutAction.NEXT_AUDIO_TRACK -> R.string.glcn_remote_next_audio
+        RemoteShortcutAction.TOGGLE_SUBTITLES -> R.string.glcn_remote_subtitles
     },
 )
 
@@ -417,6 +426,15 @@ private fun remoteActionIcon(action: RemoteShortcutAction): OwnTVIcon = when (ac
     RemoteShortcutAction.OPEN_ASPECT_CONTROLS -> OwnTVIcon.ASPECT
     RemoteShortcutAction.TOGGLE_PLAYBACK_INFO -> OwnTVIcon.INFO
     RemoteShortcutAction.PREVIOUS_CHANNEL -> OwnTVIcon.HISTORY
+    RemoteShortcutAction.CHANNEL_NEXT -> OwnTVIcon.CHEVRON_UP
+    RemoteShortcutAction.CHANNEL_PREVIOUS -> OwnTVIcon.CHEVRON_DOWN
+    RemoteShortcutAction.OPEN_CHANNEL_LIST -> OwnTVIcon.LIST_GRID
+    RemoteShortcutAction.TOGGLE_FAVORITE -> OwnTVIcon.FAVORITE
+    RemoteShortcutAction.RECORD -> OwnTVIcon.REC
+    RemoteShortcutAction.SLEEP_TIMER -> OwnTVIcon.BEDTIME
+    RemoteShortcutAction.TOGGLE_ENGINE -> OwnTVIcon.SWAP
+    RemoteShortcutAction.NEXT_AUDIO_TRACK -> OwnTVIcon.AUDIO
+    RemoteShortcutAction.TOGGLE_SUBTITLES -> OwnTVIcon.SUBTITLE
 }
 
 private const val CAPTURE_LONG_PRESS_MS = 600L

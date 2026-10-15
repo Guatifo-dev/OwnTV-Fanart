@@ -80,8 +80,9 @@ fun Modifier.chNavPaging(
                     val current = currentTargetIndex()
                     val last = lastIndex()
                     val target = when (selected.action) {
-                        RemoteShortcutAction.PAGE_TOWARD_FIRST -> current - upSkip
-                        RemoteShortcutAction.PAGE_TOWARD_LAST -> current + downSkip
+                        // glcn: "previous / next channel" is a page in a list.
+                        RemoteShortcutAction.PAGE_TOWARD_FIRST, RemoteShortcutAction.CHANNEL_PREVIOUS -> current - upSkip
+                        RemoteShortcutAction.PAGE_TOWARD_LAST, RemoteShortcutAction.CHANNEL_NEXT -> current + downSkip
                         RemoteShortcutAction.JUMP_TO_FIRST -> if (longPressEnabled()) 0 else current
                         RemoteShortcutAction.JUMP_TO_LAST -> if (longPressEnabled()) last else current
                         else -> {

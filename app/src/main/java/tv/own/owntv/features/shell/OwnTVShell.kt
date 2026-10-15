@@ -780,6 +780,22 @@ fun OwnTVShell(
             RemoteShortcutAction.PLAY_PAUSE -> if (playerMode != PlayerMode.NONE) dockedEngine.togglePlayPause()
             RemoteShortcutAction.RETURN_TO_LIVE -> if (playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV && timeshifted) liveVm.goToLive()
             RemoteShortcutAction.PREVIOUS_CHANNEL -> if (playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV) liveVm.previousChannel()
+            // glcn: the channel list over live TV — from the mini player too; elsewhere, Live TV.
+            RemoteShortcutAction.OPEN_CHANNEL_LIST -> when {
+                playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV -> {
+                    if (playerMode != PlayerMode.FULLSCREEN) expandPlayer()
+                    showChannelList = true
+                }
+                else -> openShortcutSection(MainSection.LIVE_TV)
+            }
+            RemoteShortcutAction.TOGGLE_FAVORITE -> if (playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV) previewChannel?.let { liveVm.toggleFavorite(it) }
+            RemoteShortcutAction.CHANNEL_NEXT,
+            RemoteShortcutAction.CHANNEL_PREVIOUS,
+            RemoteShortcutAction.RECORD,
+            RemoteShortcutAction.SLEEP_TIMER,
+            RemoteShortcutAction.TOGGLE_ENGINE,
+            RemoteShortcutAction.NEXT_AUDIO_TRACK,
+            RemoteShortcutAction.TOGGLE_SUBTITLES,
             RemoteShortcutAction.PAGE_TOWARD_FIRST,
             RemoteShortcutAction.PAGE_TOWARD_LAST,
             RemoteShortcutAction.JUMP_TO_FIRST,

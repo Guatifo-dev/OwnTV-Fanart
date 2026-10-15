@@ -78,11 +78,11 @@ import tv.own.owntv.ui.theme.glass
 internal object GuideGridDefaults {
     /** The channel column when the guide widths are not customised (P4-01: 48 → 344 of 1920). */
     const val ChannelColShare = 296f / 1920f
-    /** `.gcell` rows: 56 high, 62 apart. */
-    val RowHeight = 56.mpx
+    /** `.gcell` rows — glcn: 74 high (was 56), so the title and its time read from the sofa. */
+    val RowHeight = 74.mpx
     val RowGap = 6.mpx
-    /** 3.5 hours across the mockup's 1512 px timeline. */
-    val PxPerMin = 7.2.mpx
+    /** glcn: about 2.6 hours across the timeline (was 3.5), so half-hour programmes are wide enough to read. */
+    val PxPerMin = 9.6.mpx
     const val SlotMin = 30
 }
 
@@ -110,8 +110,8 @@ internal fun ProgrammeStripCanvas(
     val a = tv.own.owntv.ui.theme.stageAccent
     val px = with(density) { 1.mpx.toPx() }
     val pxPerMin = with(density) { GuideGridDefaults.PxPerMin.toPx() }
-    val titleStyle = tv.own.owntv.ui.theme.stageText(18, 700).copy(textDirection = TextDirection.Content)
-    val timeStyle = tv.own.owntv.ui.theme.stageText(14, 400).copy(fontFeatureSettings = "tnum", textDirection = TextDirection.Content)
+    val titleStyle = tv.own.owntv.ui.theme.stageText(21, 700).copy(textDirection = TextDirection.Content)
+    val timeStyle = tv.own.owntv.ui.theme.stageText(16, 500).copy(fontFeatureSettings = "tnum", textDirection = TextDirection.Content)
     val formatTime = rememberSystemTimeFormatter()
     val rangeTemplate = stringResource(R.string.content_live_time_range_plain)
     val labels = remember(programmes, formatTime, rangeTemplate) {
@@ -188,10 +188,12 @@ internal fun ProgrammeStripCanvas(
             val smallColor = if (focused) Color.Black.copy(alpha = 0.6f) else dimColor.copy(alpha = fade)
             val iconColor = if (focused) a.onAccent else a.accent.copy(alpha = fade)
             val title = measurer.measure(p.title, titleStyle.copy(color = titleColor), overflow = TextOverflow.Ellipsis, maxLines = 1, softWrap = false, constraints = Constraints(maxWidth = textW))
-            drawText(title, topLeft = Offset(tx + 14 * px, 8 * px))
+            // glcn: title and time centred in the (taller) row together.
+            val textTop = ((h - title.size.height - 3 * px - 20 * px) / 2f).coerceAtLeast(8 * px)
+            drawText(title, topLeft = Offset(tx + 14 * px, textTop))
             // The small line: icons first, 8 apart, then the time.
             var cx = tx + 14 * px
-            val lineTop = 8 * px + title.size.height + 3 * px
+            val lineTop = textTop + title.size.height + 3 * px
             val icon = 14 * px
             fun glyph(g: OwnTVIcon, c: Color, filled: Boolean = false) {
                 if (cx + icon > x + w - 14 * px) return

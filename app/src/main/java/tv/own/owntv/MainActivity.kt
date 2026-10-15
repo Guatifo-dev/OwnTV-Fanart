@@ -230,6 +230,8 @@ open class MainActivity : ComponentActivity() {
                 quietSystemClicks()
             }
         }
+        // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
+        lifecycleScope.launch { runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() } }
         if (savedInstanceState == null) lifecycleScope.launch {
             if (glcnSettings.startupSound.first()) {
                 val season = if (glcnSettings.seasonMode.first() > 0) tv.own.owntv.core.theme.Seasons.current()

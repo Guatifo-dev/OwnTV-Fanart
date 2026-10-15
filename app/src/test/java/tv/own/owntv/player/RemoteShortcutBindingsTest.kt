@@ -15,8 +15,8 @@ class RemoteShortcutBindingsTest {
     fun defaultsPreserveCurrentBrowsePaging() {
         assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_CHANNEL_UP, RemoteShortcutPress.SHORT, RemoteShortcutAction.PAGE_TOWARD_FIRST) in RemoteShortcutBindings.defaults)
         assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_CHANNEL_DOWN, RemoteShortcutPress.LONG, RemoteShortcutAction.JUMP_TO_LAST) in RemoteShortcutBindings.defaults)
-        assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_MEDIA_REWIND, RemoteShortcutPress.LONG, RemoteShortcutAction.JUMP_TO_FIRST) in RemoteShortcutBindings.defaults)
-        assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, RemoteShortcutPress.SHORT, RemoteShortcutAction.PAGE_TOWARD_LAST) in RemoteShortcutBindings.defaults)
+        assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_MEDIA_REWIND, RemoteShortcutPress.LONG, RemoteShortcutAction.PREVIOUS_CHANNEL) in RemoteShortcutBindings.defaults)
+        assertTrue(RemoteShortcutBinding(KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, RemoteShortcutPress.SHORT, RemoteShortcutAction.CHANNEL_NEXT) in RemoteShortcutBindings.defaults)
     }
 
     @Test
