@@ -590,6 +590,47 @@ fun HomeScreen(
                             track = track,
                             modifier = rowModifier,
                         )
+
+                        HomeRow.SPORTS_NOW -> HomeLiveRow(
+                            title = row.displayTitle(),
+                            mode = HomeLiveRowMode.ON_NOW,
+                            channels = state.sportsGuide.channels,
+                            guide = state.sportsGuide,
+                            onChannelClick = onPlayChannel,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            start = contentStart,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        HomeRow.RECENT_MOVIES -> FavoritePosterRow(
+                            title = row.displayTitle(),
+                            items = state.recentMovies,
+                            key = { it.id },
+                            name = { it.name },
+                            poster = { it.posterUrl },
+                            start = contentStart,
+                            onItemClick = onOpenMovie,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        HomeRow.RECENT_SERIES -> FavoritePosterRow(
+                            title = row.displayTitle(),
+                            items = state.recentSeries,
+                            key = { it.id },
+                            name = { it.name },
+                            poster = { it.posterUrl },
+                            start = contentStart,
+                            onItemClick = onOpenSeries,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
                     }
                 }
             }
@@ -657,6 +698,9 @@ private fun rowHasData(row: HomeRow, state: HomeUiState): Boolean = when (row) {
     HomeRow.FAVORITE_SERIES -> state.favoriteSeries.isNotEmpty()
     HomeRow.CONTINUE_MOVIES -> state.continueMovies.isNotEmpty()
     HomeRow.CONTINUE_SERIES -> state.continueSeries.isNotEmpty()
+    HomeRow.SPORTS_NOW -> state.sportsGuide.hasContent
+    HomeRow.RECENT_MOVIES -> state.recentMovies.isNotEmpty()
+    HomeRow.RECENT_SERIES -> state.recentSeries.isNotEmpty()
 }
 
 private fun rowCanRender(row: HomeRow, state: HomeUiState, showHeroFallback: Boolean): Boolean =
