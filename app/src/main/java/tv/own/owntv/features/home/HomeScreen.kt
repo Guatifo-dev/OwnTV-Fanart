@@ -400,7 +400,7 @@ fun HomeScreen(
                     // brings the top of the page (the greeting) back, not just the row itself.
                     Box(
                         if (row == renderRows.firstOrNull() && !fullBleed) Modifier.onFocusChanged {
-                            if (it.hasFocus) homeScope.launch { runCatching { listState.animateScrollToItem(0) } }
+                            if (it.hasFocus) homeScope.launch { scrollHomeToTop(listState) }
                         } else Modifier,
                     ) {
                     val firstItemFocusRequester = rowFocusRequester(row)
@@ -621,7 +621,7 @@ fun HomeScreen(
                                 onNonHeroFocused()
                                 // The billboard's button sits at its foot: bring the whole page top — the
                                 // greeting and the picture — back into view, not just the button.
-                                homeScope.launch { runCatching { listState.animateScrollToItem(0) } }
+                                homeScope.launch { scrollHomeToTop(listState) }
                             },
                             firstItemFocusRequester = firstItemFocusRequester,
                             start = contentStart,
@@ -1612,5 +1612,19 @@ private fun KeepWatchingMenu(title: String, onRemove: () -> Unit, onDismiss: () 
                 )
             }
         }
+    }
+}
+
+/**
+ * glcn: back to the very top of Home (the greeting) once the first row has focus. The focus change
+ * starts its own bring-into-view scroll in the same frame, which used to cancel this one now and then
+ * and leave the page short of the top: wait for it, then scroll, and make sure.
+ */
+private suspend fun scrollHomeToTop(listState: androidx.compose.foundation.lazy.LazyListState) {
+    kotlinx.coroutines.delay(120)
+    runCatching { listState.animateScrollToItem(0) }
+    if (listState.firstVisibleItemIndex != 0 || listState.firstVisibleItemScrollOffset != 0) {
+        kotlinx.coroutines.delay(60)
+        runCatching { listState.scrollToItem(0) }
     }
 }
