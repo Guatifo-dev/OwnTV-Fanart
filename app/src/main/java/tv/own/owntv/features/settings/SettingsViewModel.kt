@@ -1012,6 +1012,11 @@ class SettingsViewModel(
         viewModelScope.launch { settings.setLiveStageWidths(enabled, widths) }
     }
 
+    // glcn: seasonal themes — 0 off, 1 details, 2 details and animations.
+    val seasonMode: StateFlow<Int> =
+        settings.seasonMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleSeasonMode() { viewModelScope.launch { settings.setSeasonMode((seasonMode.value + 1) % 3) } }
+
     val ambientGlowEnabled: StateFlow<Boolean> =
         settings.ambientGlowEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setAmbientGlowEnabled(enabled: Boolean) { viewModelScope.launch { settings.setAmbientGlowEnabled(enabled) } }

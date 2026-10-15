@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,10 +37,12 @@ fun ProgrammeArt(
     tolerance: Float = 0.18f,
 ) {
     var imageRatio by remember(url) { mutableStateOf<Float?>(null) }
-    BoxWithConstraints(modifier) {
-        val boxRatio = if (constraints.hasBoundedHeight && constraints.maxHeight > 0) {
-            constraints.maxWidth.toFloat() / constraints.maxHeight
-        } else 16f / 9f
+    // glcn: the box's shape from its measured size — no subcomposition per card (BoxWithConstraints),
+    // which is what a row of fifty pictures pays for on every scroll.
+    var boxRatio by remember { mutableStateOf(16f / 9f) }
+    androidx.compose.foundation.layout.Box(
+        modifier.onSizeChanged { if (it.width > 0 && it.height > 0) boxRatio = it.width.toFloat() / it.height },
+    ) {
         val r = imageRatio
         val fits = r == null || abs(r / boxRatio - 1f) <= tolerance
         if (fits) {

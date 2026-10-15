@@ -364,6 +364,7 @@ fun SettingsScreen(
     val animationLevel by settingsVm.animationLevel.collectAsStateWithLifecycle()
     val vodLayout by settingsVm.vodLayout.collectAsStateWithLifecycle()
     val ambientGlowEnabled by settingsVm.ambientGlowEnabled.collectAsStateWithLifecycle()
+    val seasonMode by settingsVm.seasonMode.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
     LaunchedEffect(glassOn, themeMode) {
         if (glassOn || themeMode != ThemeMode.DARK) showAmbientGlow = false
@@ -648,6 +649,21 @@ fun SettingsScreen(
             focus = ambientGlowRowFocus,
             onClick = { saveScroll(); dialogReturn = ambientGlowRowFocus; showAmbientGlow = true },
         ) else null,
+        // glcn: seasonal themes — OK steps Off → Details → Animated.
+        RootRow(
+            "glcn_season", TileTone.SECONDARY, OwnTVIcon.THEME,
+            title = stringResource(R.string.glcn_season_title),
+            desc = stringResource(R.string.glcn_season_desc),
+            chip = stringResource(
+                when (seasonMode) {
+                    1 -> R.string.glcn_season_details
+                    2 -> R.string.glcn_season_animated
+                    else -> R.string.common_off
+                },
+            ),
+            chipTone = if (seasonMode > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleSeasonMode() },
+        ),
         RootRow(
             "fonts", TileTone.SECONDARY, OwnTVIcon.TEXT_SIZE,
             title = stringResource(R.string.settings_font_customization),

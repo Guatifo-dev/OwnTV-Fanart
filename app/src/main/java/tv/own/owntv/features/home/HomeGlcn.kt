@@ -84,7 +84,8 @@ internal val LocalHomeFocusArt = staticCompositionLocalOf<(String?) -> Unit> { {
 @Composable
 internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
     var settled by remember { mutableStateOf(url) }
-    LaunchedEffect(url) { if (url != settled) { delay(160); settled = url } }
+    // glcn: long enough that holding ◀ ▶ across a row does not load a picture per card.
+    LaunchedEffect(url) { if (url != settled) { delay(350); settled = url } }
     Box(modifier.fillMaxSize()) {
         tv.own.owntv.ui.components.ArtTint(settled, Modifier.fillMaxSize(), strength = 0.55f)
         Box(
@@ -116,7 +117,7 @@ internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
 
 /** "Buenas noches, Carlos" and the time, above the first row. */
 @Composable
-internal fun HomeGreeting(name: String?, start: Dp) {
+internal fun HomeGreeting(name: String?, start: Dp, mark: String? = null) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(30_000); now = System.currentTimeMillis() } }
     val hour = remember(now) { java.util.Calendar.getInstance().apply { timeInMillis = now }.get(java.util.Calendar.HOUR_OF_DAY) }
@@ -132,7 +133,7 @@ internal fun HomeGreeting(name: String?, start: Dp) {
     val date = remember(now) { java.text.SimpleDateFormat("EEEE d MMMM", java.util.Locale.getDefault()).format(java.util.Date(now)) }
     Column(Modifier.padding(start = start, bottom = 6.mpx)) {
         Text(
-            listOfNotNull(greeting, name?.takeIf { it.isNotBlank() }).joinToString(", "),
+            listOfNotNull(greeting, name?.takeIf { it.isNotBlank() }).joinToString(", ") + (mark?.let { "  $it" } ?: ""),
             style = stageText(34, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
         )
         Text(

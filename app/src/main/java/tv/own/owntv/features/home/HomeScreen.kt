@@ -163,6 +163,8 @@ fun HomeScreen(
      * (A plain request on the content area drills to the nearest card instead.) Null on leaving.
      */
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
+    /** glcn: false while the player covers Home — the seasonal animations rest then. */
+    seasonActive: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -368,12 +370,17 @@ fun HomeScreen(
         } else false
     }
 
+    // glcn: seasonal touches (Settings → Appearance), the season read once per visit to Home.
+    val seasonSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
+    val seasonMode by seasonSettings.seasonMode.collectAsStateWithLifecycle(initialValue = 0)
+    val season = remember { tv.own.owntv.core.theme.Seasons.current() }
     // glcn: the picture of the focused card, behind the rows.
     var focusArt by remember { mutableStateOf<String?>(null) }
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
         if (trendingItem == null && posterItem == null) HomeFocusBackdrop(focusArt)
+        if (seasonMode > 0 && seasonActive) Seasonal.Behind(season, animated = seasonMode == 2)
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
         CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }) {
@@ -388,7 +395,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
-                if (!fullBleed) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart) }
+                if (!fullBleed) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null) }
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
                     // glcn: whichever row is first — the billboard, Keep watching or any other — reaching it
                     // brings the top of the page (the greeting) back, not just the row itself.
@@ -703,6 +710,7 @@ fun HomeScreen(
                     }
                 }
             }
+        if (seasonMode > 0 && seasonActive) Seasonal.Front(season, animated = seasonMode == 2)
         }
     }
 

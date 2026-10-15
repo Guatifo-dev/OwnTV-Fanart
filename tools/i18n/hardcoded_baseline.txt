@@ -18,6 +18,8 @@
 1	app/src/main/java/tv/own/owntv/features/customize/CustomizeViewModel.kt	Custom
 1	app/src/main/java/tv/own/owntv/features/customize/MoveToCategoryDialog.kt	new
 1	app/src/main/java/tv/own/owntv/features/epg/EpgScreen.kt	·
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	\0
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$it
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$startLabel · ${channel.name}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	${t.channel.id}:${t.programme.startMs}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	,
@@ -29,6 +31,10 @@
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
+1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🐈‍⬛
+1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	👻
+1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🦇
+1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🦌🦌🛷
 1	app/src/main/java/tv/own/owntv/features/live/LiveCinematic.kt	·
 1	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
 1	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w780
@@ -53,6 +59,7 @@
 2	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	#FFFFFF
 1	app/src/main/java/tv/own/owntv/features/shell/components/ChannelListOverlay.kt	–
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_season
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	\0
 2	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	·
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	–
