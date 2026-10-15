@@ -12,8 +12,8 @@ pictures first: the guide's fanart across Home, Live TV and the guide, and a few
 
 | Device | Latest release |
 |---|---|
-| Android TV (NVIDIA SHIELD, Google TV, Fire TV…) | [OwnTV-glcn.apk](https://github.com/carlosglcn/OwnTV_glcn/releases/latest/download/OwnTV-glcn.apk) |
-| Android phone / tablet | [OwnTV-Mobile-glcn.apk](https://github.com/carlosglcn/OwnTV_Mobile_glcn/releases/latest/download/OwnTV-Mobile-glcn.apk) |
+| Android TV (NVIDIA SHIELD, Google TV, Fire TV…) | [OwnTV-Fanart.apk](https://github.com/carlosglcn/OwnTV_glcn/releases/latest/download/OwnTV-Fanart.apk) |
+| Android phone / tablet | [OwnTV-Fanart-Mobile.apk](https://github.com/carlosglcn/OwnTV_Mobile_glcn/releases/latest/download/OwnTV-Fanart-Mobile.apk) |
 
 It installs **beside** the official app (its own package, `tv.own.owntv.glcn`), and tells you in-app when a new version is out.
 

@@ -232,6 +232,14 @@ open class MainActivity : ComponentActivity() {
         }
         // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
         lifecycleScope.launch { runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() } }
+        // glcn: the Fanart icon once, on a TV that had chosen another colour of the old icon.
+        lifecycleScope.launch {
+            runCatching {
+                if (glcnSettings.takeGlcnIconOnce()) {
+                    tv.own.owntv.core.brand.AppIconSwitcher.apply(this@MainActivity, tv.own.owntv.core.brand.AppIcon.DEFAULT)
+                }
+            }
+        }
         if (savedInstanceState == null) lifecycleScope.launch {
             if (glcnSettings.startupSound.first()) {
                 val season = if (glcnSettings.seasonMode.first() > 0) tv.own.owntv.core.theme.Seasons.current()

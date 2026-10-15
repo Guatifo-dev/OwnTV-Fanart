@@ -5,8 +5,8 @@ name: Build glcn
 # installs next to the official OwnTV.
 #
 # Output:
-#   - Release "glcn-latest" with OwnTV-glcn.apk  →
-#     https://github.com/carlosglcn/OwnTV_glcn/releases/download/glcn-latest/OwnTV-glcn.apk
+#   - Release "glcn-latest" with OwnTV-Fanart.apk  →
+#     https://github.com/carlosglcn/OwnTV_glcn/releases/download/glcn-latest/OwnTV-Fanart.apk
 #   - Branch "ci-status": status.txt + build.log (last lines), so the result can be read with git.
 on:
   push:
@@ -76,7 +76,7 @@ jobs:
         if: success()
         run: |
           APK=$(ls app/build/outputs/apk/standard/release/*.apk | head -1)
-          mkdir -p dist && cp "$APK" dist/OwnTV-glcn.apk
+          mkdir -p dist && cp "$APK" dist/OwnTV-Fanart.apk
           ls -la dist
 
       - name: Publish releases
@@ -86,12 +86,12 @@ jobs:
         run: |
           NOTES="Build ${GITHUB_SHA::7} — core $(tr -d '[:space:]' < glcn/core.ref | cut -c1-7)"
           # Versioned release: what the in-app updater reads (releases/latest).
-          gh release create "v$VERSION_NAME" dist/OwnTV-glcn.apk \
-            --title "OwnTV glcn $VERSION_NAME" --notes "$NOTES" --target "$GITHUB_SHA" --latest
+          gh release create "v$VERSION_NAME" dist/OwnTV-Fanart.apk \
+            --title "OwnTV Fanart $VERSION_NAME" --notes "$NOTES" --target "$GITHUB_SHA" --latest
           # Fixed link for Downloader, kept as a pre-release so it is never "latest".
           gh release delete glcn-latest --yes --cleanup-tag || true
-          gh release create glcn-latest dist/OwnTV-glcn.apk \
-            --title "OwnTV glcn (enlace fijo)" --notes "$NOTES" --target "$GITHUB_SHA" --prerelease
+          gh release create glcn-latest dist/OwnTV-Fanart.apk \
+            --title "OwnTV Fanart (enlace fijo)" --notes "$NOTES" --target "$GITHUB_SHA" --prerelease
           # Keep the three newest versioned releases.
           gh release list --limit 100 --json tagName,createdAt --jq 'map(select(.tagName|startswith("v")))|sort_by(.createdAt)|reverse|.[3:]|.[].tagName' \
             | while read -r t; do gh release delete "$t" --yes --cleanup-tag || true; done
