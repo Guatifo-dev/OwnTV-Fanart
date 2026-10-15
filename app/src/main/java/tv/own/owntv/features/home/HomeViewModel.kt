@@ -98,6 +98,10 @@ data class HomeUiState(
     val sportsGuide: GuideSliceState = GuideSliceState(),
     val recentMovies: List<MovieEntity> = emptyList(),
     val recentSeries: List<SeriesEntity> = emptyList(),
+    val featured: List<tv.own.owntv.core.home.FeaturedItem> = emptyList(),
+    val tonight: List<tv.own.owntv.core.home.TonightItem> = emptyList(),
+    val genres: List<tv.own.owntv.core.home.GenreRow> = emptyList(),
+    val profileName: String? = null,
     /**
      * True until the first [HomeViewModel.loadHomeData] completes. Home's queries are profile-scoped and
      * already indexed, but on a cold boot their first reads come off slow eMMC (pages not yet in the OS
@@ -143,7 +147,28 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
+    private val reminderManager: tv.own.owntv.core.reminder.ReminderManager,
 ) : ViewModel() {
+
+    // --- glcn: "Tonight" reminders ----------------------------------------------------------------
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val reminderRows: StateFlow<List<tv.own.owntv.core.database.entity.ReminderEntity>> =
+        settings.activeProfileId
+            .flatMapLatest { pid -> if (pid < 0) kotlinx.coroutines.flow.flowOf(emptyList()) else reminderManager.observe(pid) }
+            .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun toggleTonightReminder(item: tv.own.owntv.core.home.TonightItem) {
+        viewModelScope.launch {
+            val existing = reminderRows.value.firstOrNull { it.channelId == item.channel.id && it.startMs == item.programme.startMs }
+            if (existing != null) { reminderManager.dismiss(existing.id); return@launch }
+            val pid = settings.activeProfileId.first().takeIf { it >= 0 } ?: return@launch
+            reminderManager.add(
+                pid, item.channel.id, item.channel.name, item.channel.epgChannelId, item.programme.title,
+                item.programme.startMs, item.programme.stopMs, settings.reminderLeadMinutes.first(),
+            )
+        }
+    }
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -429,6 +454,10 @@ class HomeViewModel(
             sportsGuide = data.sportsGuide,
             recentMovies = data.recentMovies,
             recentSeries = data.recentSeries,
+            featured = data.featured,
+            tonight = data.tonight,
+            genres = data.genres,
+            profileName = data.profileName,
             isLoading = false,
         )
         tv.own.owntv.core.util.Perf.stamp("home-data")

@@ -17,6 +17,16 @@
 1	app/src/main/java/tv/own/owntv/features/customize/CustomizeScreen.kt	hid:${entry.key}
 1	app/src/main/java/tv/own/owntv/features/customize/CustomizeViewModel.kt	Custom
 1	app/src/main/java/tv/own/owntv/features/customize/MoveToCategoryDialog.kt	new
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$startLabel · ${channel.name}
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	${t.channel.id}:${t.programme.startMs}
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	,
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	EEEE d MMMM
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	billboard
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFocusArt
+4	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
+2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
+1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
 1	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w780
 8	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	${cfg.host}$p

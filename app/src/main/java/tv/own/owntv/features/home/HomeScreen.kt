@@ -368,11 +368,15 @@ fun HomeScreen(
         } else false
     }
 
+    // glcn: the picture of the focused card, behind the rows.
+    var focusArt by remember { mutableStateOf<String?>(null) }
+    val reminders by vm.reminderRows.collectAsStateWithLifecycle()
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
+        if (trendingItem == null && posterItem == null) HomeFocusBackdrop(focusArt)
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
-        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -384,6 +388,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
+                if (!fullBleed) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart) }
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
@@ -547,6 +552,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { it.name },
                             poster = { it.posterUrl },
+                            backdrop = { it.backdropUrl },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -561,6 +567,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { it.name },
                             poster = { it.posterUrl },
+                            backdrop = { it.backdropUrl },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
@@ -591,6 +598,52 @@ fun HomeScreen(
                             modifier = rowModifier,
                         )
 
+                        HomeRow.FEATURED -> FeaturedBillboard(
+                            items = state.featured,
+                            onPlayChannel = { ch -> onPlayChannel(ch.id, state.featured.filterIsInstance<tv.own.owntv.core.home.FeaturedItem.Live>().map { it.channel }) },
+                            onOpenMovie = onOpenMovie,
+                            onOpenSeries = onOpenSeries,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            start = contentStart,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        HomeRow.TONIGHT -> TonightRow(
+                            title = row.displayTitle(),
+                            items = state.tonight,
+                            reminded = { t -> reminders.any { it.channelId == t.channel.id && it.startMs == t.programme.startMs } },
+                            onToggleReminder = vm::toggleTonightReminder,
+                            onOpenChannel = { t -> onPlayChannel(t.channel.id, state.tonight.map { it.channel }.distinctBy { it.id }) },
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            start = contentStart,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        HomeRow.GENRES -> androidx.compose.foundation.layout.Column(
+                            rowModifier,
+                            verticalArrangement = Arrangement.spacedBy(RowGap),
+                        ) {
+                            state.genres.forEachIndexed { gi, genre ->
+                                FavoritePosterRow(
+                                    title = genre.name,
+                                    items = genre.movies,
+                                    key = { it.id },
+                                    name = { it.name },
+                                    poster = { it.posterUrl },
+                                    backdrop = { it.backdropUrl },
+                                    start = contentStart,
+                                    onItemClick = onOpenMovie,
+                                    onFocus = onNonHeroFocused,
+                                    firstItemFocusRequester = if (gi == 0) firstItemFocusRequester else null,
+                                    track = track,
+                                )
+                            }
+                        }
+
                         HomeRow.SPORTS_NOW -> HomeLiveRow(
                             title = row.displayTitle(),
                             mode = HomeLiveRowMode.ON_NOW,
@@ -610,6 +663,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { it.name },
                             poster = { it.posterUrl },
+                            backdrop = { it.backdropUrl },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -624,6 +678,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { it.name },
                             poster = { it.posterUrl },
+                            backdrop = { it.backdropUrl },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
@@ -701,6 +756,9 @@ private fun rowHasData(row: HomeRow, state: HomeUiState): Boolean = when (row) {
     HomeRow.SPORTS_NOW -> state.sportsGuide.hasContent
     HomeRow.RECENT_MOVIES -> state.recentMovies.isNotEmpty()
     HomeRow.RECENT_SERIES -> state.recentSeries.isNotEmpty()
+    HomeRow.FEATURED -> state.featured.isNotEmpty()
+    HomeRow.TONIGHT -> state.tonight.isNotEmpty()
+    HomeRow.GENRES -> state.genres.isNotEmpty()
 }
 
 private fun rowCanRender(row: HomeRow, state: HomeUiState, showHeroFallback: Boolean): Boolean =
@@ -1228,6 +1286,7 @@ private fun ContinuePosterRow(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         LazyRow(
@@ -1263,6 +1322,7 @@ private fun <T> FavoritePosterRow(
     poster: (T) -> String?,
     start: Dp,
     onItemClick: (T) -> Unit,
+    backdrop: (T) -> String? = { null },
     onFocus: () -> Unit,
     firstItemFocusRequester: FocusRequester?,
     track: (FocusRequester) -> Unit,
@@ -1284,7 +1344,7 @@ private fun <T> FavoritePosterRow(
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
+                        .onFocusChanged { if (it.hasFocus) { onFocus(); setArt(backdrop(item) ?: poster(item)) } },
                 ) {
                     AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 }

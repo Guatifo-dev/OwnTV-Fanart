@@ -65,6 +65,11 @@ fun HomeLiveRow(
     modifier: Modifier = Modifier,
 ) {
     val onNow = mode == HomeLiveRowMode.ON_NOW
+    // glcn: "On now" rails are drawn from the programmes' pictures.
+    if (onNow) {
+        ArtLiveRow(title, guide.channels, guide.programmes, guide.now, onChannelClick, onFocus, firstItemFocusRequester, start, track, modifier)
+        return
+    }
     val shown = if (onNow) guide.channels else channels
     if (shown.isEmpty()) return
     Column(modifier) {

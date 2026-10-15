@@ -247,6 +247,9 @@ private val HomeRow.icon: OwnTVIcon get() = when (this) {
     HomeRow.SPORTS_NOW -> OwnTVIcon.SPORTS
     HomeRow.RECENT_MOVIES -> OwnTVIcon.MOVIES
     HomeRow.RECENT_SERIES -> OwnTVIcon.SERIES
+    HomeRow.FEATURED -> OwnTVIcon.STAR
+    HomeRow.TONIGHT -> OwnTVIcon.BELL
+    HomeRow.GENRES -> OwnTVIcon.MOVIES
 }
 
 @Composable
