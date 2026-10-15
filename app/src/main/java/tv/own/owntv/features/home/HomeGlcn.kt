@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import tv.own.owntv.ui.stage.stageTilt
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -180,12 +181,14 @@ internal fun ArtLiveCard(
     val rawArt = programme?.imageUrl?.takeIf { it.isNotBlank() }
     // A blank placeholder picture reads as a broken card: the channel's logo stands in for it.
     val art = rawArt?.takeUnless { tv.own.owntv.ui.components.rememberPlainArt(it) }
+    var held by remember { mutableStateOf(false) }
     StageSurface(
         onClick = onClick,
         radius = StageRadii.Row,
         modifier = modifier
             .size(width, width * 9f / 16f + CAPTION_HEIGHT)
-            .onFocusChanged { if (it.hasFocus) setArt(art) },
+            .onFocusChanged { held = it.hasFocus; if (it.hasFocus) setArt(art) }
+            .stageTilt(held),
         onLongClick = onLongClick,
         focusStyle = StageFocus.FX,
         idle = Modifier.background(StageColors.Ink.copy(alpha = 0.06f), RoundedCornerShape(StageRadii.Row)),

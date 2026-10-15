@@ -75,8 +75,9 @@ class FanartDream : DreamService() {
         }
         title = TextView(this).apply {
             setTextColor(Color.WHITE)
-            textSize = 34f
+            textSize = 28f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            setShadowLayer(12f, 0f, 2f, Color.argb(160, 0, 0, 0))
             maxLines = 2
         }
         subtitle = TextView(this).apply {
@@ -87,6 +88,18 @@ class FanartDream : DreamService() {
         text.addView(title)
         text.addView(subtitle)
         root.addView(text, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM or Gravity.START))
+        // The time in the corner, as on an Apple TV's aerial screensaver.
+        val pad = (resources.displayMetrics.density * 40).toInt()
+        root.addView(
+            android.widget.TextClock(this).apply {
+                setTextColor(Color.argb(220, 255, 255, 255))
+                textSize = 30f
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+                setShadowLayer(12f, 0f, 2f, Color.argb(160, 0, 0, 0))
+                setPadding(pad, pad, pad, pad)
+            },
+            FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END),
+        )
         setContentView(root)
     }
 

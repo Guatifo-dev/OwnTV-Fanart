@@ -827,6 +827,7 @@ fun StagePoster(
         modifier
             .width(width)
             .stageLift(focused, StageFocus.POSTER)
+            .stageTilt(focused)
             .stageClickable(interaction, true, onClick, onLongClick),
     ) {
         Box(
@@ -903,6 +904,7 @@ fun StageStill(
         modifier
             .width(width)
             .stageLift(focused, StageFocus.POSTER)
+            .stageTilt(focused)
             .stageClickable(interaction, true, onClick, onLongClick),
     ) {
         Box(

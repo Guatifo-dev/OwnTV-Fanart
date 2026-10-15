@@ -479,7 +479,8 @@ fun HomeScreen(
                             KeepWatchingRow(
                                 title = row.displayTitle(),
                                 items = state.heroItems,
-                                big = fullBleed && !inRows,
+                                // glcn: Apple TV's "Up Next" — big cards right under the billboard.
+                                big = (fullBleed && !inRows) || renderRows.indexOf(HomeRow.HERO) <= 1,
                                 start = contentStart,
                                 metadata = state.heroMetadata,
                                 previewIndex = previewIndex,

@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
 
 /**
  * glcn: the focused card's picture comes alive — it drifts slowly closer (a Ken Burns push-in) and a
@@ -60,3 +61,40 @@ internal fun BoxScope.FocusArtFx(focused: Boolean, content: @Composable BoxScope
         content = content,
     )
 }
+
+/**
+ * glcn: the focused card floats in space like on an Apple TV — it leans a few degrees and sways
+ * slowly while it is held. Only the focused card moves; read in the draw phase, so it never
+ * recomposes the card. Still with animations off.
+ */
+@Composable
+internal fun Modifier.stageTilt(focused: Boolean): Modifier {
+    if (!tv.own.owntv.ui.theme.animationsOn) return this
+    val amp = remember { Animatable(0f) }
+    val phase = remember { Animatable(0f) }
+    LaunchedEffect(focused) {
+        if (focused) {
+            kotlinx.coroutines.coroutineScope {
+                launch { amp.animateTo(1f, tween(600, easing = FastOutSlowInEasing)) }
+                launch {
+                    while (true) {
+                        phase.animateTo(phase.value + TWO_PI, tween(7_000, easing = androidx.compose.animation.core.LinearEasing))
+                        phase.snapTo(phase.value % TWO_PI)
+                    }
+                }
+            }
+        } else {
+            amp.animateTo(0f, tween(300))
+        }
+    }
+    return this.graphicsLayer {
+        val a = amp.value
+        if (a > 0f) {
+            cameraDistance = 14f * density
+            rotationY = kotlin.math.sin(phase.value) * 3.2f * a
+            rotationX = kotlin.math.cos(phase.value) * 2.2f * a
+        }
+    }
+}
+
+private const val TWO_PI = (2 * Math.PI).toFloat()

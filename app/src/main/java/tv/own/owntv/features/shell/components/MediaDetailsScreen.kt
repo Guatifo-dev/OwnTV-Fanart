@@ -23,6 +23,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -103,10 +108,17 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
         Box(modifier.fillMaxSize().background(page).trapAllFocusExit()) {
             // glcn: the page takes the tone of the backdrop.
             tv.own.owntv.ui.components.ArtTint(details.backdropUrl ?: details.posterUrl, Modifier.matchParentSize(), strength = 0.7f, focusX = 0.5f, focusY = 0.45f)
+            // glcn: the picture fills the screen and settles in — it opens a touch closer and eases
+            // back, as if the card the user pressed had grown into the page.
+            val settle = remember { androidx.compose.animation.core.Animatable(if (tv.own.owntv.ui.theme.animationsOn) 0f else 1f) }
+            LaunchedEffect(Unit) { settle.animateTo(1f, androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
             if (!details.backdropUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = details.backdropUrl, contentDescription = null, contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).graphicsLayer {
+                        val k = 1.08f - 0.08f * settle.value
+                        scaleX = k; scaleY = k; alpha = 0.3f + 0.7f * settle.value
+                    },
                 )
             }
                         // A light picture still has to carry white text: a general dim, then the fade into the page.
@@ -128,7 +140,18 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
                         if (!details.subtitle.isNullOrBlank()) {
                             Text(details.subtitle, style = stageText(18, 800, 0.08.em), color = stageAccent.accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Text(details.title, style = stageText(64, 800, (-1.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.mpx))
+                        // glcn: the title's own logo, when TMDB has one; the words otherwise.
+                        var logoFailed by remember(details.logoUrl) { mutableStateOf(false) }
+                        if (!details.logoUrl.isNullOrBlank() && !logoFailed) {
+                            AsyncImage(
+                                model = details.logoUrl, contentDescription = details.title, contentScale = ContentScale.Fit,
+                                alignment = Alignment.BottomStart,
+                                onError = { logoFailed = true },
+                                modifier = Modifier.padding(top = 6.mpx).widthIn(max = 620.mpx).height(150.mpx),
+                            )
+                        } else {
+                            Text(details.title, style = stageText(64, 800, (-1.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.mpx))
+                        }
                         if (details.metaLine.isNotBlank()) {
                             Text(details.metaLine, style = stageText(22, 600), color = StageColors.ItemText, modifier = Modifier.padding(top = 12.mpx))
                         }
