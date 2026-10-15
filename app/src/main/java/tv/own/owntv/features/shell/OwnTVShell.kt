@@ -1473,6 +1473,10 @@ fun OwnTVShell(
       if (playerMode != PlayerMode.FULLSCREEN) {
           tv.own.owntv.features.shell.components.SyncStatusPill(modifier = Modifier.align(Alignment.BottomCenter))
       }
+      // glcn: seasonal touches over every menu — never over the full-screen player.
+      if (playerMode != PlayerMode.FULLSCREEN && multiview == null) {
+          tv.own.owntv.features.home.SeasonalOverlay(Modifier.fillMaxSize())
+      }
 
       // Player surface — hoisted so it persists across fullscreen <-> mini (same call site = the
       // SurfaceView isn't recreated when docking/expanding, so playback never blips). NOT composed in

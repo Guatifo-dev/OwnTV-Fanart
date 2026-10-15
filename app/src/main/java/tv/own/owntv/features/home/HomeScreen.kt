@@ -380,7 +380,6 @@ fun HomeScreen(
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
         if (trendingItem == null && posterItem == null) HomeFocusBackdrop(focusArt)
-        if (seasonMode > 0 && seasonActive) Seasonal.Behind(season, animated = seasonMode == 2)
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
         CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }) {
@@ -710,7 +709,6 @@ fun HomeScreen(
                     }
                 }
             }
-        if (seasonMode > 0 && seasonActive) Seasonal.Front(season, animated = seasonMode == 2)
         }
     }
 
