@@ -376,16 +376,33 @@ fun HomeScreen(
     val season = remember { tv.own.owntv.core.theme.Seasons.current() }
     // glcn: the picture of the focused card, behind the rows.
     var focusArt by remember { mutableStateOf<String?>(null) }
+    var focusInfo by remember { mutableStateOf<HomeFocusInfo?>(null) }
+    val backdropSetting by seasonSettings.homeBackdropStyle.collectAsStateWithLifecycle(initialValue = 0)
+    // The full-screen styles take over only where Home has no hero of its own.
+    val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
-        if (trendingItem == null && posterItem == null) HomeFocusBackdrop(focusArt)
+        if (trendingItem == null && posterItem == null) when (backdropStyle) {
+            1 -> HomeCinemaBackdrop(focusArt, focusInfo, greeting = {
+                HomeGreeting(state.profileName, 0.mpx, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null)
+            }, start = contentStart)
+            2 -> HomePanelBackdrop(focusArt)
+            else -> HomeFocusBackdrop(focusArt)
+        }
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
-        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }, LocalHomeFocusInfo provides { focusInfo = it }) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .then(
+                        when (backdropStyle) {
+                            1 -> Modifier.padding(top = CINEMA_ROWS_TOP)
+                            2 -> Modifier.padding(end = PANEL_WIDTH)
+                            else -> Modifier
+                        },
+                    )
                     .onFocusChanged { if (it.hasFocus) onChildFocused() }
                     // ▶ out of the rail comes back to the card it left from (P1 carry-over): every level
                     // of the list remembers its focused child.
@@ -394,7 +411,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
-                if (!fullBleed) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null) }
+                if (!fullBleed && backdropStyle != 1) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null) }
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
                     // glcn: whichever row is first — the billboard, Keep watching or any other — reaching it
                     // brings the top of the page (the greeting) back, not just the row itself.
@@ -710,6 +727,7 @@ fun HomeScreen(
                 }
             }
         }
+        if (backdropStyle == 2) HomeInfoPanel(focusArt, focusInfo, Modifier.align(Alignment.TopEnd))
     }
 
     // The preview starts after the card has settled, so decoder setup does not compete with the focus
@@ -1167,6 +1185,8 @@ private fun KeepWatchingRow(
             onDismiss = { menuFor = null },
         )
     }
+    val setArt = LocalHomeFocusArt.current
+    val setInfo = LocalHomeFocusInfo.current
     val h = if (big) 216 else 189
     Column(modifier) {
         HomeRowHeader(title, small = if (big) null else items.size.toString(), start = start, big = big)
@@ -1182,14 +1202,16 @@ private fun KeepWatchingRow(
                     is HeroItem.SeriesHero -> homeStill(meta?.backdropUrl, item.series.backdropUrl, item.series.posterUrl, null)
                     is HeroItem.LiveHero -> homeStill(null, item.now?.imageUrl, null, item.channel.logoUrl)
                 }
+                val cardTitle = when (item) {
+                    is HeroItem.MovieHero -> item.item.title
+                    is HeroItem.SeriesHero -> item.series.name
+                    // glcn: what is on now, when the guide knows it.
+                    is HeroItem.LiveHero -> item.now?.title ?: item.channel.name
+                }
+                val cardLine = keepWatchingLine(item)
                 StageStill(
-                    title = when (item) {
-                        is HeroItem.MovieHero -> item.item.title
-                        is HeroItem.SeriesHero -> item.series.name
-                        // glcn: what is on now, when the guide knows it.
-                        is HeroItem.LiveHero -> item.now?.title ?: item.channel.name
-                    },
-                    line = keepWatchingLine(item),
+                    title = cardTitle,
+                    line = cardLine,
                     onClick = { onPlay(item) },
                     onLongClick = { menuFor = item },
                     width = w.mpx,
@@ -1200,7 +1222,13 @@ private fun KeepWatchingRow(
                     modifier = Modifier
                         .then(if (index == 0) Modifier.focusRequester(firstFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { onCardFocusChanged(index, it.hasFocus) },
+                        .onFocusChanged {
+                            onCardFocusChanged(index, it.hasFocus)
+                            if (it.hasFocus) {
+                                setArt((still as? HomeStill.Picture)?.url)
+                                setInfo(HomeFocusInfo(title = cardTitle, line = cardLine, plot = meta?.plot))
+                            }
+                        },
                 ) {
                     // The video sits under the still, which lifts off once frames arrive. (A TextureView
                     // hidden at alpha 0 is never drawn, so it never gets the surface the engine needs.)
@@ -1308,6 +1336,7 @@ private fun ContinuePosterRow(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val setInfo = LocalHomeFocusInfo.current
     val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
@@ -1325,7 +1354,7 @@ private fun ContinuePosterRow(
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
+                        .onFocusChanged { if (it.hasFocus) { onFocus(); setArt(item.posterUrl); setInfo(HomeFocusInfo(item.title)) } },
                 ) {
                     AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 }
@@ -1350,6 +1379,7 @@ private fun <T> FavoritePosterRow(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val setInfo = LocalHomeFocusInfo.current
     val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
@@ -1367,7 +1397,12 @@ private fun <T> FavoritePosterRow(
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) { onFocus(); setArt(backdrop(item) ?: poster(item)) } },
+                        .onFocusChanged {
+                            if (it.hasFocus) {
+                                onFocus(); setArt(backdrop(item) ?: poster(item))
+                                setInfo(posterInfo(item, name(item)))
+                            }
+                        },
                 ) {
                     AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 }
@@ -1627,4 +1662,19 @@ private suspend fun scrollHomeToTop(listState: androidx.compose.foundation.lazy.
         kotlinx.coroutines.delay(60)
         runCatching { listState.scrollToItem(0) }
     }
+}
+
+/** glcn: the side panel's words for a film or series poster. */
+private fun posterInfo(item: Any?, name: String): HomeFocusInfo = when (item) {
+    is tv.own.owntv.core.database.entity.MovieEntity -> HomeFocusInfo(
+        title = name,
+        line = listOfNotNull(item.year?.toString(), item.rating?.takeIf { it > 0 }?.let { "★ " + ratingText(it) }).joinToString("  ·  ").ifBlank { null },
+        plot = item.plot,
+    )
+    is tv.own.owntv.core.database.entity.SeriesEntity -> HomeFocusInfo(
+        title = name,
+        line = listOfNotNull(item.year?.toString(), item.rating?.takeIf { it > 0 }?.let { "★ " + ratingText(it) }).joinToString("  ·  ").ifBlank { null },
+        plot = item.plot,
+    )
+    else -> HomeFocusInfo(name)
 }

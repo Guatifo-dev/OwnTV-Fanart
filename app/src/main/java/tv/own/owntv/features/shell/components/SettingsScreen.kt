@@ -366,6 +366,7 @@ fun SettingsScreen(
     val ambientGlowEnabled by settingsVm.ambientGlowEnabled.collectAsStateWithLifecycle()
     val seasonMode by settingsVm.seasonMode.collectAsStateWithLifecycle()
     val animStyle by settingsVm.animStyle.collectAsStateWithLifecycle()
+    val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
@@ -652,6 +653,21 @@ fun SettingsScreen(
             focus = ambientGlowRowFocus,
             onClick = { saveScroll(); dialogReturn = ambientGlowRowFocus; showAmbientGlow = true },
         ) else null,
+        // glcn: Home's background — Classic / Cinema / Panel.
+        RootRow(
+            "glcn_home_backdrop", TileTone.PRIMARY, OwnTVIcon.THEME,
+            title = stringResource(R.string.glcn_home_backdrop_title),
+            desc = stringResource(R.string.glcn_home_backdrop_desc),
+            chip = stringResource(
+                when (homeBackdrop) {
+                    1 -> R.string.glcn_home_backdrop_cinema
+                    2 -> R.string.glcn_home_backdrop_panel
+                    else -> R.string.glcn_home_backdrop_classic
+                },
+            ),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleHomeBackdropStyle() },
+        ),
         // glcn: animation style (Full / Subtle), menu sounds (Off / Soft / Normal), opening chime.
         RootRow(
             "glcn_anim_style", TileTone.SECONDARY, OwnTVIcon.GLOW,

@@ -1012,6 +1012,9 @@ class SettingsViewModel(
         viewModelScope.launch { settings.setLiveStageWidths(enabled, widths) }
     }
 
+    val homeBackdropStyle: StateFlow<Int> = settings.homeBackdropStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleHomeBackdropStyle() { viewModelScope.launch { settings.setHomeBackdropStyle((homeBackdropStyle.value + 1) % 3) } }
+
     // glcn: Kodi-style extras.
     val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setDialogueBoost(on: Boolean) { viewModelScope.launch { settings.setDialogueBoost(on) } }

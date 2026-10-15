@@ -69,6 +69,7 @@ import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.StageRadii
 import tv.own.owntv.ui.theme.dissolveEdges
 import tv.own.owntv.ui.theme.mpx
+import tv.own.owntv.ui.theme.mpxSp
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
@@ -180,6 +181,7 @@ internal fun ArtLiveCard(
 ) {
     val a = stageAccent
     val setArt = LocalHomeFocusArt.current
+    val setInfo = LocalHomeFocusInfo.current
     val rawArt = programme?.imageUrl?.takeIf { it.isNotBlank() }
     // A blank placeholder picture reads as a broken card: the channel's logo stands in for it.
     val art = rawArt?.takeUnless { tv.own.owntv.ui.components.rememberPlainArt(it) }
@@ -189,7 +191,21 @@ internal fun ArtLiveCard(
         radius = StageRadii.Row,
         modifier = modifier
             .size(width, width * 9f / 16f + CAPTION_HEIGHT)
-            .onFocusChanged { held = it.hasFocus; if (it.hasFocus) setArt(art) }
+            .onFocusChanged {
+                held = it.hasFocus
+                if (it.hasFocus) {
+                    setArt(art)
+                    setInfo(
+                        HomeFocusInfo(
+                            title = programme?.title?.let(SportsNow::displayTitle) ?: channel.name,
+                            line = if (startLabel != null) "$startLabel · ${channel.name}" else channel.name,
+                            plot = programme?.description,
+                            rateTitle = programme?.title,
+                            rateCategories = programme?.categories,
+                        ),
+                    )
+                }
+            }
             .stageTilt(held),
         onLongClick = onLongClick,
         focusStyle = StageFocus.FX,
@@ -395,6 +411,7 @@ internal fun FeaturedBillboard(
         delay(if (focused) 12_000 else 8_000)
         index = (index + 1) % items.size
     }
+    val setInfo = LocalHomeFocusInfo.current
     val setArt = LocalHomeFocusArt.current
     val a = stageAccent
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -473,7 +490,7 @@ internal fun FeaturedBillboard(
                         .tracked(track = track)
                         .onFocusChanged {
                             focused = it.hasFocus
-                            if (it.hasFocus) { onFocus(); setArt(null) }
+                            if (it.hasFocus) { onFocus(); setArt(null); setInfo(null) }
                         }
                         .onPreviewKeyEvent { e ->
                             if (e.type != KeyEventType.KeyDown || items.size < 2) return@onPreviewKeyEvent false
@@ -499,3 +516,136 @@ internal fun FeaturedBillboard(
         }
     }
 }
+
+/** glcn: what the focused card is, for the backdrop styles that say so beside the picture. */
+@androidx.compose.runtime.Immutable
+internal data class HomeFocusInfo(
+    val title: String,
+    val line: String? = null,
+    val plot: String? = null,
+    /** A guide programme's own title and categories, for its TMDB rating; null for films and series. */
+    val rateTitle: String? = null,
+    val rateCategories: String? = null,
+)
+
+/** A card tells Home what it is when it takes focus (alongside [LocalHomeFocusArt]). */
+internal val LocalHomeFocusInfo = staticCompositionLocalOf<(HomeFocusInfo?) -> Unit> { {} }
+
+/** The settled focus — picture and words change together, once the D-pad rests. */
+@Composable
+private fun rememberSettled(url: String?, info: HomeFocusInfo?): Pair<String?, HomeFocusInfo?> {
+    var settled by remember { mutableStateOf(url to info) }
+    LaunchedEffect(url, info) {
+        if ((url to info) != settled) { delay(350); settled = url to info }
+    }
+    return settled
+}
+
+/** The focused card's picture over the whole screen, drifting slowly when animations allow. */
+@Composable
+private fun FullBackdrop(url: String?, modifier: Modifier = Modifier) {
+    val animate = tv.own.owntv.ui.theme.animationsOn
+    Crossfade(targetState = url, label = "homeFullArt", modifier = modifier) { u ->
+        if (!u.isNullOrBlank()) {
+            val drift = remember(u) { androidx.compose.animation.core.Animatable(1f) }
+            val driftOn = animate && !tv.own.owntv.ui.stage.GlcnMotion.subtle
+            LaunchedEffect(u, driftOn) {
+                if (driftOn) drift.animateTo(1.05f, androidx.compose.animation.core.tween(12_000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
+            }
+            AsyncImage(
+                model = u, contentDescription = null, contentScale = ContentScale.Crop,
+                alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
+                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = drift.value; scaleY = drift.value },
+            )
+        } else {
+            Box(Modifier.fillMaxSize())
+        }
+    }
+}
+
+/** Title, a line (with TMDB's rating for a film or series on air) and two lines of synopsis. */
+@Composable
+private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Text(info.title, style = stageText(titleSize, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        val rating = info.rateTitle?.let { tv.own.owntv.ui.components.rememberTmdbRating(it, info.rateCategories) }
+        val line = listOfNotNull(info.line?.takeIf { it.isNotBlank() }, rating).joinToString("  ·  ")
+        if (line.isNotBlank()) {
+            Text(line, style = stageText(19, 600), color = Color.White.copy(alpha = 0.82f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.mpx))
+        }
+        info.plot?.takeIf { it.isNotBlank() }?.let {
+            Text(
+                it, style = stageText(19, 400).copy(lineHeight = (19 * 1.45f).mpxSp), color = Color.White.copy(alpha = 0.72f),
+                maxLines = plotLines, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.mpx),
+            )
+        }
+    }
+}
+
+/**
+ * Backdrop style "Cinema": the picture fills the screen, clear in the top half, with what it is written
+ * over it on the left; the rows live in the lower part ([CINEMA_ROWS_TOP]). Before anything has focus
+ * the greeting stands where the title will be.
+ */
+@Composable
+internal fun HomeCinemaBackdrop(url: String?, info: HomeFocusInfo?, greeting: @Composable () -> Unit, start: Dp, modifier: Modifier = Modifier) {
+    val (art, shown) = rememberSettled(url, info)
+    val page = tv.own.owntv.ui.theme.stageTone(Color(0xFF070B0E), tv.own.owntv.ui.theme.LocalStagePalette.current.page)
+    Box(modifier.fillMaxSize()) {
+        tv.own.owntv.ui.components.ArtTint(art, Modifier.fillMaxSize(), strength = 0.6f)
+        FullBackdrop(art, Modifier.fillMaxSize())
+        // Words on the left, rows at the foot: dark only where they are.
+        Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.88f, 0.3f to 0.6f, 0.55f to 0.15f, 0.8f to 0f))
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(0f to Color.Transparent, 0.32f to Color.Transparent, 0.5f to page.copy(alpha = 0.72f), 0.66f to page.copy(alpha = 0.94f), 1f to page),
+            ),
+        )
+        Box(Modifier.padding(start = start, top = 120.mpx, end = 760.mpx)) {
+            if (shown != null) FocusInfoBlock(shown, titleSize = 54, plotLines = 2) else greeting()
+        }
+    }
+}
+
+/** Where the rows start under the "Cinema" backdrop. */
+internal val CINEMA_ROWS_TOP = 400.mpx
+
+/**
+ * Backdrop style "Panel": the picture fills the screen behind everything, darkened so the rows read on
+ * top, and a fixed panel at the side says what has focus.
+ */
+@Composable
+internal fun HomePanelBackdrop(url: String?, modifier: Modifier = Modifier) {
+    val (art, _) = rememberSettled(url, null)
+    val page = tv.own.owntv.ui.theme.stageTone(Color(0xFF070B0E), tv.own.owntv.ui.theme.LocalStagePalette.current.page)
+    Box(modifier.fillMaxSize()) {
+        tv.own.owntv.ui.components.ArtTint(art, Modifier.fillMaxSize(), strength = 0.6f)
+        FullBackdrop(art, Modifier.fillMaxSize())
+        Box(Modifier.fillMaxSize().background(page.copy(alpha = 0.58f)))
+        Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.5f, 0.6f to 0.2f, 1f to 0f))
+    }
+}
+
+/** The side panel of the "Panel" style: the picture small and sharp, then what it is. */
+@Composable
+internal fun HomeInfoPanel(url: String?, info: HomeFocusInfo?, modifier: Modifier = Modifier) {
+    val (art, shown) = rememberSettled(url, info)
+    Column(
+        modifier
+            .width(PANEL_WIDTH)
+            .fillMaxHeight()
+            .padding(top = 120.mpx, bottom = 48.mpx, end = 48.mpx)
+            .clip(RoundedCornerShape(28.mpx))
+            .background(Color.Black.copy(alpha = 0.38f))
+            .padding(24.mpx),
+    ) {
+        Box(Modifier.fillMaxWidth().height(PANEL_WIDTH * 9f / 16f - 30.mpx).clip(RoundedCornerShape(18.mpx)).background(Color.White.copy(alpha = 0.06f))) {
+            Crossfade(targetState = art, label = "panelArt") { u ->
+                if (!u.isNullOrBlank()) AsyncImage(model = u, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
+        if (shown != null) FocusInfoBlock(shown, titleSize = 34, plotLines = 7, modifier = Modifier.padding(top = 22.mpx))
+    }
+}
+
+internal val PANEL_WIDTH = 560.mpx

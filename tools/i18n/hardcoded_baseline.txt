@@ -20,17 +20,21 @@
 1	app/src/main/java/tv/own/owntv/features/epg/EpgScreen.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	\0
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$it
-1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$startLabel · ${channel.name}
+2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	$startLabel · ${channel.name}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	${t.channel.id}:${t.programme.startMs}
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	,
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	EEEE d MMMM
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	billboard
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	cardZoom
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFocusArt
-5	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFullArt
+1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	panelArt
+6	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
+2	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	·
+2	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	★
 1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	👻
 1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🕷️
 3	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🦇
@@ -60,6 +64,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/ChannelListOverlay.kt	–
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_anim_style
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_backdrop
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_season
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_startup_sound
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds
