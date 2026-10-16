@@ -46,7 +46,8 @@ android {
     defaultConfig {
         applicationId = "tv.own.owntv"
         // glcn fork: own package id so it installs next to the official OwnTV (CI passes ".glcn").
-        providers.gradleProperty("glcn.appIdSuffix").orNull?.takeIf { it.isNotBlank() }?.let { applicationIdSuffix = it }
+        // Always its own id, in any build: the original author asked forks not to share his.
+        applicationIdSuffix = providers.gradleProperty("glcn.appIdSuffix").orNull?.takeIf { it.isNotBlank() } ?: ".glcn"
         minSdk = 26
         targetSdk = 36
         // CI injects these from the git tag (see .github/workflows/android.yml) so releases never
