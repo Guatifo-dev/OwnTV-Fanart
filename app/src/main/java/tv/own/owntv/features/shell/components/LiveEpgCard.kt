@@ -57,6 +57,8 @@ fun LiveEpgCard(
     variant: EpgCardVariant = EpgCardVariant.LIVE,
     // ARCHIVE only: the wall-clock instant on screen, which drives the progress bar and "x min left".
     atMs: Long? = null,
+    /** glcn: one line only — the live card under the archive one while rewound. */
+    compact: Boolean = false,
 ) {
     if (epg == null || (epg.now == null && epg.next == null)) return
     val archive = variant == EpgCardVariant.ARCHIVE
@@ -69,108 +71,86 @@ fun LiveEpgCard(
     // not about the present — otherwise a programme from yesterday reads as 100% finished.
     val nowMs = if (archive) (atMs ?: wallNow) else wallNow
 
-    Row(
-        // glcn: on a dark panel of its own — over a bright scene, or a channel's own on-screen graphics
-        // in the same corner, the guide lines could not be read on the top shade alone.
-        modifier = if (!archive) modifier
+    // glcn: stacked, not side by side — now on top at full width, what follows on one line under it.
+    // Side by side, the two halves fought for the corner and the "now" half shrank to one word a line.
+    Column(
+        modifier = modifier
+            .widthIn(min = 300.dp, max = 500.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color.Black.copy(alpha = 0.62f))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-        else modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.Black.copy(alpha = 0.62f))
-            .background(colors.primary.copy(alpha = 0.09f))
-            .border(1.dp, colors.primary.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .background(Color.Black.copy(alpha = 0.66f))
+            .then(
+                if (archive) Modifier
+                    .background(colors.primary.copy(alpha = 0.09f))
+                    .border(1.dp, colors.primary.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                else Modifier,
+            )
+            .padding(horizontal = 14.dp, vertical = if (compact) 6.dp else 10.dp),
     ) {
-        epg.now?.let { entry ->
-            // glcn: the now half gives way, never the next half — squeezed to nothing beside a long
-            // synopsis, "EN DIRECTO DESPUÉS" was drawn one syllable per line down the edge.
-            Column(Modifier.weight(1f, fill = false).widthIn(max = 420.dp)) {
-                SlotLabel(stringResource(if (archive) R.string.content_archive_playing else R.string.content_live_now), colors.primary)
-                Text(
-                    entry.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = hudInk,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                val remaining = ((entry.stopMs - nowMs) / 60_000L).toInt()
-                Text(
-                    if (remaining in 1..600) {
-                        stringResource(
-                            R.string.content_live_time_remaining,
-                            formatTime(entry.stopMs),
-                            remaining,
-                        )
-                    } else {
-                        stringResource(
-                            R.string.content_live_time_range,
-                            formatTime(entry.startMs),
-                            formatTime(entry.stopMs),
-                        )
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = hudInk.copy(alpha = 0.5f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                // What the programme actually IS, not just what it is called. The guide carries this
-                // for both stored XMLTV rows and the providers' own short-EPG replies, and until now
-                // the only place it surfaced was the Guide screen — so anyone watching live could read
-                // a title and nothing else. Two lines: enough to tell an episode apart, short enough
-                // that the card stays a strip across the top of the picture.
-                entry.description?.takeIf { it.isNotBlank() }?.let { synopsis ->
+        val now = epg.now
+        if (compact) {
+            // "EN DIRECTO AHORA · Title · quedan 12 min"
+            if (now != null) {
+                val remaining = ((now.stopMs - nowMs) / 60_000L).toInt()
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SlotLabel(stringResource(R.string.content_live_now), colors.primary)
                     Text(
-                        synopsis,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = hudInk.copy(alpha = 0.75f),
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 2.dp),
+                        now.title + (if (remaining in 1..600) "  ·  " + stringResource(R.string.content_live_time_remaining, formatTime(now.stopMs), remaining) else ""),
+                        style = MaterialTheme.typography.labelMedium, color = hudInk, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
-                val span = (entry.stopMs - entry.startMs).toFloat()
-                if (span > 0f) {
-                    val progress = ((nowMs - entry.startMs) / span).coerceIn(0f, 1f)
-                    Spacer(Modifier.height(5.dp))
-                    Box(
-                        Modifier.fillMaxWidth().height(2.dp).clip(RoundedCornerShape(1.dp))
-                            .background(hudInk.copy(alpha = 0.18f)),
-                    ) {
-                        Box(
-                            Modifier.fillMaxWidth(progress).height(2.dp)
-                                .clip(RoundedCornerShape(1.dp)).background(colors.primary),
-                        )
-                    }
+            }
+            return@Column
+        }
+        if (now != null) {
+            SlotLabel(stringResource(if (archive) R.string.content_archive_playing else R.string.content_live_now), colors.primary)
+            Text(
+                now.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = hudInk,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val remaining = ((now.stopMs - nowMs) / 60_000L).toInt()
+            Text(
+                if (remaining in 1..600) stringResource(R.string.content_live_time_remaining, formatTime(now.stopMs), remaining)
+                else stringResource(R.string.content_live_time_range, formatTime(now.startMs), formatTime(now.stopMs)),
+                style = MaterialTheme.typography.labelMedium,
+                color = hudInk.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val span = (now.stopMs - now.startMs).toFloat()
+            if (span > 0f) {
+                val progress = ((nowMs - now.startMs) / span).coerceIn(0f, 1f)
+                Spacer(Modifier.height(6.dp))
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(hudInk.copy(alpha = 0.2f))) {
+                    Box(Modifier.fillMaxWidth(progress).height(3.dp).clip(RoundedCornerShape(2.dp)).background(colors.primary))
                 }
             }
-        }
-        // Hairline separator, only when both halves are present.
-        if (epg.now != null && epg.next != null) {
-            Box(Modifier.height(34.dp).widthIn(min = 1.dp, max = 1.dp).background(hudInk.copy(alpha = 0.18f)))
+            // What the programme actually IS, not just what it is called.
+            now.description?.takeIf { it.isNotBlank() }?.let { synopsis ->
+                Text(
+                    synopsis,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = hudInk.copy(alpha = 0.82f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
         }
         epg.next?.let { entry ->
-            Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
-                SlotLabel(stringResource(if (archive) R.string.content_archive_then else R.string.content_live_next), hudInk.copy(alpha = 0.45f))
+            Row(
+                Modifier.padding(top = if (now != null) 8.dp else 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SlotLabel(stringResource(if (archive) R.string.content_archive_then else R.string.content_live_next), hudInk.copy(alpha = 0.6f))
                 Text(
-                    entry.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = hudInk.copy(alpha = 0.72f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    stringResource(
-                        R.string.content_live_time_range,
-                        formatTime(entry.startMs),
-                        formatTime(entry.stopMs),
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = hudInk.copy(alpha = 0.4f),
+                    formatTime(entry.startMs) + "  " + entry.title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = hudInk.copy(alpha = 0.85f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

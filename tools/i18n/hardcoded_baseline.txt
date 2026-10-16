@@ -67,6 +67,8 @@
 1	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	#FFEB3B
 2	app/src/main/java/tv/own/owntv/features/settings/VideoPlayerSettingsScreen.kt	#FFFFFF
 1	app/src/main/java/tv/own/owntv/features/shell/components/ChannelListOverlay.kt	–
+2	app/src/main/java/tv/own/owntv/features/shell/components/LiveEpgCard.kt	\0
+1	app/src/main/java/tv/own/owntv/features/shell/components/LiveEpgCard.kt	·
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	github.com/carlosglcn/OwnTV-Fanart
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_anim_style

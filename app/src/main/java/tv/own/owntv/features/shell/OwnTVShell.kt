@@ -1792,7 +1792,9 @@ fun OwnTVShell(
                                 }
                                 tv.own.owntv.features.shell.components.LiveEpgCard(
                                     epg = epg,
-                                    modifier = if (watching == null) Modifier else Modifier.alpha(0.55f),
+                                    // glcn: while rewound, live is context — one line under the replayed programme.
+                                    compact = watching != null,
+                                    modifier = if (watching == null) Modifier else Modifier.alpha(0.85f),
                                 )
                             }
                         }
