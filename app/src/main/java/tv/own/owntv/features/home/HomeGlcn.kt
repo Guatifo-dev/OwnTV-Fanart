@@ -62,6 +62,7 @@ import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.home.FeaturedItem
 import tv.own.owntv.core.home.TonightItem
 import tv.own.owntv.core.live.SportsNow
+import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.ProgrammeArt
 import tv.own.owntv.ui.stage.StageFocus
