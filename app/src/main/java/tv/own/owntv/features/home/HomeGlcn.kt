@@ -33,6 +33,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -631,20 +632,20 @@ internal fun HomeCinemaBackdrop(url: String?, info: HomeFocusInfo?, greeting: @C
         tv.own.owntv.ui.components.ArtTint(art, Modifier.fillMaxSize(), strength = 0.6f)
         FullBackdrop(art, Modifier.fillMaxSize())
         // Words on the left, rows at the foot: dark only where they are.
-        Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.88f, 0.3f to 0.6f, 0.55f to 0.15f, 0.8f to 0f))
+        Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.94f, 0.32f to 0.78f, 0.58f to 0.25f, 0.85f to 0f))
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(0f to Color.Transparent, 0.32f to Color.Transparent, 0.5f to page.copy(alpha = 0.72f), 0.66f to page.copy(alpha = 0.94f), 1f to page),
             ),
         )
-        Box(Modifier.padding(start = start, top = 120.mpx, end = 760.mpx)) {
-            if (shown != null) FocusInfoBlock(shown, titleSize = 54, plotLines = 2) else greeting()
+        Box(Modifier.padding(start = start, top = 112.mpx, end = 760.mpx).height(CINEMA_ROWS_TOP - 130.mpx).then(Modifier.clipToBounds())) {
+            if (shown != null) FocusInfoBlock(shown, titleSize = 46, plotLines = 2) else greeting()
         }
     }
 }
 
 /** Where the rows start under the "Cinema" backdrop. */
-internal val CINEMA_ROWS_TOP = 400.mpx
+internal val CINEMA_ROWS_TOP = 470.mpx
 
 /**
  * Backdrop style "Panel": the picture fills the screen behind everything, darkened so the rows read on

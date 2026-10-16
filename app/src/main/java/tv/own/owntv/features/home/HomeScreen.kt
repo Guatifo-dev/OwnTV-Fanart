@@ -209,7 +209,9 @@ fun HomeScreen(
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback) }
+    // glcn: under the "Cinema" background the full-screen picture is the billboard — no second one in the rows.
+    val cinemaEarly by koinInject<tv.own.owntv.core.settings.SettingsRepository>().homeBackdropStyle.collectAsStateWithLifecycle(initialValue = 0)
+    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback) && !(cinemaEarly == 1 && it == HomeRow.FEATURED) }
     val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
@@ -384,7 +386,8 @@ fun HomeScreen(
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
         if (trendingItem == null && posterItem == null) when (backdropStyle) {
-            1 -> HomeCinemaBackdrop(focusArt, focusInfo, greeting = {
+            // Before anything has focus, the first featured title stands in the picture.
+            1 -> HomeCinemaBackdrop(focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }, focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
                 HomeGreeting(state.profileName, 0.mpx, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null)
             }, start = contentStart)
             2 -> HomePanelBackdrop(focusArt)
@@ -1677,4 +1680,17 @@ private fun posterInfo(item: Any?, name: String): HomeFocusInfo = when (item) {
         plot = item.plot,
     )
     else -> HomeFocusInfo(name)
+}
+
+/** glcn: a featured slide as the Cinema background's words. */
+private fun featuredInfo(item: tv.own.owntv.core.home.FeaturedItem): HomeFocusInfo = when (item) {
+    is tv.own.owntv.core.home.FeaturedItem.Live -> HomeFocusInfo(
+        title = tv.own.owntv.core.live.SportsNow.displayTitle(item.programme.title),
+        plot = item.programme.description,
+        rateTitle = item.programme.title,
+        rateCategories = item.programme.categories,
+        channel = item.channel,
+    )
+    is tv.own.owntv.core.home.FeaturedItem.Movie -> posterInfo(item.movie, item.movie.name)
+    is tv.own.owntv.core.home.FeaturedItem.Series -> posterInfo(item.series, item.series.name)
 }
