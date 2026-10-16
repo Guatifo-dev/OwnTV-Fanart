@@ -666,11 +666,13 @@ internal fun HomePanelBackdrop(url: String?, modifier: Modifier = Modifier) {
 @Composable
 internal fun HomeInfoPanel(url: String?, info: HomeFocusInfo?, modifier: Modifier = Modifier) {
     val (art, shown) = rememberSettled(url, info)
+    // glcn: nothing focused that it can describe (the billboard says it all itself): no empty box.
+    if (art.isNullOrBlank() && shown == null) return
     Column(
         modifier
             .width(PANEL_WIDTH)
             .fillMaxHeight()
-            .padding(top = 120.mpx, bottom = 48.mpx, end = 48.mpx)
+            .padding(top = 150.mpx, bottom = 48.mpx, end = 48.mpx)
             .clip(RoundedCornerShape(28.mpx))
             .background(Color.Black.copy(alpha = 0.38f))
             .padding(24.mpx),

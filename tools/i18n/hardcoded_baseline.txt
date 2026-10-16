@@ -42,6 +42,7 @@
 1	app/src/main/java/tv/own/owntv/features/home/Seasonal.kt	🦌🦌🛷🎅
 1	app/src/main/java/tv/own/owntv/features/live/LiveCinematic.kt	·
 1	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
+1	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	go live pressed: copy=${live.localTimeshift.value != null} onExo=${liveOnExo.value}
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	Fanart
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	ahXN00
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	carlosglcn

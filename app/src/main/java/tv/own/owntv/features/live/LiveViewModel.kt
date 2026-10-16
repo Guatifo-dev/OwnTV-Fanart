@@ -1864,9 +1864,17 @@ class LiveViewModel(
 
     /** Jump back to the real-time live edge (back on the fast ExoPlayer engine). */
     fun goToLive() {
-        if (timeshift.goLiveOnCopy()) return
-        clearTimeshift()
-        _previewChannel.value?.let { ensurePlaying(it) }
+        tv.own.owntv.player.LiveDiagnosticsLog.event("go live pressed: copy=${live.localTimeshift.value != null} onExo=${liveOnExo.value}")
+        if (!timeshift.goLiveOnCopy()) {
+            clearTimeshift()
+            _previewChannel.value?.let { ensurePlaying(it) }
+        }
+        // glcn: whichever way the channel was re-opened, ExoPlayer ends at the newest moment and playing —
+        // re-using a paused player otherwise picked up where it had been paused.
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(600)
+            if (liveOnExo.value) previewEngine.goLiveEdge()
+        }
     }
 
     /**
