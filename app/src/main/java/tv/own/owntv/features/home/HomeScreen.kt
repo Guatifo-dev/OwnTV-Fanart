@@ -57,6 +57,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -391,7 +394,12 @@ fun HomeScreen(
                 HomeGreeting(state.profileName, 0.mpx, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null)
             }, start = contentStart)
             2 -> HomePanelBackdrop(focusArt)
-            else -> HomeFocusBackdrop(focusArt)
+            // glcn: quieter once the rows have scrolled over it, so the cards read on a calm page.
+            else -> {
+                val scrolledAway by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex > 1 } }
+                val calm by androidx.compose.animation.core.animateFloatAsState(if (scrolledAway) 0.4f else 1f, label = "backdropCalm")
+                HomeFocusBackdrop(focusArt, Modifier.graphicsLayer { alpha = calm })
+            }
         }
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
@@ -406,6 +414,9 @@ fun HomeScreen(
                             else -> Modifier
                         },
                     )
+                    // glcn: rows fade out as they pass under the clock and the buttons at the top, instead of
+                    // sliding beneath them in full colour. Not under Cinema, whose rows start lower anyway.
+                    .then(if (backdropStyle == 1) Modifier else Modifier.topFade(NoHeroTop))
                     .onFocusChanged { if (it.hasFocus) onChildFocused() }
                     // ▶ out of the rail comes back to the card it left from (P1 carry-over): every level
                     // of the list remembers its focused child.
@@ -1694,3 +1705,15 @@ private fun featuredInfo(item: tv.own.owntv.core.home.FeaturedItem): HomeFocusIn
     is tv.own.owntv.core.home.FeaturedItem.Movie -> posterInfo(item.movie, item.movie.name)
     is tv.own.owntv.core.home.FeaturedItem.Series -> posterInfo(item.series, item.series.name)
 }
+
+/** glcn: the content dissolves into the page over the top [height] (alpha mask, one offscreen layer). */
+private fun Modifier.topFade(height: androidx.compose.ui.unit.Dp): Modifier = this
+    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val h = height.toPx()
+        drawRect(
+            Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, startY = h * 0.25f, endY = h),
+            blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+        )
+    }

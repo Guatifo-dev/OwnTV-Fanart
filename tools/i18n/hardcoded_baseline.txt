@@ -33,6 +33,7 @@
 7	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
+1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	backdropCalm
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
 2	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	·
 2	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	★
