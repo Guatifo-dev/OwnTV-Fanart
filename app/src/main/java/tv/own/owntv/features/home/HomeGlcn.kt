@@ -42,6 +42,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -100,6 +101,8 @@ internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
             val animate = tv.own.owntv.ui.theme.animationsOn
             Crossfade(targetState = settled, label = "homeFocusArt") { u ->
                 if (!u.isNullOrBlank()) {
+                    // glcn: a bright picture is brought down to the page, so cards always read over it.
+                    val glow = tv.own.owntv.ui.components.rememberArtColor(u)?.luminance() ?: 0.3f
                     // glcn: the backdrop drifts slowly closer too, in step with the focused card.
                     val drift = remember(u) { androidx.compose.animation.core.Animatable(1f) }
                     val driftOn = animate && !tv.own.owntv.ui.stage.GlcnMotion.subtle
@@ -111,6 +114,7 @@ internal fun HomeFocusBackdrop(url: String?, modifier: Modifier = Modifier) {
                         alignment = androidx.compose.ui.BiasAlignment(0f, -0.4f),
                         modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = drift.value; scaleY = drift.value },
                     )
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = (0.1f + glow * 0.5f).coerceAtMost(0.5f))))
                 }
             }
             Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.85f, 0.35f to 0.45f, 0.7f to 0.15f, 1f to 0f))
@@ -195,7 +199,8 @@ internal fun ArtLiveCard(
             .onFocusChanged {
                 held = it.hasFocus
                 if (it.hasFocus) {
-                    setArt(art)
+                    // glcn: a card with no picture of its own keeps the backdrop that is there.
+                    if (art != null) setArt(art)
                     setInfo(
                         HomeFocusInfo(
                             title = programme?.title?.let(SportsNow::displayTitle) ?: channel.name,
@@ -561,6 +566,8 @@ private fun FullBackdrop(url: String?, modifier: Modifier = Modifier) {
                 alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f),
                 modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = drift.value; scaleY = drift.value },
             )
+            val glow = tv.own.owntv.ui.components.rememberArtColor(u)?.luminance() ?: 0.3f
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = (0.05f + glow * 0.45f).coerceAtMost(0.45f))))
         } else {
             Box(Modifier.fillMaxSize())
         }

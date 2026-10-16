@@ -382,6 +382,8 @@ fun HomeScreen(
     // glcn: the picture of the focused card, behind the rows.
     var focusArt by remember { mutableStateOf<String?>(null) }
     var focusInfo by remember { mutableStateOf<HomeFocusInfo?>(null) }
+    // glcn: the billboard brings its own picture; the backdrop steps back while it has focus.
+    var billboardFocused by remember { mutableStateOf(false) }
     val backdropSetting by seasonSettings.homeBackdropStyle.collectAsStateWithLifecycle(initialValue = 0)
     // The full-screen styles take over only where Home has no hero of its own.
     val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
@@ -397,13 +399,13 @@ fun HomeScreen(
             // glcn: quieter once the rows have scrolled over it, so the cards read on a calm page.
             else -> {
                 val scrolledAway by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex > 1 } }
-                val calm by androidx.compose.animation.core.animateFloatAsState(if (scrolledAway) 0.4f else 1f, label = "backdropCalm")
+                val calm by androidx.compose.animation.core.animateFloatAsState(if (billboardFocused) 0f else if (scrolledAway) 0.4f else 1f, label = "backdropCalm")
                 HomeFocusBackdrop(focusArt, Modifier.graphicsLayer { alpha = calm })
             }
         }
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
-        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { focusArt = it }, LocalHomeFocusInfo provides { focusInfo = it }) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { if (it == null) billboardFocused = true else { billboardFocused = false; focusArt = it } }, LocalHomeFocusInfo provides { focusInfo = it; if (it != null) billboardFocused = false }) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -741,7 +743,7 @@ fun HomeScreen(
                 }
             }
         }
-        if (backdropStyle == 2) HomeInfoPanel(focusArt, focusInfo, Modifier.align(Alignment.TopEnd))
+        if (backdropStyle == 2 && !billboardFocused) HomeInfoPanel(focusArt, focusInfo, Modifier.align(Alignment.TopEnd))
     }
 
     // The preview starts after the card has settled, so decoder setup does not compete with the focus
@@ -1239,7 +1241,7 @@ private fun KeepWatchingRow(
                         .onFocusChanged {
                             onCardFocusChanged(index, it.hasFocus)
                             if (it.hasFocus) {
-                                setArt((still as? HomeStill.Picture)?.url)
+                                (still as? HomeStill.Picture)?.url?.let(setArt)
                                 setInfo(HomeFocusInfo(title = cardTitle, line = cardLine, plot = meta?.plot))
                             }
                         },
@@ -1368,7 +1370,7 @@ private fun ContinuePosterRow(
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) { onFocus(); setArt(item.posterUrl); setInfo(HomeFocusInfo(item.title)) } },
+                        .onFocusChanged { if (it.hasFocus) { onFocus(); setInfo(HomeFocusInfo(item.title)) } },
                 ) {
                     AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 }
@@ -1413,7 +1415,9 @@ private fun <T> FavoritePosterRow(
                         .tracked(track = track)
                         .onFocusChanged {
                             if (it.hasFocus) {
-                                onFocus(); setArt(backdrop(item) ?: poster(item))
+                                // glcn: only a wide picture becomes the backdrop — a poster cropped to the
+                                // screen looked broken; without one the backdrop that is there stays.
+                                onFocus(); backdrop(item)?.takeIf { it.isNotBlank() }?.let(setArt)
                                 setInfo(posterInfo(item, name(item)))
                             }
                         },
