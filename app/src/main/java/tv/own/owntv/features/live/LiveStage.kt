@@ -61,6 +61,8 @@ import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.core.live.EpgNowNext
+import tv.own.owntv.core.live.ProviderName
+import tv.own.owntv.core.live.ProviderTags
 import tv.own.owntv.core.parser.EpgDetails
 import tv.own.owntv.core.parser.XtEpgEntry
 import tv.own.owntv.features.home.timeLeftText

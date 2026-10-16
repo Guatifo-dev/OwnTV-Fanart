@@ -449,6 +449,8 @@ class SettingsViewModel(
     // --- Video Player Settings ---
     val hwDecoding: StateFlow<Boolean> = settings.hwDecoding.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     fun setHwDecoding(enabled: Boolean) { viewModelScope.launch { settings.setHwDecoding(enabled) } }
+    val softwareDecodeAbove1080p: StateFlow<Boolean> = settings.softwareDecodeAbove1080p.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setSoftwareDecodeAbove1080p(enabled: Boolean) { viewModelScope.launch { settings.setSoftwareDecodeAbove1080p(enabled) } }
 
     val vodEnginePreference: StateFlow<tv.own.owntv.core.player.EnginePreference> = settings.vodEnginePreference
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.player.EnginePreference.MPV_FIRST)

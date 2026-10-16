@@ -76,7 +76,7 @@ suspend fun restoreAfterDialogClose(
             // scrollTo takes the scroll mutex, so it also cancels a bringIntoView animation in flight.
             runCatching { scrollState.scrollTo(scrollOffset) }
         }
-        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.isSuccess
+        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.getOrDefault(false)
         if (landed && ++settled > RESTORE_SETTLE_FRAMES) return
     }
 }
@@ -102,7 +102,7 @@ suspend fun restoreAfterDialogClose(
         if (listState.firstVisibleItemIndex != index || listState.firstVisibleItemScrollOffset != offset) {
             runCatching { listState.scrollToItem(index, offset) }
         }
-        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.isSuccess
+        if (!landed) landed = opener != null && runCatching { opener.requestFocus() }.getOrDefault(false)
         if (landed && ++settled > RESTORE_SETTLE_FRAMES) return
     }
 }

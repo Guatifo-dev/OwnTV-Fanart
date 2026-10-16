@@ -335,7 +335,7 @@ internal fun FavouritesPage(
                 modifier = Modifier.focusRequester(segFocus),
             )
         }
-        androidx.compose.runtime.SideEffect { setEntry { runCatching { firstTarget.requestFocus() }.isSuccess } }
+        androidx.compose.runtime.SideEffect { setEntry { runCatching { firstTarget.requestFocus() }.getOrDefault(false) } }
         if (counts.total == 0) {
             EmptyNote(stringResource(R.string.more_fav_empty_title), stringResource(R.string.more_fav_empty_body))
             return@Column
@@ -479,7 +479,7 @@ internal fun HistoryPage(
             Spacer(Modifier.weight(1f))
             if (counts.total > 0) StageTool(stringResource(R.string.settings_clear_history), onClick = { showClear = true }, icon = OwnTVIcon.TRASH, danger = true, modifier = Modifier.focusRequester(clearFocus))
         }
-        androidx.compose.runtime.SideEffect { setEntry { runCatching { (rows.firstOrNull()?.let { r -> focusOf(r.id) } ?: segFocus).requestFocus() }.isSuccess } }
+        androidx.compose.runtime.SideEffect { setEntry { runCatching { (rows.firstOrNull()?.let { r -> focusOf(r.id) } ?: segFocus).requestFocus() }.getOrDefault(false) } }
         if (rows.isEmpty()) {
             EmptyNote(stringResource(R.string.more_history_empty))
             return@Column
@@ -578,7 +578,7 @@ internal fun ErrorLogPage(setEntry: (() -> Boolean) -> Unit, onCountChanged: () 
                 runCatching { exportFocus.requestFocus() }
             })
         }
-        androidx.compose.runtime.SideEffect { setEntry { runCatching { (if (entries.isNullOrEmpty()) exportFocus else firstRow).requestFocus() }.isSuccess } }
+        androidx.compose.runtime.SideEffect { setEntry { runCatching { (if (entries.isNullOrEmpty()) exportFocus else firstRow).requestFocus() }.getOrDefault(false) } }
         Text(stringResource(R.string.settings_playback_error_description_full), style = stageText(17, 500), color = StageColors.Muted, modifier = Modifier.padding(top = 10.mpx))
         exportPath?.let { Text(stringResource(R.string.settings_backup_saved_to, it), style = stageText(16, 500), color = stageAccent.accent, modifier = Modifier.padding(top = 8.mpx)) }
         if (exportFailed) Text(stringResource(R.string.settings_backup_export_error), style = stageText(16, 500), color = StageColors.Danger, modifier = Modifier.padding(top = 8.mpx))

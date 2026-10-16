@@ -23,9 +23,26 @@
 - **⏰ Schedule recording… on a channel: pick the day, start and end (#2)**
 - **⏹️ Stop recording from the channel's menu**
 - **☀️ Light theme across the whole app (Theme: System / Dark / Light)**
+- **🗓️ Auto-match EPG says when it has finished, even away from the Guide** (community PR #251 by @camchis)
+- **🔐 ClearKey channels whose playlist carries the key itself play**
+- **🔎 Search filter buttons: Live TV, TV Shows, Movies, Series**
+- **🎞️ Software decoding above 1080p (Video player switch)**
+- **⚡ Faster downloads over several connections**
+- **💬 A failed download says why**
+- **📺 Watch or keep downloading on a one-stream playlist**
+- **🗂️ Downloads and recordings whose file is gone say "File missing"**
 
 ### 🐛 Fixes
+- **🔤 Hebrew and Arabic subtitles read right to left on every line (#259)**
+- **🎯 ▶ into a page that is still opening no longer does nothing** (community PR #264 by @Kevsosmooth)
+- **⌨️ Settings search from More opens the keyboard on the first OK**
+- **▶️ External player picker offers Always again, so one player can be the default**
+- **📡 Pause and rewind live TV: a channel comes back by itself after a network outage**
+- **⚡ A single CH+/CH− press opens the channel without the half-second wait** (community PR #255 by @sarmadsoomro)
+- **🗓️ Auto-match EPG finishes in seconds on large playlists** (community PR #252 by @camchis)
+- **🎬 A longer Film buffer really holds more of a high-bitrate film** (community PR ahXN00/OwnTV_Core#31 by @sarmadsoomro)
 - **⚡ Opening a channel from its preview goes straight to full screen, no black gap** (community PR #242 by @tvdev-android)
+- **😴 The screensaver no longer starts when a film stops to buffer**
 - **Customize no longer keeps a removed item's actions on screen**
 - **🎞️ Catch-up plays on the hardware decoder and freezes on its first frame less often (#229)**
 - **📡 A catch-up of a programme still on air switches to live instead of freezing**
@@ -54,6 +71,14 @@
 - **💥 Error log and Backup & Restore no longer close the app on a 24-hour clock**
 - **⏯️ The remote's Play/Pause key pauses and resumes again**
 - **🔎 Search finds "Spider-Man" from "Spider-M" and lists every match, not the first 40**
+- **🔗 A provider's get.php M3U link is added as Xtream, so movies and series land in their own sections (#238)**
+- **📺 Shows with a Season 0 load all their episodes on Xtream**
+- **🔢 Xtream episodes with no number are numbered in order instead of all showing E0**
+- **🔁 A show's episode list retries once when the provider drops the connection**
+- **▶️ Play on a new show starts at Season 1 Episode 1; Specials come after the last season**
+- **⏭️ Auto-play continues past a missing season number instead of stopping**
+- **🔤 M3U episodes named "Season 1 Episode 5" or "S2019E05" are recognised**
+- **💾 Big downloads to a FAT32 USB stick fail with a clear reason**
 
 ## v5.1.0 — 2026-10-04
 

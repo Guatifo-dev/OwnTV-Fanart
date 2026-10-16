@@ -13,7 +13,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.layout
 import tv.own.owntv.features.live.LiveCategories
-import tv.own.owntv.features.live.ProviderTags
+import tv.own.owntv.core.live.ProviderTags
 import tv.own.owntv.features.live.edgeScrollSpec
 import tv.own.owntv.features.shell.components.VodCinematicBackdrop
 import tv.own.owntv.features.shell.components.VodDetailsCard
@@ -99,8 +99,8 @@ import tv.own.owntv.features.live.displayLabel
 import org.koin.androidx.compose.koinViewModel
 import androidx.tv.material3.Text
 import tv.own.owntv.R
-import tv.own.owntv.features.customize.categoryRestoreSummary
-import tv.own.owntv.features.customize.CategoryRestorePlan
+import tv.own.owntv.core.customize.categoryRestoreSummary
+import tv.own.owntv.core.customize.CategoryRestorePlan
 import androidx.compose.runtime.produceState
 import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.database.entity.ContentOrderEntity
@@ -1134,7 +1134,7 @@ fun MoviesScreen(
             onMove = { vm.enterCategoryMoveMode(item.key); contextCategory = null },
             // Always offered: the plan is read in the background and only fills in the confirmation.
             resetLabel = stringResource(if (item.key is LiveKey.Custom) R.string.content_category_restore_custom else R.string.content_category_restore_playlist),
-            resetLines = restorePlan?.let { categoryRestoreSummary(it) },
+            resetLines = restorePlan?.let { categoryRestoreSummary(it, androidx.compose.ui.platform.LocalContext.current.resources) },
             onReset = { vm.restoreCategory(item.key); contextCategory = null },
             onDismiss = { contextCategory = null }
         )

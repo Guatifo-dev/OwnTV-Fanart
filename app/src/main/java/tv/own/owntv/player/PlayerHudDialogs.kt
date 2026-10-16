@@ -103,7 +103,7 @@ internal fun TrackDialog(
         repeat(10) {
             androidx.compose.runtime.withFrameNanos { }
             if (selectedIndex >= 0) runCatching { listState.scrollToItem(target) }
-            if (runCatching { focus.requestFocus() }.isSuccess) return@LaunchedEffect
+            if (runCatching { focus.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
             delay(50)
         }
     }
@@ -191,7 +191,7 @@ internal fun TrackDialog(
 private suspend fun requestFocusRetrying(focus: FocusRequester) {
     repeat(10) {
         androidx.compose.runtime.withFrameNanos {}
-        if (runCatching { focus.requestFocus() }.isSuccess) return
+        if (runCatching { focus.requestFocus() }.getOrDefault(false)) return
         delay(50)
     }
 }

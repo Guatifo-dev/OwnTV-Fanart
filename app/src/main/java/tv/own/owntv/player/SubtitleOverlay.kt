@@ -18,6 +18,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,6 +88,7 @@ fun SubtitleOverlay(
                 fontFamily = if (styleOn) font?.asComposeFamily() ?: FontFamily.SansSerif else FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium,
                 shadow = Shadow(color = Color.Black, offset = Offset(0f, 2f), blurRadius = 6f),
+                textDirection = if (isRtlSubtitle(line)) TextDirection.Rtl else TextDirection.Ltr,
             ),
             modifier = Modifier
                 .widthIn(max = 1100.dp * sizeScale)
@@ -95,6 +97,21 @@ fun SubtitleOverlay(
                 .padding(horizontal = 16.dp * sizeScale, vertical = 6.dp * sizeScale),
         )
     }
+}
+
+/**
+ * Whether a cue reads right to left: more Hebrew/Arabic letters than Latin ones. Decided once for the
+ * whole cue (#259) — left to Compose, every line took the app's own direction, so a Hebrew line ended
+ * up with its full stop, dash or number on the wrong side unless the file carried bidi marks.
+ */
+internal fun isRtlSubtitle(text: String): Boolean {
+    var rtl = 0
+    var ltr = 0
+    for (c in text) when (Character.getDirectionality(c)) {
+        Character.DIRECTIONALITY_RIGHT_TO_LEFT, Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC -> rtl++
+        Character.DIRECTIONALITY_LEFT_TO_RIGHT -> ltr++
+    }
+    return rtl > ltr
 }
 
 /**

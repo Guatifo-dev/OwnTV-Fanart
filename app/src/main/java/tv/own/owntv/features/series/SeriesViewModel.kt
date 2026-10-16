@@ -69,9 +69,9 @@ import tv.own.owntv.core.repository.SeriesRepository
 import tv.own.owntv.core.storage.StorageAccess
 import tv.own.owntv.core.storage.MediaFolders
 import tv.own.owntv.features.customize.MoveTarget
-import tv.own.owntv.features.customize.CategoryRestorePlan
-import tv.own.owntv.features.customize.planCategoryRestore
-import tv.own.owntv.features.customize.restoreCategoryToDefault
+import tv.own.owntv.core.customize.CategoryRestorePlan
+import tv.own.owntv.core.customize.planCategoryRestore
+import tv.own.owntv.core.customize.restoreCategoryToDefault
 import tv.own.owntv.features.live.LiveRailItem
 import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
@@ -423,14 +423,18 @@ class SeriesViewModel(
     private var playingQueue: PlayingQueue? = null
 
     /** A season's last episode finished with auto-play on — start the next season's first episode, if any.
-     *  Matches the just-finished episode by its stream URL (robust to in-season auto-advance). */
+     *  Matches the just-finished episode by its stream URL (robust to in-season auto-advance). The next
+     *  season is the next in watching order: a gap in the numbering no longer ends the show, and the
+     *  Specials follow the finale rather than leading into Season 1. */
     private fun continueToNextSeason() {
         val url = player.currentMediaUrl ?: return
         val all = episodes.value
         val finished = all.firstOrNull { it.streamUrl == url } ?: return // not one of this series' episodes
+        val nextSeason = tv.own.owntv.core.content.EpisodeOrder.seasonAfter(all.map { it.seasonNumber }, finished.seasonNumber)
+            ?: return // no next season — series finished
         val nextEpisode = all
-            .filter { it.seasonNumber == finished.seasonNumber + 1 }
-            .minByOrNull { it.episodeNumber } ?: return // no next season — series finished
+            .filter { it.seasonNumber == nextSeason }
+            .minByOrNull { it.episodeNumber } ?: return
         playEpisode(nextEpisode)
     }
 
@@ -609,7 +613,7 @@ class SeriesViewModel(
     val nextUpEpisodeId: StateFlow<Long?> = combine(episodes, episodeProgress) { eps, prog ->
         if (eps.isEmpty()) null
         else {
-            val ordered = eps.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+            val ordered = eps.sortedWith(tv.own.owntv.core.content.EpisodeOrder.episodes)
             val lastWatched = prog.values.maxByOrNull { it.updatedAt }
             when {
                 lastWatched == null -> ordered.first().id
@@ -835,8 +839,9 @@ class SeriesViewModel(
             } else {
                 // Mirror the screen's own fallback: a show whose seasons start at 0 or 2 displays its
                 // first season, and fetching the requested-but-absent season would leave the grid blank.
-                val available = eps.map { it.seasonNumber }.distinct().sorted()
-                val active = if (available.contains(season)) season else available.firstOrNull() ?: season
+                val available = eps.map { it.seasonNumber }.distinct()
+                val active = if (available.contains(season)) season
+                else tv.own.owntv.core.content.EpisodeOrder.openingSeason(available) ?: season
                 show to eps.filter { it.seasonNumber == active }
             }
         }
@@ -910,7 +915,7 @@ class SeriesViewModel(
         val pid = currentProfileId() ?: return false
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return false
         seriesRepository.loadEpisodes(show)
-        val queue = seriesDao.episodesBySeries(show.id).first()
+        val queue = seriesDao.episodesBySeries(show.id).first().sortedWith(tv.own.owntv.core.content.EpisodeOrder.episodes)
         if (queue.isEmpty()) return false
         playEpisodeQueue(show, queue, episode, startPositionMs)
         return true

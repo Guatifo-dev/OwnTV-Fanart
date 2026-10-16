@@ -74,7 +74,7 @@ import tv.own.owntv.core.settings.SettingsRepository.SortMode
 import tv.own.owntv.features.epg.GuideMenuHost
 import tv.own.owntv.features.live.LiveCategoryEntry
 import tv.own.owntv.features.live.LiveRailItem
-import tv.own.owntv.features.live.ProviderTags
+import tv.own.owntv.core.live.ProviderTags
 import tv.own.owntv.features.live.displayLabel
 import tv.own.owntv.ui.components.MenuAction
 import tv.own.owntv.ui.components.OwnTVIcon

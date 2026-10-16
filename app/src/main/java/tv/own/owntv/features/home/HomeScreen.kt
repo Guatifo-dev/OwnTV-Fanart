@@ -246,7 +246,7 @@ fun HomeScreen(
         lastFocus ?: if (fullBleed) playFocus else renderRows.firstOrNull()?.let(rowFocusRequester),
     )
     DisposableEffect(onEntryHook) {
-        onEntryHook?.invoke { latestEntry?.let { runCatching { it.requestFocus() }.isSuccess } ?: false }
+        onEntryHook?.invoke { latestEntry?.let { runCatching { it.requestFocus() }.getOrDefault(false) } ?: false }
         onDispose { onEntryHook?.invoke(null) }
     }
 

@@ -6,9 +6,12 @@ import tv.own.owntv.core.epg.displayLogoUrl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -630,6 +633,20 @@ class EpgViewModel(
         }
     }
 
+    /**
+     * Save a whole run's matches in ONE write. Each [CustomizationStore.setEpgMatch] re-reads, rewrites
+     * and re-saves the profile's entire customisation, so a lineup of a few thousand matches made that
+     * many writes of an ever-growing list — minutes on a television, with the Guide still saying
+     * "Matching…" until the last one landed. Same ids, same normalisation, one write.
+     */
+    private suspend fun saveEpgMatches(profileId: Long, matches: Collection<Pair<String, String>>) {
+        val clean = matches.mapNotNull { (key, epgId) ->
+            epgId.trim().lowercase().takeIf { it.isNotEmpty() }?.let { key to it }
+        }.toMap()
+        if (clean.isEmpty()) return
+        customize.update(profileId, MediaType.LIVE) { it.copy(epgMatches = it.epgMatches + clean) }
+    }
+
     /** Set/clear a channel's manual EPG match (null clears → auto-match), then reload the guide. */
     fun setEpgMatch(channel: ChannelEntity, epgChannelId: String?) {
         viewModelScope.launch {
@@ -716,6 +733,20 @@ class EpgViewModel(
     val matchSummary: StateFlow<EpgMatchSummary?> = _matchSummary.asStateFlow()
 
     /**
+     * The outcome of a bulk run, once, as it finishes — for the shell to say when the Guide is not on
+     * screen. A run outlives leaving the Guide, and its review waits in [review] for the Guide to come
+     * back, but nothing said so: someone who pressed Auto-match and went to watch a channel never knew
+     * there was a review waiting, or that the run had finished at all.
+     */
+    private val _matchFinished = MutableSharedFlow<EpgMatchSummary>(extraBufferCapacity = 1)
+    val matchFinished: SharedFlow<EpgMatchSummary> = _matchFinished.asSharedFlow()
+
+    private fun finishRun(summary: EpgMatchSummary) {
+        _matchSummary.value = summary
+        _matchFinished.tryEmit(summary)
+    }
+
+    /**
      * Scan every channel that has no working guide (no manual match and its tvg-id isn't in the EPG
      * feed), match it by name, auto-apply high-confidence hits and queue the rest for review.
      */
@@ -732,24 +763,24 @@ class EpgViewModel(
                 val cust = customize.observe(pid, MediaType.LIVE).first()
 
                 val outcome = autoMatcher.run(cust, playlistIds)
-                if (!outcome.hadCandidates) { _matchSummary.value = EpgMatchSummary.NoData; return@launch }
+                if (!outcome.hadCandidates) { finishRun(EpgMatchSummary.NoData); return@launch }
 
-                // Persist the confident hits (DataStore writes are cheap, but do them off the scan).
-                for ((key, epgId) in outcome.applied) customize.setEpgMatch(pid, MediaType.LIVE, key, epgId)
+                // Persist the confident hits — in one write, see [saveEpgMatches].
+                saveEpgMatches(pid, outcome.applied)
 
                 runApplied = outcome.applied.map { it.second }
                 openReview(outcome.review.map {
                     EpgMatchSuggestion(it.channel, it.epgChannelId, it.displayName, it.score)
                 })
                 val applied = outcome.applied.size
-                _matchSummary.value = when {
+                finishRun(when {
                     applied == 0 && outcome.review.isEmpty() -> EpgMatchSummary.AllMatched
                     // Everything found pointed at a guide channel with nothing scheduled. Saying
                     // "matched" here would be a success message for a row that stays blank.
                     applied == 0 && outcome.withheldForNoProgrammes == outcome.review.size ->
                         EpgMatchSummary.MatchedNoProgrammes
                     else -> EpgMatchSummary.AutoMatched(applied, outcome.review.size)
-                }
+                })
                 if (applied > 0) fillMatchedInBackground(outcome.applied.map { it.second }) // off the spinner
             } finally {
                 _matching.value = false
@@ -807,7 +838,7 @@ class EpgViewModel(
         if (all.isEmpty()) return
         viewModelScope.launch {
             val pid = settings.activeProfileId.first()
-            for (s in all) customize.setEpgMatch(pid, MediaType.LIVE, CustomizeKeys.channel(s.channel), s.epgChannelId)
+            saveEpgMatches(pid, all.map { CustomizeKeys.channel(it.channel) to it.epgChannelId })
             _review.value = emptyList()
             includeLogosIfTicked(all.map { it.epgChannelId })
             fillMatchedInBackground(all.map { it.epgChannelId })

@@ -68,7 +68,7 @@ Each engine is chosen automatically by content type, with fallback between them.
 - **VOD fallback is never remembered** — every film starts on the engine you chose.
 - **Reset saved player choices** forgets every per-item pin in one step.
 - **Protected (DRM) playback** — Widevine and ClearKey over DASH and HLS, read from the playlist's
-  `#KODIPROP` licence properties, for live channels, films and episodes. The device's own CDM does
+  `#KODIPROP` licence properties (a licence server, or ClearKey keys written inline), for live channels, films and episodes. The device's own CDM does
   the work, so there is nothing to configure and no licence to buy; the device's security level
   decides whether HD is served. Such an item is pinned to ExoPlayer, outranks every other preference,
   and never leaves for an external player. It also **cannot be recorded** — the CDM decrypts only
@@ -201,7 +201,8 @@ List or Guide.
 
 **Movies and Series** — Cinematic or Separate panels (3.5), a sort tool, a title menu (Watch /
 Library / Organise / Details). A **series page** carries the backdrop, Resume/Play, Favourite,
-**Download season** and series options, season tabs with counts (Specials last and uncounted),
+**Download season** and series options, season tabs with counts (Specials last and uncounted; an
+unstarted show plays from Season 1 Episode 1 and auto-play reaches the Specials after the finale),
 Grid | List and an Episode order menu (oldest/newest, hide watched); episode titles are cleaned of
 "Show – S01E03 –" prefixes, with TMDB's title filling a gap. Page and hero headlines drop a leading
 provider tag such as "|MULTI|"; poster labels keep the provider's spelling. **Trailers** play in an in-app player
@@ -212,12 +213,16 @@ YouTube.
 the folder each tab saves to; rows grouped Downloading / On this TV with picture, details, full file
 path and live "64% · 12.4 MB/s · 3 min left"; actions appear on the focused row only. A Recordings card
 shows the next scheduled recording. A channel's menu also schedules a recording by day, start and end
-(no guide needed) and offers **Stop recording** while that channel records.
+(no guide needed) and offers **Stop recording** while that channel records. Downloads add connections
+(up to eight, within the playlist's limit) while each one helps and write the file in order, so a USB
+stick keeps up; a failure states its reason, a missing file says so, and on a one-stream playlist
+playing pauses the download and asks whether to keep watching or keep downloading.
 
-**Search** — tabs All / Live TV / Movies / Series with counts; a channel result shows Live TV's own
+**Search** — filter buttons Live TV / TV Shows / Movies / Series with counts, switched on and off
+with OK (none on = everything); a channel result shows Live TV's own
 preview pane, a film or series its poster panel. It is a show-only page: **OK goes to the item** in
 its own category or page, and Back returns to Search with the query kept. Empty, it offers Jump to,
-recent searches and Continue watching. An **On TV** group lists stored-guide programmes whose title
+recent searches and Continue watching. A **TV Shows** group lists stored-guide programmes whose title
 matches, on now or in the next 12 hours, and OK goes to the channel.
 
 **More** — a glass section list with the profile row: Settings, Favourites, History, Backup &

@@ -104,7 +104,7 @@ fun MoreScreen(
     val pageTarget = remember { FocusRequester() }
     var pageEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var pageFocused by remember { mutableStateOf(false) }
-    val enterPage: () -> Boolean = { pageEntry?.invoke() ?: runCatching { pageTarget.requestFocus() }.isSuccess }
+    val enterPage: () -> Boolean = { pageEntry?.invoke() ?: runCatching { pageTarget.requestFocus() }.getOrDefault(false) }
     val backToSheet: () -> Unit = { runCatching { itemFocus.getValue(selected).requestFocus() } }
     // Like the rail: ▲ ▼ move focus, OK selects the item (its page shows, focus stays on the item),
     // ▶ goes into the page that is shown (owner).
@@ -112,7 +112,7 @@ fun MoreScreen(
 
     // The rail's ▶ lands on the item the sheet was last on.
     DisposableEffect(onEntryHook) {
-        onEntryHook?.invoke { runCatching { itemFocus.getValue(selected).requestFocus() }.isSuccess }
+        onEntryHook?.invoke { runCatching { itemFocus.getValue(selected).requestFocus() }.getOrDefault(false) }
         onDispose { onEntryHook?.invoke(null) }
     }
     LaunchedEffect(restoreFocus) {

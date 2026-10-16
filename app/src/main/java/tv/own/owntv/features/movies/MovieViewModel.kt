@@ -63,9 +63,9 @@ import tv.own.owntv.core.launcher.LauncherIntegrationRepository
 import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.util.throttleLatest
 import tv.own.owntv.features.customize.MoveTarget
-import tv.own.owntv.features.customize.CategoryRestorePlan
-import tv.own.owntv.features.customize.planCategoryRestore
-import tv.own.owntv.features.customize.restoreCategoryToDefault
+import tv.own.owntv.core.customize.CategoryRestorePlan
+import tv.own.owntv.core.customize.planCategoryRestore
+import tv.own.owntv.core.customize.restoreCategoryToDefault
 import tv.own.owntv.features.live.LiveRailItem
 import tv.own.owntv.core.download.DownloadManager
 import tv.own.owntv.core.storage.StorageAccess

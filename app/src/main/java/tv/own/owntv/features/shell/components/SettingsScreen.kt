@@ -303,6 +303,9 @@ fun SettingsScreen(
     val saveScroll = { savedScrollPx = pageScroll.value }
     // The rows column: fresh entry and a lost focus land here, on the page's first row.
     val rowsFocus = remember { FocusRequester() }
+    // Opens the search field's keyboard as it appears, so one OK reaches typing (More's search box too).
+    var searchAutoEdit by remember { mutableStateOf(false) }
+    LaunchedEffect(searchAutoEdit) { if (searchAutoEdit) { kotlinx.coroutines.delay(1000); searchAutoEdit = false } }
     LaunchedEffect(start) {
         if (start == null) return@LaunchedEffect
         tab = SettingsTab.ROOT
@@ -310,7 +313,8 @@ fun SettingsScreen(
         if (start.search) {
             searchMode = true
             searchFromMore = true
-            for (attempt in 0 until 10) { kotlinx.coroutines.delay(50); if (runCatching { searchFieldFocus.requestFocus() }.isSuccess) break }
+            searchAutoEdit = true
+            for (attempt in 0 until 10) { kotlinx.coroutines.delay(50); if (runCatching { searchFieldFocus.requestFocus() }.getOrDefault(false)) break }
         }
         onStartConsumed()
     }
@@ -418,8 +422,6 @@ fun SettingsScreen(
 
     // Restore focus to the row a sub-screen was opened from when the user navigates back.
     var lastTab by rememberSaveable { mutableStateOf<SettingsTab?>(null) }
-    var searchAutoEdit by remember { mutableStateOf(false) }
-    LaunchedEffect(searchAutoEdit) { if (searchAutoEdit) { kotlinx.coroutines.delay(1000); searchAutoEdit = false } }
     // Built from the enum, not hand-listed. It used to be a literal map of twenty entries, and
     // adding SettingsTab.RECORDING without adding a line to it crashed the whole Settings screen
     // with "Key RECORDING is missing in the map" — a `getValue` on a map that had quietly gone

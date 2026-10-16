@@ -227,7 +227,8 @@ private fun EpgRow(
     val subtitle = if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(source.url) != null) {
         stringResource(R.string.settings_epg_sources_portal_guide)
     } else {
-        source.url
+        // Never the account's user name and password (F2): an XMLTV address often carries both.
+        tv.own.owntv.core.network.HttpClient.redactUrl(source.url)
     }
     val catchupNote = count?.third?.takeIf { it > 0 }?.let {
         pluralStringResource(R.plurals.settings_epg_sources_catchup, it, it)
@@ -491,7 +492,7 @@ private fun PlaylistEpgPicker(
             else -> Column(Modifier.trapAllFocusExit().focusGroup()) {
                 opts.forEach { opt ->
                     // A portal guide has no address to show — say what it is instead.
-                    val line = if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(opt.url) != null) stringResource(R.string.settings_epg_sources_portal_guide) else opt.url
+                    val line = if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(opt.url) != null) stringResource(R.string.settings_epg_sources_portal_guide) else tv.own.owntv.core.network.HttpClient.redactUrl(opt.url)
                     tv.own.owntv.ui.stage.StagePopupOption(
                         title = opt.name, subtitle = line, onClick = { onPick(opt) },
                         modifier = if (opt == opts.first()) Modifier.focusRequester(firstFocus) else Modifier,

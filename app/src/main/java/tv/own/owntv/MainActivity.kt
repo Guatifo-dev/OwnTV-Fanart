@@ -258,9 +258,14 @@ open class MainActivity : ComponentActivity() {
 
             // Hold the screen on while video is actually playing, so the TV screensaver doesn't
             // start mid-channel/episode; released when paused/stopped (then the screensaver is fine).
+            // Buffering counts as playing: the screensaver timer runs from the last remote press, so
+            // releasing for a one-second rebuffer deep into a film started the screensaver at once.
             val playing by player.isPlaying.collectAsStateWithLifecycle()
-            LaunchedEffect(playing) {
-                if (playing) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            val buffering by player.buffering.collectAsStateWithLifecycle()
+            val failed by player.error.collectAsStateWithLifecycle()
+            val keepAwake = (playing || buffering) && failed == null
+            LaunchedEffect(keepAwake) {
+                if (keepAwake) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
 

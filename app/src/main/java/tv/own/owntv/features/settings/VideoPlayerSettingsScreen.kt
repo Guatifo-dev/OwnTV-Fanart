@@ -194,6 +194,7 @@ internal val VIDEO_QUICK_ROWS: List<VideoQuickRef> = listOf(
     VideoQuickRef("vp_forget_fixes", SECTION_PLAYER, OwnTVIcon.REFRESH, R.string.settings_forget_stream_fixes, R.string.settings_forget_stream_fixes_description),
     VideoQuickRef("vp_external", SECTION_PLAYER, OwnTVIcon.PLAY, R.string.settings_external_player, R.string.settings_external_player_row_description),
     VideoQuickRef("vp_hw", SECTION_PICTURE, OwnTVIcon.VIDEO, R.string.settings_hardware_decoding, R.string.settings_hardware_decoding_description),
+    VideoQuickRef("vp_sw_above_1080p", SECTION_PICTURE, OwnTVIcon.VIDEO, R.string.settings_software_decode_above_1080p, R.string.settings_software_decode_above_1080p_description),
     VideoQuickRef("vp_hdr", SECTION_PICTURE, OwnTVIcon.VIDEO, R.string.settings_quick_hdr, R.string.settings_hdr_description),
     VideoQuickRef("vp_max_quality", SECTION_PICTURE, OwnTVIcon.VIDEO, R.string.settings_max_video_quality, R.string.settings_max_video_quality_description),
     VideoQuickRef("vp_tunneled", SECTION_PICTURE, OwnTVIcon.VIDEO, R.string.settings_tunneled_playback, R.string.settings_tunneled_playback_description),
@@ -278,6 +279,10 @@ internal fun videoQuickBinding(key: String, vm: SettingsViewModel): VideoQuickBi
         "vp_hw" -> {
             val on by vm.hwDecoding.collectAsStateWithLifecycle()
             toggle(onOff(on), on) { vm.setHwDecoding(!on) }
+        }
+        "vp_sw_above_1080p" -> {
+            val on by vm.softwareDecodeAbove1080p.collectAsStateWithLifecycle()
+            toggle(onOff(on), on) { vm.setSoftwareDecodeAbove1080p(!on) }
         }
         "vp_hdr" -> {
             val on by vm.hdrEnabled.collectAsStateWithLifecycle()
@@ -593,6 +598,7 @@ internal fun VideoPlayerGroupRows(
     val colors = OwnTVTheme.colors
     val vm: SettingsViewModel = koinViewModel()
     val hw by vm.hwDecoding.collectAsStateWithLifecycle()
+    val swAbove1080p by vm.softwareDecodeAbove1080p.collectAsStateWithLifecycle()
     val vodEngine by vm.vodEnginePreference.collectAsStateWithLifecycle()
     val liveEngine by vm.liveEnginePreference.collectAsStateWithLifecycle()
     val enginePins by vm.vodEnginePinCount.collectAsStateWithLifecycle()
@@ -693,7 +699,7 @@ internal fun VideoPlayerGroupRows(
         dialogForQuickKey(focusRowKey)?.let { dialog = it }
         repeat(10) {
             kotlinx.coroutines.delay(50)
-            if (runCatching { rowReturnFocus.requestFocus() }.isSuccess) return@LaunchedEffect
+            if (runCatching { rowReturnFocus.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
         }
     }
     // Kick focus into the group; the group's onEnter (below) decides the actual target.
@@ -894,6 +900,13 @@ internal fun VideoPlayerGroupRows(
             desc = stringResource(R.string.settings_hardware_decoding_description),
             chip = if (hw) stringResource(R.string.common_on) else stringResource(R.string.common_off), primaryChip = hw,
             onClick = { vm.setHwDecoding(!hw) },
+        )
+        Row2(
+            quickKey = "vp_sw_above_1080p",
+            icon = OwnTVIcon.VIDEO, title = stringResource(R.string.settings_software_decode_above_1080p),
+            desc = stringResource(R.string.settings_software_decode_above_1080p_description),
+            chip = stringResource(if (swAbove1080p) R.string.common_on else R.string.common_off), primaryChip = swAbove1080p,
+            onClick = { vm.setSoftwareDecodeAbove1080p(!swAbove1080p) },
         )
         Row2(
             quickKey = "vp_hdr",

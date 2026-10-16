@@ -177,6 +177,7 @@ internal val SETTING_HELP: Map<String, Int> = mapOf(
 /** For a switch row, whether On is the recommended value (the panel tags it). Absent = no tag. */
 internal val SWITCH_RECOMMENDED: Map<String, Boolean> = mapOf(
     "vp_hw" to true,
+    "vp_sw_above_1080p" to false,
     "vp_measured_stats" to false,
     "vp_logging" to false,
     "rec_reserve" to true,
