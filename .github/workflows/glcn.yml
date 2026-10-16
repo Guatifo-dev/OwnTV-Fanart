@@ -79,12 +79,16 @@ jobs:
           mkdir -p dist && cp "$APK" dist/OwnTV-Fanart.apk
           ls -la dist
 
+      # glcn: every push is built and checked, but a version is only published when asked:
+      # a commit whose message carries [release], or a manual run. The notes come from
+      # glcn/RELEASE_NOTES.md, which the in-app updater shows.
       - name: Publish releases
-        if: success()
+        if: success() && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]'))
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NOTES="Build ${GITHUB_SHA::7} — core $(tr -d '[:space:]' < glcn/core.ref | cut -c1-7)"
+          if [ -s glcn/RELEASE_NOTES.md ]; then NOTES="$(cat glcn/RELEASE_NOTES.md)"$'\n\n'"$NOTES"; fi
           # Versioned release: what the in-app updater reads (releases/latest).
           gh release create "v$VERSION_NAME" dist/OwnTV-Fanart.apk \
             --title "OwnTV Fanart $VERSION_NAME" --notes "$NOTES" --target "$GITHUB_SHA" --latest
