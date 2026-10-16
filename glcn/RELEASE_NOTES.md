@@ -11,3 +11,15 @@
 - Modo "Cine": la información en etiquetas (hora, canal, nota TMDB…) y título más grande.
 - Modo "Panel": las filas ya no se meten bajo el panel (48 px de separación), caben tres tarjetas exactas y el panel se alinea con la primera fila.
 - La app usa su propio enlace interno (owntvfanart://) y su propio identificador en cualquier compilación, para no coincidir nunca con la OwnTV original.
+
+### Novedades de la OwnTV original (ahXN00) incluidas
+- Un solo toque de CH+/CH− cambia de canal al instante.
+- Pausar y rebobinar el directo: el canal vuelve solo tras un corte de red.
+- Botones de filtro en Buscar (Directo, Programas, Películas, Series).
+- Descodificación por software por encima de 1080p (opción del reproductor).
+- Descargas más rápidas y que explican por qué fallan; aviso de "archivo no encontrado".
+- Subtítulos en hebreo y árabe de derecha a izquierda.
+- Series: los especiales (temporada 0) van tras la última temporada; mejor numeración de episodios.
+- El emparejado automático de la guía (EPG) es mucho más rápido y avisa al terminar.
+- El salvapantallas ya no salta cuando una película se para a cargar.
+- Canales ClearKey con la clave en la lista se reproducen.
