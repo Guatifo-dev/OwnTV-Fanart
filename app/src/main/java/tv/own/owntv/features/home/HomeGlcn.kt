@@ -150,6 +150,9 @@ internal fun HomeGreeting(name: String?, start: Dp, mark: String? = null) {
     }
 }
 
+/** glcn: the live cards' width when a style sets it (Panel fits exactly three beside its panel); null = 400. */
+internal val LocalHomeCardWidth = androidx.compose.runtime.compositionLocalOf<Dp?> { null }
+
 /** Room under a picture card for its title and line. */
 private val CAPTION_HEIGHT = 74.mpx
 
@@ -180,7 +183,7 @@ internal fun ArtLiveCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
-    width: Dp = 400.mpx,
+    width: Dp = LocalHomeCardWidth.current ?: 400.mpx,
     startLabel: String? = null,
     bell: Boolean = false,
 ) {
@@ -246,7 +249,19 @@ internal fun ArtLiveCard(
                     if (art != null) {
                         ProgrammeArt(url = art, modifier = Modifier.fillMaxSize())
                     } else {
-                        Box(Modifier.fillMaxSize().background(Color(0xFF14191F)))
+                        // glcn: no picture — the channel's own colour, from its logo, behind the logo; never a blank card.
+                        val logoTone = tv.own.owntv.ui.components.rememberArtColor(channel.displayLogoUrl)
+                            ?.takeIf { it.luminance() in 0.03f..0.75f } ?: Color(0xFF2A3340)
+                        Box(
+                            Modifier.fillMaxSize().background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        androidx.compose.ui.graphics.lerp(logoTone, Color.Black, 0.3f),
+                                        androidx.compose.ui.graphics.lerp(logoTone, Color.Black, 0.78f),
+                                    ),
+                                ),
+                            ),
+                        )
                         ChannelPlate(channel, Modifier.align(Alignment.Center).size(150.mpx, 96.mpx))
                     }
                 }
@@ -579,7 +594,7 @@ private fun FullBackdrop(url: String?, modifier: Modifier = Modifier) {
  * the programme is read in full: its synopsis, how far through it is, and what comes next.
  */
 @Composable
-private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, modifier: Modifier = Modifier) {
+private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, modifier: Modifier = Modifier, chips: Boolean = false) {
     val nowArt: tv.own.owntv.core.live.NowArt = org.koin.compose.koinInject()
     val live by androidx.compose.runtime.produceState<Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>?>(null, info.channel?.id) {
         value = info.channel?.let { ch -> runCatching { nowArt.nowAndNext(ch) }.getOrNull() }
@@ -596,7 +611,14 @@ private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, 
         Text(info.title, style = stageText(titleSize, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
         val rating = info.rateTitle?.let { tv.own.owntv.ui.components.rememberTmdbRating(it, info.rateCategories) }
         val line = listOfNotNull(info.line?.takeIf { it.isNotBlank() }, rating).joinToString("  ·  ")
-        if (line.isNotBlank()) {
+        if (chips && line.isNotBlank()) {
+            // glcn (Cine): the facts as separate tags — time, channel, year, length — the rating in the accent.
+            val parts = info.line.orEmpty().split(" · ").map { it.trim() }.filter { it.isNotEmpty() }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.mpx), modifier = Modifier.padding(top = 14.mpx)) {
+                parts.take(4).forEach { InfoChip(it, accent = false) }
+                rating?.let { InfoChip(it, accent = true) }
+            }
+        } else if (line.isNotBlank()) {
             Text(line, style = stageText(19, 600), color = Color.White.copy(alpha = 0.82f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.mpx))
         }
         live?.first?.let { p ->
@@ -626,6 +648,21 @@ private fun FocusInfoBlock(info: HomeFocusInfo, titleSize: Int, plotLines: Int, 
     }
 }
 
+@Composable
+private fun InfoChip(text: String, accent: Boolean) {
+    val a = stageAccent
+    Text(
+        text,
+        style = stageText(17, 700),
+        color = if (accent) a.accent else Color.White.copy(alpha = 0.9f),
+        maxLines = 1, overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.mpx))
+            .background(if (accent) a.accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.14f))
+            .padding(horizontal = 12.mpx, vertical = 5.mpx),
+    )
+}
+
 /**
  * Backdrop style "Cinema": the picture fills the screen, clear in the top half, with what it is written
  * over it on the left; the rows live in the lower part ([CINEMA_ROWS_TOP]). Before anything has focus
@@ -646,7 +683,7 @@ internal fun HomeCinemaBackdrop(url: String?, info: HomeFocusInfo?, greeting: @C
             ),
         )
         Box(Modifier.padding(start = start, top = 112.mpx, end = 760.mpx).height(CINEMA_ROWS_TOP - 130.mpx).then(Modifier.clipToBounds())) {
-            if (shown != null) FocusInfoBlock(shown, titleSize = 46, plotLines = 2) else greeting()
+            if (shown != null) FocusInfoBlock(shown, titleSize = 52, plotLines = 2, chips = true) else greeting()
         }
     }
 }
@@ -680,7 +717,8 @@ internal fun HomeInfoPanel(url: String?, info: HomeFocusInfo?, modifier: Modifie
         modifier
             .width(PANEL_WIDTH)
             .fillMaxHeight()
-            .padding(top = 150.mpx, bottom = 48.mpx, end = 48.mpx)
+            // glcn: level with the first row, and the same 48 from the edge as everything else.
+            .padding(top = 110.mpx, bottom = 48.mpx, end = 48.mpx)
             .clip(RoundedCornerShape(28.mpx))
             .background(Color.Black.copy(alpha = 0.38f))
             .padding(24.mpx),

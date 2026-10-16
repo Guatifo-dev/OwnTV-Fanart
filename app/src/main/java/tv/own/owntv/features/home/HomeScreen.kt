@@ -389,7 +389,9 @@ fun HomeScreen(
     val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
-    Box(modifier.fillMaxSize()) {
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxSize()) {
+        // glcn (Panel): three live cards fill the width left beside the panel exactly.
+        val panelCardWidth = if (backdropStyle == 2) ((maxWidth - PANEL_WIDTH - 48.mpx - contentStart - 40.mpx) / 3).coerceIn(220.mpx, 400.mpx) else null
         if (trendingItem == null && posterItem == null) when (backdropStyle) {
             // Before anything has focus, the first featured title stands in the picture.
             1 -> HomeCinemaBackdrop(focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }, focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
@@ -405,14 +407,15 @@ fun HomeScreen(
         }
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
-        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { if (it == null) billboardFocused = true else { billboardFocused = false; focusArt = it } }, LocalHomeFocusInfo provides { focusInfo = it; if (it != null) billboardFocused = false }) {
+        CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec, LocalHomeFocusArt provides { if (it == null) billboardFocused = true else { billboardFocused = false; focusArt = it } }, LocalHomeFocusInfo provides { focusInfo = it; if (it != null) billboardFocused = false }, LocalHomeCardWidth provides panelCardWidth) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .then(
                         when (backdropStyle) {
                             1 -> Modifier.padding(top = CINEMA_ROWS_TOP)
-                            2 -> Modifier.padding(end = PANEL_WIDTH)
+                            // glcn: the rows stop 48 short of the panel, never under it.
+                            2 -> Modifier.padding(end = PANEL_WIDTH + 48.mpx)
                             else -> Modifier
                         },
                     )
@@ -526,7 +529,8 @@ fun HomeScreen(
                                 title = row.displayTitle(),
                                 items = state.heroItems,
                                 // glcn: Apple TV's "Up Next" — big cards right under the billboard.
-                                big = (fullBleed && !inRows) || renderRows.indexOf(HomeRow.HERO) <= 1,
+                                // glcn: one or two titles to go on with are shown large wherever the row is.
+                                big = (fullBleed && !inRows) || renderRows.indexOf(HomeRow.HERO) <= 1 || state.heroItems.size <= 2,
                                 start = contentStart,
                                 metadata = state.heroMetadata,
                                 previewIndex = previewIndex,

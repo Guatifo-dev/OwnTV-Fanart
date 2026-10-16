@@ -30,7 +30,7 @@
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFocusArt
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	homeFullArt
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	panelArt
-7	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
+8	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	backdropCalm
@@ -79,6 +79,8 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_startup_sound
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_zap_panel
+1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	\0
+1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	?
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	\0
 2	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	·
 1	app/src/main/java/tv/own/owntv/glcn/FanartDream.kt	–

@@ -471,3 +471,125 @@ internal fun RailAvatar(initial: String, size: Int = 46, textSize: Int = 20, ava
         Text(initial, style = stageText(textSize, 800), color = Color(0xFF2A0D12), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
+
+/**
+ * glcn: Navigation = Top bar. The rail's sections as one glass bar at the top left, level with the clock
+ * cluster (34 down, 68 high), so the content keeps its whole width. Names as text pills; Search and More
+ * as icons at the ends. Entering it lands on the selected section; ▼ returns to the content, exactly where
+ * it was left, the way ▶ leaves the rail.
+ */
+@Composable
+fun StageTopBar(
+    selected: MainSection,
+    visibleSections: Set<MainSection>,
+    onSelect: (MainSection) -> Unit,
+    profileName: String,
+    onSwitchProfile: () -> Unit,
+    onPickAvatar: () -> Unit,
+    avatarId: Int = -1,
+    avatarPath: String = "",
+    selectedItemFocusRequester: FocusRequester,
+    contentFocusRequester: FocusRequester,
+    enterContent: (() -> Boolean)? = null,
+    onFocused: () -> Unit,
+    nowPlaying: NowPlayingRail?,
+    onNowPlaying: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    var hasFocus by remember { mutableStateOf(false) }
+    val focusSection = when {
+        selected == MainSection.SETTINGS || selected == MainSection.MORE -> MainSection.MORE
+        selected == MainSection.SEARCH || selected in visibleSections -> selected
+        else -> StageRailOrder.firstOrNull { it in visibleSections } ?: MainSection.MORE
+    }
+    val named = StageRailOrder.filter { it != MainSection.SEARCH && it in visibleSections }
+    val a = stageAccent
+    val toContent = {
+        scope.launch {
+            withFrameNanos { }
+            if (enterContent?.invoke() != true) runCatching { contentFocusRequester.requestFocus() }
+        }
+        Unit
+    }
+    Box(modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 40.mpx, y = 34.mpx)
+                .height(68.mpx)
+                .onFocusChanged {
+                    val entered = it.hasFocus && !hasFocus
+                    hasFocus = it.hasFocus
+                    if (it.hasFocus) onFocused()
+                    if (entered) scope.launch { runCatching { selectedItemFocusRequester.requestFocus() } }
+                }
+                .focusProperties {
+                    onExit = {
+                        if (requestedFocusDirection == FocusDirection.Down) {
+                            cancelFocusChange()
+                            toContent()
+                        }
+                    }
+                }
+                .onKeyEvent { e ->
+                    if (e.key != Key.DirectionDown) return@onKeyEvent false
+                    if (e.type == KeyEventType.KeyDown) toContent()
+                    true
+                }
+                .focusGroup()
+                .stageGlass(34.mpx, overContent = true)
+                .padding(horizontal = 10.mpx),
+            horizontalArrangement = Arrangement.spacedBy(4.mpx),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BrandMark(rememberAppliedIcon(), 44.mpx, Modifier.padding(start = 6.mpx, end = 10.mpx))
+            TopIcon(OwnTVIcon.SEARCH, selected == MainSection.SEARCH, { onSelect(MainSection.SEARCH) },
+                if (focusSection == MainSection.SEARCH) Modifier.focusRequester(selectedItemFocusRequester) else Modifier)
+            if (nowPlaying != null) TopIcon(if (nowPlaying.audioMode) OwnTVIcon.EQ else OwnTVIcon.PLAY, false, onNowPlaying, accentIcon = true)
+            named.forEach { section ->
+                val active = section == selected
+                StageSurface(
+                    onClick = { onSelect(section) },
+                    radius = 24.mpx,
+                    modifier = Modifier.height(50.mpx)
+                        .then(if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier),
+                    idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape(24.mpx)) else Modifier,
+                    contentAlignment = Alignment.Center,
+                ) { focused ->
+                    Text(
+                        stringResource(section.labelRes),
+                        style = stageText(19, if (active) 700 else 600),
+                        color = when { focused -> a.onAccent; active -> a.accent; else -> StageColors.NavText },
+                        maxLines = 1,
+                        modifier = Modifier.padding(horizontal = 18.mpx),
+                    )
+                }
+            }
+            TopIcon(OwnTVIcon.TILES, selected == MainSection.MORE || selected == MainSection.SETTINGS, { onSelect(MainSection.MORE) },
+                if (focusSection == MainSection.MORE) Modifier.focusRequester(selectedItemFocusRequester) else Modifier)
+            StageSurface(
+                onClick = onSwitchProfile,
+                onLongClick = onPickAvatar,
+                radius = 23.mpx,
+                modifier = Modifier.padding(start = 4.mpx).size(46.mpx),
+                focusStyle = StageFocus.POSTER,
+                contentAlignment = Alignment.Center,
+            ) { RailAvatar(profileName.trim().take(1).uppercase().ifEmpty { "?" }, avatarId = avatarId, imagePath = avatarPath) }
+        }
+    }
+}
+
+@Composable
+private fun TopIcon(icon: OwnTVIcon, active: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, accentIcon: Boolean = false) {
+    val a = stageAccent
+    StageSurface(
+        onClick = onClick,
+        radius = 25.mpx,
+        modifier = modifier.size(50.mpx),
+        idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape(25.mpx)) else Modifier,
+        contentAlignment = Alignment.Center,
+    ) { focused ->
+        OwnTVIcon(icon, when { focused -> a.onAccent; active || accentIcon -> a.accent; else -> StageColors.NavText }, Modifier.size(25.mpx))
+    }
+}

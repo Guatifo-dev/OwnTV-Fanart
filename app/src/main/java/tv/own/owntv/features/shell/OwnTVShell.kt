@@ -1146,7 +1146,12 @@ fun OwnTVShell(
                                         stageScreen -> 0.dp
                                         else -> 6.dp
                                     },
-                                    top = if (stageScreen) 0.dp else tv.own.owntv.features.shell.components.StageContentTop,
+                                    top = when {
+                                        !stageScreen -> tv.own.owntv.features.shell.components.StageContentTop
+                                        // glcn: the top bar takes the band the clock sits in; Home already starts below it.
+                                        navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP && selectedSection != MainSection.HOME -> 96.mpx
+                                        else -> 0.dp
+                                    },
                                 )
                                 // ◀ with nothing further left in the content goes back to the rail, however the
                                 // content was entered. The D-pad search alone missed it whenever the open rail
@@ -1266,7 +1271,7 @@ fun OwnTVShell(
                             onContentScrolled = { contentScrolled = it },
                             // Beside the resting capsule; a docked rail already reserves its own width.
                             onEntryHook = { homeEntry = it },
-                            contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
+                            contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.FLOATING) 150.mpx else 64.mpx,
                             modifier = Modifier.fillMaxSize(),
                         )
 
@@ -1362,7 +1367,7 @@ fun OwnTVShell(
                             restoreFocus = restoreFocus,
                             onRestored = { restoreFocus = false },
                             onEntryHook = { downloadsEntry = it },
-                            contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
+                            contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.FLOATING) 150.mpx else 64.mpx,
                             modifier = Modifier.fillMaxSize(),
                         )
 
@@ -1448,7 +1453,29 @@ fun OwnTVShell(
                 onPlaylistPillBounds = { playlistPillBounds = it },
                 modifier = Modifier.align(Alignment.TopEnd).onFocusChanged { clusterFocused = it.hasFocus }.focusGroup(),
             )
-            tv.own.owntv.features.shell.components.StageRail(
+            if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP) tv.own.owntv.features.shell.components.StageTopBar(
+                selected = selectedSection,
+                visibleSections = visibleSections,
+                onSelect = selectFromNav,
+                profileName = profileName.ifBlank { stringResource(R.string.common_own_tv_user) },
+                onSwitchProfile = onSwitchProfile,
+                onPickAvatar = { showAvatarPicker = true },
+                avatarId = avatarId,
+                avatarPath = avatarPath,
+                selectedItemFocusRequester = sidebarFocus,
+                contentFocusRequester = contentAreaFocus,
+                enterContent = when (selectedSection) {
+                    MainSection.HOME -> homeEntry
+                    MainSection.EPG, MainSection.LIVE_TV -> guideEntry
+                    MainSection.MOVIES, MainSection.SERIES -> vodEntry
+                    MainSection.DOWNLOADS -> downloadsEntry
+                    MainSection.MORE -> moreEntry
+                    else -> null
+                },
+                onFocused = { focusedLayer = ShellLayer.SIDEBAR },
+                nowPlaying = nowPlayingRail,
+                onNowPlaying = enterNowPlaying,
+            ) else tv.own.owntv.features.shell.components.StageRail(
                 state = railState,
                 size = railSize,
                 length = navLength,

@@ -1980,6 +1980,7 @@ private fun navStyleLabel(style: tv.own.owntv.core.settings.SettingsRepository.N
     when (style) {
         tv.own.owntv.core.settings.SettingsRepository.NavStyle.FLOATING -> R.string.settings_nav_floating
         tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED -> R.string.settings_nav_docked
+        tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP -> R.string.glcn_nav_top
     },
 )
 
@@ -3375,7 +3376,7 @@ private fun stageRowExtras(
         )),
         "navigation" to RowExtra(
             SettingValue.Opens(navStyleLabel(navStyle) + sep + stringResource(navSize.labelRes)),
-            choices = listOf(stringResource(R.string.settings_nav_floating), stringResource(R.string.settings_nav_docked)),
+            choices = listOf(stringResource(R.string.settings_nav_floating), stringResource(R.string.settings_nav_docked), stringResource(R.string.glcn_nav_top)),
             chosen = navStyle.ordinal,
             recommended = 1,
         ),

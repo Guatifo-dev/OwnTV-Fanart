@@ -67,6 +67,7 @@ fun NavigationSettingsPopup(
     val styles = listOf(
         NavStyle.FLOATING to (R.string.settings_nav_floating to R.string.settings_nav_floating_desc),
         NavStyle.DOCKED to (R.string.settings_nav_docked to R.string.settings_nav_docked_desc),
+        NavStyle.TOP to (R.string.glcn_nav_top to R.string.glcn_nav_top_desc),
     )
 
     StagePopup(onDismiss = onDismiss, title = stringResource(R.string.settings_navigation), eyebrow = eyebrow) {
@@ -79,6 +80,8 @@ fun NavigationSettingsPopup(
                 leading = { focused -> StagePopupRadio(on = value == style, focused = focused) },
             )
         }
+        // glcn: the bar along the top has no size or length to set.
+        if (style != NavStyle.TOP) {
         StagePopupDivider()
         StagePopupOption(
             title = stringResource(R.string.settings_size),
@@ -104,6 +107,7 @@ fun NavigationSettingsPopup(
                 onClick = { onWiden(widths[(widths.indexOf(widen) + 1) % widths.size]) },
                 leading = { OwnTVIcon(OwnTVIcon.EXPAND, StageColors.Text, Modifier.size(21.mpx)) },
             )
+        }
         }
         val static = menuMode == NavMenuMode.STATIC
         StagePopupOption(
