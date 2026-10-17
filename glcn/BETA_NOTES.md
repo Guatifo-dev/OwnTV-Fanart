@@ -23,3 +23,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Arreglado: en Ajustes, cada tarjeta abría el grupo anterior (Apariencia abría Fuentes y guía). Faltaba la tarjeta Fanart; ya está, y cada tarjeta abre su grupo.
 - Sonidos de menú en «Desactivado»: la app queda en silencio. Antes seguían sonando los clics del propio Android TV.
 - Inicio Cine/Panel con estilos claros: el título y la sinopsis salen en texto oscuro y se leen (antes blanco sobre claro).
+- Sonidos de menú: «Suaves» de serie en instalaciones nuevas. Quien ya tenía la app conserva lo que tenía.

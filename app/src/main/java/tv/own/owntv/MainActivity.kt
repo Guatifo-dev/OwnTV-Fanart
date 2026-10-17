@@ -226,6 +226,7 @@ open class MainActivity : ComponentActivity() {
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
         // glcn: menu sounds follow the setting; the opening chime plays once per cold start.
         lifecycleScope.launch {
+            runCatching { glcnSettings.keepUiSoundsForExistingOnce() }
             glcnSettings.uiSounds.collect {
                 tv.own.owntv.glcn.UiSounds.level = it
                 quietSystemClicks()
