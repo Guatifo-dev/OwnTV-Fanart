@@ -273,6 +273,7 @@ open class MainActivity : ComponentActivity() {
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
             val accent by viewModel.accent.collectAsStateWithLifecycle()
             val customAccent by viewModel.customAccent.collectAsStateWithLifecycle()
+            val glcnStyle by org.koin.compose.koinInject<tv.own.owntv.core.settings.SettingsRepository>().glcnStyle.collectAsStateWithLifecycle(initialValue = null)
             val focusHighlight by viewModel.focusHighlight.collectAsStateWithLifecycle()
             val focusHighlightWidth by viewModel.focusHighlightWidth.collectAsStateWithLifecycle()
             val uiZoomPercent by viewModel.uiZoomPercent.collectAsStateWithLifecycle()
@@ -378,6 +379,7 @@ open class MainActivity : ComponentActivity() {
                 popupFontFamily = fontCustomization.popupFamily,
                 popupFontSizePercent = fontCustomization.popupFontSizePercent,
                 popupSizePercent = fontCustomization.popupSizePercent,
+                glcnStyle = glcnStyle,
             ) {
                 val base = LocalDensity.current
                 // Glass is "always on" (Option B): panels go translucent whenever at least one surface is

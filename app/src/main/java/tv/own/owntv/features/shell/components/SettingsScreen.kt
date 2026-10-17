@@ -1,5 +1,6 @@
 package tv.own.owntv.features.shell.components
 
+import tv.own.owntv.glcn.label
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.features.settings.SettingValue
 import tv.own.owntv.features.settings.labelRes
@@ -374,6 +375,8 @@ fun SettingsScreen(
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
     val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
+    val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
+    var showGlcnStyle by remember { mutableStateOf(false) }
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val dialogueBoost by settingsVm.dialogueBoost.collectAsStateWithLifecycle()
@@ -557,8 +560,16 @@ fun SettingsScreen(
         // glcn: everything this version adds, on one page.
         RootGroup("group_fanart", stringResource(R.string.glcn_fanart_group), OwnTVIcon.SPARKLE, stringResource(R.string.glcn_fanart_summary)),
         RootRow(
-            "glcn_home_backdrop", TileTone.PRIMARY, OwnTVIcon.THEME,
+            "glcn_style", TileTone.PRIMARY, OwnTVIcon.PALETTE,
             heading = stringResource(R.string.glcn_part_home),
+            title = stringResource(R.string.glcn_style_title),
+            desc = stringResource(R.string.glcn_style_desc),
+            chip = glcnStyle?.label() ?: stringResource(R.string.common_off),
+            chipTone = if (glcnStyle != null) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { showGlcnStyle = true },
+        ),
+        RootRow(
+            "glcn_home_backdrop", TileTone.PRIMARY, OwnTVIcon.THEME,
             title = stringResource(R.string.glcn_home_backdrop_title),
             desc = stringResource(R.string.glcn_home_backdrop_desc),
             chip = stringResource(
@@ -1420,6 +1431,9 @@ fun SettingsScreen(
     if (showStartup) StartupDialogHost(settingsVm, startupMode, onClose = { showStartup = false }, onPickChannel = { showStartupChannelPicker = true })
     if (showStartupChannelPicker) StartupChannelPickerHost(settingsVm, startupChannel, onClose = { showStartupChannelPicker = false })
     if (showAnimations) AnimationsDialogHost(settingsVm, animationLevel, onClose = { showAnimations = false })
+    if (showGlcnStyle) {
+        tv.own.owntv.glcn.StylePickerPopup(glcnStyle, onPick = settingsVm::applyGlcnStyle, onDismiss = { showGlcnStyle = false })
+    }
     if (showNavigation) {
         NavigationPopupHost(settingsVm, onDismiss = { showNavigation = false })
     }

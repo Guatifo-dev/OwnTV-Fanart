@@ -1022,6 +1022,8 @@ class SettingsViewModel(
     val backToWindow: StateFlow<Boolean> = settings.backToWindow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun toggleBackToWindow() { viewModelScope.launch { settings.setBackToWindow(!backToWindow.value) } }
     val autoSkipIntro: StateFlow<Boolean> = settings.autoSkipIntro.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val glcnStyle: StateFlow<tv.own.owntv.core.theme.GlcnStyle?> = settings.glcnStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    fun applyGlcnStyle(style: tv.own.owntv.core.theme.GlcnStyle?) { viewModelScope.launch { settings.applyGlcnStyle(style) } }
     fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
 
     // glcn: Kodi-style extras.

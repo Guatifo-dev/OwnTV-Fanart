@@ -67,7 +67,7 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
-private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
+private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, GLCN_STYLE, GLCN_HOME, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
 
 /**
  * Onboarding for one profile (P10B-W1 … W9). [firstRun] shows language/welcome/disclaimer; otherwise it
@@ -115,8 +115,11 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 title = stringResource(R.string.setup_before_you_start),
                 sub = stringResource(R.string.setup_disclaimer),
                 back = WizardAction(stringResource(R.string.common_back), { step = Step.DISPLAY_SIZE }),
-                next = WizardAction(stringResource(R.string.setup_i_understand), { step = Step.SETUP_CHOICE }, rememberFirstFocus()),
+                next = WizardAction(stringResource(R.string.setup_i_understand), { step = Step.GLCN_STYLE }, rememberFirstFocus()),
             )
+            // glcn: the style and Home's layout, chosen before anything else so the rest of setup wears them.
+            Step.GLCN_STYLE -> StyleStep(onNext = { step = Step.GLCN_HOME }, onBack = { step = Step.DISCLAIMER })
+            Step.GLCN_HOME -> HomeLayoutStep(onNext = { step = Step.SETUP_CHOICE }, onBack = { step = Step.GLCN_STYLE })
             // First decision: start fresh or bring everything back from a backup (profiles included —
             // no point creating a profile first that the restore would replace).
             Step.SETUP_CHOICE -> {
@@ -125,7 +128,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                     step = WizardStep.PROFILE,
                     title = stringResource(R.string.setup_set_up_owntv),
                     sub = stringResource(R.string.setup_setup_choice_description),
-                    back = WizardAction(stringResource(R.string.common_back), { step = Step.DISCLAIMER }),
+                    back = WizardAction(stringResource(R.string.common_back), { step = Step.GLCN_HOME }),
                     next = null,
                 ) {
                     WizardCards(
@@ -288,7 +291,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
 
 /** A focus requester that takes focus once the step is on screen (the step's first control). */
 @Composable
-private fun rememberFirstFocus(): FocusRequester {
+internal fun rememberFirstFocus(): FocusRequester {
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { kotlinx.coroutines.delay(60); runCatching { fr.requestFocus() } }
     return fr
