@@ -28,7 +28,9 @@ import tv.own.owntv.core.epg.displayLogoUrl
 object PiconPrefetch {
     private const val START_DELAY_MS = 20_000L
     private const val MAX_CHANNELS = 20_000
-    private const val PARALLEL = 3
+    private const val PARALLEL = 1
+    /** A pause between logos, so the logo server never sees a burst (some answer one with errors). */
+    private const val GAP_MS = 120L
 
     fun start(context: Context, scope: CoroutineScope) {
         val app = context.applicationContext
@@ -47,8 +49,12 @@ object PiconPrefetch {
         }
     }
 
+    /** Only on Wi-Fi or Ethernet: a phone on 5G can report itself unmetered, and that is still its data. */
     private fun metered(c: Context): Boolean = runCatching {
-        (c.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).isActiveNetworkMetered
+        val cm = c.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return true
+        cm.isActiveNetworkMetered || !(caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) ||
+            caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET))
     }.getOrDefault(true)
 
     private suspend fun fetch(app: Context, dao: ChannelDao, sourceIds: List<Long>) = coroutineScope {
@@ -68,6 +74,7 @@ object PiconPrefetch {
                         .size(64, 64)
                         .build()
                     runCatching { loader.execute(request) }
+                    delay(GAP_MS)
                 }
             }
         }

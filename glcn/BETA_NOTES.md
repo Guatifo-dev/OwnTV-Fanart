@@ -11,3 +11,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Saltar intro: tras saltar, el botón desaparece (antes podía seguir en pantalla).
 - Picons: tras arrancar y después de cada sincronización, la app descarga en segundo plano los logos de todos los canales; la lista y la guía salen ya con sus logos. Misma calidad.
 - Info del reproductor (botón ⓘ): nueva línea **Arranque del canal**, lo que tardó el canal en mostrar imagen.
+- La precarga de picons va ahora de uno en uno, con pausas, para no saturar el servidor de logos.
