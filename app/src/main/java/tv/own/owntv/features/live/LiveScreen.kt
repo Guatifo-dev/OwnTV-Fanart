@@ -161,6 +161,11 @@ fun LiveScreen(
     val previewArmed by vm.previewArmed.collectAsStateWithLifecycle()
     val previewBlockedSingleSession by vm.previewBlockedSingleSession.collectAsStateWithLifecycle()
     val nowNext by vm.nowNext.collectAsStateWithLifecycle()
+    // glcn: which channel [nowNext] belongs to. The preview's channel changes the moment the cursor
+    // moves, its guide a moment later — in between, the newly focused row showed the previous channel's
+    // programme. Only a guide that arrived while this channel was previewed is its own.
+    var nowNextFor by remember { mutableStateOf<Long?>(null) }
+    LaunchedEffect(nowNext) { nowNextFor = previewChannel?.id }
     val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
     val sortMode by vm.sortMode.collectAsStateWithLifecycle()
     val livePreviewSetting by vm.livePreviewEnabled.collectAsStateWithLifecycle()
@@ -927,7 +932,7 @@ fun LiveScreen(
                                     name = parsed,
                                     // The channel under the cursor answers from the preview itself, so the row
                                     // and the stage beside it can never disagree.
-                                    now = if (isPreviewed) nowNext?.now ?: nowProgrammes[channel.id] else nowProgrammes[channel.id],
+                                    now = if (isPreviewed && nowNextFor == channel.id) nowNext?.now ?: nowProgrammes[channel.id] else nowProgrammes[channel.id],
                                     nowTitle = nowPlaying[channel.id],
                                     isFavorite = favoriteIds.contains(channel.id),
                                     showNumber = showChannelNumbers,
