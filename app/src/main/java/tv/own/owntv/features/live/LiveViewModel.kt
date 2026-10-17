@@ -1900,7 +1900,14 @@ class LiveViewModel(
         tv.own.owntv.player.LiveDiagnosticsLog.event("go live pressed: copy=${live.localTimeshift.value != null} onExo=${liveOnExo.value}")
         if (!timeshift.goLiveOnCopy()) {
             clearTimeshift()
-            _previewChannel.value?.let { ensurePlaying(it) }
+            if (live.localTimeshift.value != null) {
+                // glcn: playing from the copy saved on this device but not counted as rewound (a plain
+                // pause): re-open the copy at its newest moment. Re-tuning the channel instead re-opened
+                // the same copy at the remembered resume point — where the user started watching.
+                live.localRewind.seek(null)
+            } else {
+                _previewChannel.value?.let { ensurePlaying(it) }
+            }
         }
         // glcn: whichever way the channel was re-opened, ExoPlayer ends at the newest moment and playing —
         // re-using a paused player otherwise picked up where it had been paused.
