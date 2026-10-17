@@ -48,6 +48,10 @@ android {
         // glcn fork: own package id so it installs next to the official OwnTV (CI passes ".glcn").
         // Always its own id, in any build: the original author asked forks not to share his.
         applicationIdSuffix = providers.gradleProperty("glcn.appIdSuffix").orNull?.takeIf { it.isNotBlank() } ?: ".glcn"
+        // glcn: the beta (dev branch) installs beside the stable app under its own name and follows its own updates.
+        val glcnBeta = providers.gradleProperty("glcn.beta").orNull == "true"
+        if (glcnBeta) resValue("string", "app_name", "OwnTV Fanart Beta")
+        buildConfigField("boolean", "GLCN_BETA", glcnBeta.toString())
         minSdk = 26
         targetSdk = 36
         // CI injects these from the git tag (see .github/workflows/android.yml) so releases never
@@ -182,6 +186,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 
     androidResources {

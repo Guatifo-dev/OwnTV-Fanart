@@ -10,14 +10,14 @@ name: Build glcn
 #   - Branch "ci-status": status.txt + build.log (last lines), so the result can be read with git.
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: glcn-build
+  group: glcn-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -69,7 +69,8 @@ jobs:
           echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
           ./gradlew :app:assembleStandardRelease \
             -Powntv.corePath="$GITHUB_WORKSPACE/core-src" \
-            -Pglcn.appIdSuffix=.glcn \
+            -Pglcn.appIdSuffix=${{ github.ref == 'refs/heads/dev' && '.glcn.beta' || '.glcn' }} \
+            -Pglcn.beta=${{ github.ref == 'refs/heads/dev' }} \
             --stacktrace --console=plain 2>&1 | tee build.log
 
       - name: Package APK
@@ -83,7 +84,7 @@ jobs:
       # a commit whose message carries [release], or a manual run. The notes come from
       # glcn/RELEASE_NOTES.md, which the in-app updater shows.
       - name: Publish releases
-        if: success() && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]'))
+        if: success() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]'))
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -100,12 +101,26 @@ jobs:
           gh release list --limit 100 --json tagName,createdAt --jq 'map(select(.tagName|startswith("v")))|sort_by(.createdAt)|reverse|.[3:]|.[].tagName' \
             | while read -r t; do gh release delete "$t" --yes --cleanup-tag || true; done
 
+      # glcn: the dev branch is the beta — every push publishes it, as a pre-release (never "latest", so
+      # the stable app never sees it). The beta app reads this tag; the version is in the release name.
+      - name: Publish beta
+        if: success() && github.ref == 'refs/heads/dev'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp dist/OwnTV-Fanart.apk dist/OwnTV-Fanart-Beta.apk
+          NOTES="Beta ${GITHUB_SHA::7} — core $(tr -d '[:space:]' < glcn/core.ref | cut -c1-7)"
+          if [ -s glcn/BETA_NOTES.md ]; then NOTES="$(cat glcn/BETA_NOTES.md)"$'\n\n'"$NOTES"; fi
+          gh release delete beta-latest --yes --cleanup-tag || true
+          gh release create beta-latest dist/OwnTV-Fanart-Beta.apk \
+            --title "OwnTV Fanart Beta $VERSION_NAME" --notes "$NOTES" --target "$GITHUB_SHA" --prerelease
+
       - name: Report status to ci-status branch
         if: always()
         run: |
           STATUS="${{ steps.build.outcome }}"
           mkdir -p /tmp/ci && cd /tmp/ci
-          git init -q && git checkout -q -b ci-status
+          git init -q && git checkout -q -b "${{ github.ref == 'refs/heads/dev' && 'ci-status-dev' || 'ci-status' }}"
           {
             echo "status=$STATUS"
             echo "app=$GITHUB_SHA"
@@ -118,4 +133,4 @@ jobs:
           fi
           git add -A
           git -c user.name=ci -c user.email=ci@localhost commit -q -m "ci $STATUS ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY" ci-status
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY" "${{ github.ref == 'refs/heads/dev' && 'ci-status-dev' || 'ci-status' }}"
