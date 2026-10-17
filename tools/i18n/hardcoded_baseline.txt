@@ -99,6 +99,9 @@
 1	app/src/main/java/tv/own/owntv/glcn/IntroSkip.kt	OK
 1	app/src/main/java/tv/own/owntv/glcn/IntroSkip.kt	glcn_intro
 1	app/src/main/java/tv/own/owntv/glcn/PiconPrefetch.kt	http
+1	app/src/main/java/tv/own/owntv/player/PlayerHudChrome.kt	\0
+1	app/src/main/java/tv/own/owntv/player/PlayerHudChrome.kt	EXO
+1	app/src/main/java/tv/own/owntv/player/PlayerHudChrome.kt	MPV
 1	app/src/main/java/tv/own/owntv/player/StreamInfoOverlay.kt	%.1f s
 1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	TMDB
 1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	artTint

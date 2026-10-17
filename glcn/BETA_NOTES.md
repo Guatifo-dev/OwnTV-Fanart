@@ -14,3 +14,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - La precarga de picons va ahora de uno en uno, con pausas, para no saturar el servidor de logos.
 - Mando SHIELD: **mantener ⏯ abre la Guía**. Mantener ≡ lo usa la propia SHIELD para su menú de ajustes, así que la app nunca lo recibía. Se cambia solo una vez en instalaciones existentes, sin tocar botones personalizados. Favorito se marca desde la lista de canales.
 - Nuevo en Ajustes › Fanart: **Margen de pantalla** (2–8 %), para teles que recortan los bordes de la imagen.
+- **Reproductor en directo, nuevo diseño:** reloj arriba a la derecha y debajo la ficha del programa más grande, con su imagen y la sinopsis más larga. El canal (picón, número y nombre) pasa al panel de abajo con resolución · **fps** · **bitrate** · sonido. Ya no se repiten el motor ni el formato 16:9.

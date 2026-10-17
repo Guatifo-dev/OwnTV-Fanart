@@ -1840,12 +1840,21 @@ fun OwnTVShell(
                                         atMs = watching,
                                     )
                                 }
-                                tv.own.owntv.features.shell.components.LiveEpgCard(
-                                    epg = epg,
-                                    // glcn: while rewound, live is context — one line under the replayed programme.
-                                    compact = watching != null,
-                                    modifier = if (watching == null) Modifier else Modifier.alpha(0.85f),
-                                )
+                                if (watching == null) {
+                                    // glcn: the programme's picture beside it, as on the channel-change banner.
+                                    val artChannel = previewChannel
+                                    val art by androidx.compose.runtime.produceState<String?>(null, artChannel?.id, epg?.now?.startMs) {
+                                        value = artChannel?.let { runCatching { liveVm.nowFull(it).first?.imageUrl }.getOrNull() }
+                                    }
+                                    tv.own.owntv.features.shell.components.LiveEpgCardWithArt(epg = epg, art = art)
+                                } else {
+                                    tv.own.owntv.features.shell.components.LiveEpgCard(
+                                        epg = epg,
+                                        // glcn: while rewound, live is context — one line under the replayed programme.
+                                        compact = true,
+                                        modifier = Modifier.alpha(0.85f),
+                                    )
+                                }
                             }
                         }
                     } else null,

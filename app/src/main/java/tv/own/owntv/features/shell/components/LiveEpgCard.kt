@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,6 +60,8 @@ fun LiveEpgCard(
     atMs: Long? = null,
     /** glcn: one line only — the live card under the archive one while rewound. */
     compact: Boolean = false,
+    /** glcn: drawn inside [LiveEpgCardWithArt] — no panel of its own, a longer synopsis. */
+    bare: Boolean = false,
 ) {
     if (epg == null || (epg.now == null && epg.next == null)) return
     val archive = variant == EpgCardVariant.ARCHIVE
@@ -75,9 +78,8 @@ fun LiveEpgCard(
     // Side by side, the two halves fought for the corner and the "now" half shrank to one word a line.
     Column(
         modifier = modifier
-            .widthIn(min = 300.dp, max = 500.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.Black.copy(alpha = 0.66f))
+            .widthIn(min = 300.dp, max = if (bare) 470.dp else 500.dp)
+            .then(if (bare) Modifier else Modifier.clip(RoundedCornerShape(10.dp)).background(Color.Black.copy(alpha = 0.66f)))
             .then(
                 if (archive) Modifier
                     .background(colors.primary.copy(alpha = 0.09f))
@@ -134,7 +136,7 @@ fun LiveEpgCard(
                     synopsis,
                     style = MaterialTheme.typography.labelMedium,
                     color = hudInk.copy(alpha = 0.82f),
-                    maxLines = 2,
+                    maxLines = if (bare) 4 else 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 6.dp),
                 )
@@ -156,6 +158,29 @@ fun LiveEpgCard(
                 )
             }
         }
+    }
+}
+
+/**
+ * glcn: the live programme card with the programme's picture beside it — the player's top-right card, in
+ * the same manner as the channel-change banner. Without a picture it is the plain card.
+ */
+@Composable
+fun LiveEpgCardWithArt(epg: EpgNowNext?, art: String?, modifier: Modifier = Modifier) {
+    if (epg == null || (epg.now == null && epg.next == null)) return
+    if (art.isNullOrBlank()) { LiveEpgCard(epg, modifier); return }
+    Row(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.Black.copy(alpha = 0.66f))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        tv.own.owntv.ui.components.ProgrammeArt(
+            url = art,
+            modifier = Modifier.size(width = 224.dp, height = 126.dp).clip(RoundedCornerShape(10.dp)),
+        )
+        LiveEpgCard(epg, bare = true)
     }
 }
 

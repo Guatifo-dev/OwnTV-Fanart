@@ -419,7 +419,12 @@ fun PlayerHud(
     val hudScope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(forceShow) { if (forceShow) controlsVisible = true }
-    LaunchedEffect(controlsVisible, player) { if (controlsVisible) player.refreshStreamChips() }
+    // glcn: on live TV the chips (frame rate, bitrate) keep refreshing while the controls show.
+    LaunchedEffect(controlsVisible, player, isLive) {
+        if (!controlsVisible) return@LaunchedEffect
+        player.refreshStreamChips()
+        while (isLive) { kotlinx.coroutines.delay(2_500); player.refreshStreamChips() }
+    }
     DisposableEffect(showInfo, player) {
         if (showInfo) player.refreshStreamChips()
         player.setBitrateTrackingEnabled(showInfo)
@@ -725,6 +730,18 @@ fun PlayerHud(
             // One unified strip: back · logo · chips-over-channel-name · Now/Next guide. The channel name
             // used to be drawn twice (here and in a floating card below), with the guide stranded on the
             // right edge — that space belongs to the history list now.
+            // glcn: live TV — the clock in the top-right corner with the programme card under it; the
+            // channel itself moves down into the dock (see the header below). Films keep the top bar.
+            if (isLive && error == null) {
+                Column(
+                    Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 28.dp),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    PlayerClock(watchingMs = watchingWallMs?.invoke())
+                    liveEpgCard?.invoke()
+                }
+            } else {
             TopBar(
                 player, isLive, listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) }, duration, onBack,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -735,6 +752,7 @@ fun PlayerHud(
                     { PlayerClock(watchingMs = watchingWallMs?.invoke()) }
                 } else null,
             )
+            }
 
             // Hide the transport (play/seek/prev/next) and bottom bar while an error is up — the error
             // overlay owns the screen with its own Retry, so the play/rewind/forward must not show behind it.
@@ -786,6 +804,9 @@ fun PlayerHud(
                     onOpenDialog = { dialog = it }, onPip = onPip, onAudioMode = onAudioMode,
                     onMultiview = onMultiview, onRecordThis = onRecordThis, recordingThis = recordingThis, onBack = onBack,
                     modifier = Modifier.align(Alignment.BottomStart),
+                    header = if (isLive) {
+                        { LiveChannelHeader(player, streamChips.ifEmpty { listOfNotNull(videoRes) }, onBack) }
+                    } else null,
                 )
             }
         }
