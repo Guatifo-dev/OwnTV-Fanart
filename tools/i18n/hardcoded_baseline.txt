@@ -45,10 +45,21 @@
 1	app/src/main/java/tv/own/owntv/features/live/LiveCinematic.kt	·
 1	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
 1	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	go live pressed: copy=${live.localTimeshift.value != null} onExo=${liveOnExo.value}
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	\0
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	Fanart
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	ahXN00
 1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	carlosglcn
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	copy
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	exo
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	first frame
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	go live
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	mpv
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	rewind
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	seek
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	timeshift
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	tune
 2	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	·
+1	app/src/main/java/tv/own/owntv/features/more/MorePages.kt	—
 1	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w780
 8	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/settings/DnsSettingsScreen.kt	${cfg.host}$p

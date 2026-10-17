@@ -9,6 +9,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -590,6 +591,28 @@ internal fun ErrorLogPage(setEntry: (() -> Boolean) -> Unit, onCountChanged: () 
         Text(stringResource(R.string.settings_playback_error_description_full), style = stageText(17, 500), color = StageColors.Muted, modifier = Modifier.padding(top = 10.mpx))
         exportPath?.let { Text(stringResource(R.string.settings_backup_saved_to, it), style = stageText(16, 500), color = stageAccent.accent, modifier = Modifier.padding(top = 8.mpx)) }
         if (exportFailed) Text(stringResource(R.string.settings_backup_export_error), style = stageText(16, 500), color = StageColors.Danger, modifier = Modifier.padding(top = 8.mpx))
+        // glcn (beta only): the live player's own diary — the last lines of what it did (tunes, rewinds,
+        // "go live", the saved copy) — readable here, so a fault can be shown with a photo of the screen.
+        if (tv.own.owntv.BuildConfig.GLCN_BETA) {
+            val diary = remember(refresh) {
+                tv.own.owntv.player.LiveDiagnosticsLog.snapshot().lines()
+                    .filter { l -> listOf("go live", "timeshift", "tune", "seek", "rewind", "copy", "exo", "mpv", "first frame").any { l.contains(it, ignoreCase = true) } }
+                    .takeLast(40)
+            }
+            Box(
+                Modifier.padding(top = 14.mpx).fillMaxWidth().height(300.mpx)
+                    .background(StageColors.Ink.copy(alpha = 0.06f), RoundedCornerShape(14.mpx))
+                    .focusable()
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState(Int.MAX_VALUE))
+                    .padding(14.mpx),
+            ) {
+                Text(
+                    diary.joinToString("\n").ifBlank { "—" },
+                    style = stageText(13, 500), color = StageColors.Body,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                )
+            }
+        }
         val list = entries
         when {
             list == null -> Unit

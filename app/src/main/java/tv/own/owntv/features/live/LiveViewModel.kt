@@ -1902,6 +1902,9 @@ class LiveViewModel(
     fun goToLive() {
         tv.own.owntv.player.LiveDiagnosticsLog.event("go live pressed: copy=${live.localTimeshift.value != null} onExo=${liveOnExo.value}")
         var reopenOnExo = false
+        // Rewound into the provider's archive, the stream on screen IS the archive: re-opening it would
+        // replay the archive. Only a plain pause re-opens the same live stream.
+        val wasRewound = timeshift.isRewound
         if (!timeshift.goLiveOnCopy()) {
             clearTimeshift()
             if (live.localTimeshift.value != null) {
@@ -1909,7 +1912,7 @@ class LiveViewModel(
                 // pause): re-open the copy at its newest moment. Re-tuning the channel instead re-opened
                 // the same copy at the remembered resume point — where the user started watching.
                 live.localRewind.seek(null)
-            } else if (liveOnExo.value) {
+            } else if (liveOnExo.value && !wasRewound) {
                 // glcn: a plain pause on ExoPlayer with no copy: tuning the same channel again does
                 // nothing (it is already "playing"), and the paused stream resumed from its buffer, still
                 // behind. The stream itself is opened again, at the provider's live moment.
