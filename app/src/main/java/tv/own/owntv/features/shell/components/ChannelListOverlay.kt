@@ -95,7 +95,7 @@ fun ChannelListOverlay(
     watchedAt: Map<Long, Long>? = null,
     onOpenCategories: (() -> Unit)? = null,
     /** glcn: the focused channel's programme on air, for the picture panel beside the list. */
-    loadNow: (suspend (ChannelEntity) -> EpgProgrammeEntity?)? = null,
+    loadNow: (suspend (ChannelEntity) -> Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>)? = null,
     /** glcn: the focused channel's coming schedule; when set it takes the picture panel's place, right beside the list. */
     loadSchedule: (suspend (ChannelEntity) -> List<EpgProgrammeEntity>)? = null,
 ) {
@@ -296,16 +296,17 @@ fun ChannelListOverlay(
 @Composable
 private fun ZapPreviewPanel(
     channel: ChannelEntity?,
-    loadNow: suspend (ChannelEntity) -> EpgProgrammeEntity?,
+    loadNow: suspend (ChannelEntity) -> Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>,
     modifier: Modifier = Modifier,
 ) {
-    var programme by remember { mutableStateOf<EpgProgrammeEntity?>(null) }
+    var programme by remember { mutableStateOf<Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>?>(null) }
     LaunchedEffect(channel?.id) {
         if (channel == null) { programme = null; return@LaunchedEffect }
         kotlinx.coroutines.delay(180)
         programme = runCatching { loadNow(channel) }.getOrNull()
     }
-    val p = programme ?: return
+    val p = programme?.first ?: return
+    val next = programme?.second
     val fmt = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
     Column(
         modifier
@@ -328,8 +329,22 @@ private fun ZapPreviewPanel(
             fmt.format(java.util.Date(p.startMs)) + " – " + fmt.format(java.util.Date(p.stopMs)),
             style = stageText(16, 500), color = StageColors.Muted, maxLines = 1,
         )
+        // glcn: how far through it is.
+        val span = (p.stopMs - p.startMs).coerceAtLeast(1L)
+        val f = ((System.currentTimeMillis() - p.startMs).toFloat() / span).coerceIn(0f, 1f)
+        Box(Modifier.fillMaxWidth().height(4.mpx).clip(RoundedCornerShape(2.mpx)).background(StageColors.Ink.copy(alpha = 0.12f))) {
+            Box(Modifier.fillMaxWidth(f).height(4.mpx).background(stageAccent.accent))
+        }
         p.description?.takeIf { it.isNotBlank() }?.let {
             Text(it, style = stageText(16, 400), color = StageColors.Dim, maxLines = 4, overflow = TextOverflow.Ellipsis)
+        }
+        // glcn: and what follows it.
+        next?.let { n ->
+            Text(
+                stringResource(R.string.content_live_next) + " · " + fmt.format(java.util.Date(n.startMs)) + "  " + n.title,
+                style = stageText(16, 600), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.mpx),
+            )
         }
     }
 }

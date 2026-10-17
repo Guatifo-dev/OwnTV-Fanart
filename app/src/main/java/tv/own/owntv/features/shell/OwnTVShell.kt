@@ -226,6 +226,7 @@ fun OwnTVShell(
     // player returns to the exact control the user left rather than to the top of the screen.
     val shellContentFocus = remember { FocusRequester() }
     // Stage navigation (P1, P1b): where the rail sits, what it shows, its length, the floating hide delay.
+    val backToWindow by settingsRepo.backToWindow.collectAsStateWithLifecycle(initialValue = false)
     val navStyle by settingsRepo.navStyle.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED)
     val navSize by settingsRepo.navSize.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT)
     val navWiden by settingsRepo.navWiden.collectAsStateWithLifecycle(initialValue = null)
@@ -1698,7 +1699,8 @@ fun OwnTVShell(
                 val isTunedLive = isLiveChannel && !catchupActive
                 PlayerHud(
                     player = if (liveOnExo) liveVm.previewEngine else mpvEngine, // HUD drives the active engine
-                    onBack = exitPlayer,
+                    // glcn: Settings → Back in the player = Window keeps a live channel playing small.
+                    onBack = if (isTunedLive && backToWindow) dockPlayer else exitPlayer,
                     onPip = dockPlayer, // PiP/dock works for live on either engine now
                     onAudioMode = toAudioMode,
                     // The channel-list overlay draws ABOVE the HUD; while it's open the HUD goes inert so
@@ -1781,7 +1783,7 @@ fun OwnTVShell(
                             // glcn: the programme's picture beside now/next — the banner as a TV operator draws it.
                             val zapChannel = previewChannel
                             val art by androidx.compose.runtime.produceState<String?>(null, zapChannel?.id, guide?.now?.startMs) {
-                                value = zapChannel?.let { runCatching { liveVm.nowFull(it)?.imageUrl }.getOrNull() }
+                                value = zapChannel?.let { runCatching { liveVm.nowFull(it).first?.imageUrl }.getOrNull() }
                             }
                             androidx.compose.foundation.layout.Row(
                                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),

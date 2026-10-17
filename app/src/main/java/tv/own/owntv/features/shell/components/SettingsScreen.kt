@@ -372,6 +372,7 @@ fun SettingsScreen(
     val animStyle by settingsVm.animStyle.collectAsStateWithLifecycle()
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
+    val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
@@ -679,6 +680,15 @@ fun SettingsScreen(
             chip = stringResource(if (zapPanel == 1) R.string.glcn_zap_panel_schedule else R.string.glcn_zap_panel_preview),
             chipTone = TileTone.PRIMARY,
             onClick = { settingsVm.cycleZapPanel() },
+        ),
+        // glcn: what Back does on a live channel full screen.
+        RootRow(
+            "glcn_back_window", TileTone.SECONDARY, OwnTVIcon.LIVE_TV,
+            title = stringResource(R.string.glcn_back_title),
+            desc = stringResource(R.string.glcn_back_desc),
+            chip = stringResource(if (backToWindow) R.string.glcn_back_window else R.string.glcn_back_stop),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.toggleBackToWindow() },
         ),
         // glcn: animation style (Full / Subtle), menu sounds (Off / Soft / Normal), opening chime.
         RootRow(
