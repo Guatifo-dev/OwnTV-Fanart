@@ -137,7 +137,7 @@ fun LiveEpgCard(
                     synopsis,
                     style = MaterialTheme.typography.labelMedium,
                     color = hudInk.copy(alpha = 0.82f),
-                    maxLines = if (bare) 4 else 2,
+                    maxLines = if (bare) 3 else 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 6.dp),
                 )
@@ -179,7 +179,7 @@ fun LiveEpgCardWithArt(epg: EpgNowNext?, art: String?, modifier: Modifier = Modi
     ) {
         tv.own.owntv.ui.components.ProgrammeArt(
             url = art,
-            modifier = Modifier.size(width = 224.dp, height = 126.dp).clip(RoundedCornerShape(10.dp)),
+            modifier = Modifier.size(width = 192.dp, height = 108.dp).clip(RoundedCornerShape(10.dp)),
         )
         LiveEpgCard(epg, bare = true)
     }

@@ -733,13 +733,15 @@ fun PlayerHud(
             // glcn: live TV — the clock in the top-right corner with the programme card under it; the
             // channel itself moves down into the dock (see the header below). Films keep the top bar.
             if (isLive && error == null) {
-                Column(
+                // Side by side, card then clock, on one line along the top: stacked, the card reached down
+                // to the middle of the screen, where the play/pause controls sit.
+                Row(
                     Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 28.dp),
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    PlayerClock(watchingMs = watchingWallMs?.invoke())
                     liveEpgCard?.invoke()
+                    PlayerClock(watchingMs = watchingWallMs?.invoke())
                 }
             } else {
             TopBar(
