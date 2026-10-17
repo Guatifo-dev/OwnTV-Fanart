@@ -20,3 +20,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Inicio: la última fila (Esta noche) ya no queda pegada al borde de abajo.
 - Reproductor con estilos claros: la ficha del programa se lee bien (antes texto oscuro sobre fondo oscuro).
 - Vista Pósters de la lista de canales: abierta manteniendo OK ya no se cierra sola al soltar.
+- Arreglado: en Ajustes, cada tarjeta abría el grupo anterior (Apariencia abría Fuentes y guía). Falta la tarjeta Fanart, ya está.

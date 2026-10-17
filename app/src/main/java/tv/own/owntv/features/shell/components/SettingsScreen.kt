@@ -559,7 +559,7 @@ fun SettingsScreen(
             onClick = { settingsVm.setUpdateCheckOnStart(!updateCheckOnStart) },
         ),
         // glcn: everything this version adds, on one page.
-        RootGroup("group_fanart", stringResource(R.string.glcn_fanart_group), OwnTVIcon.SPARKLE, stringResource(R.string.glcn_fanart_summary)),
+        RootGroup("group_fanart", stringResource(R.string.glcn_fanart_group), OwnTVIcon.IMAGE, stringResource(R.string.glcn_fanart_summary)),
         RootRow(
             "glcn_style", TileTone.PRIMARY, OwnTVIcon.PALETTE,
             heading = stringResource(R.string.glcn_part_home),

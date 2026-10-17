@@ -215,6 +215,8 @@ private data class SettingsGroupCard(val icon: OwnTVIcon, val nameRes: Int, val 
 
 private val SettingsCards = listOf(
     SettingsGroupCard(OwnTVIcon.SPARKLE, R.string.settings_group_quick, R.string.settings_group_summary_quick, null),
+    // glcn: Fanart sits second in `SettingsGroup`, so its card must too, or every card after it opens the wrong group.
+    SettingsGroupCard(OwnTVIcon.IMAGE, R.string.glcn_fanart_group, R.string.glcn_fanart_summary, 10),
     SettingsGroupCard(OwnTVIcon.PERSON, R.string.settings_group_profile, R.string.settings_card_profile, 3),
     SettingsGroupCard(OwnTVIcon.LIST, R.string.settings_group_sources, R.string.settings_card_sources, 8),
     SettingsGroupCard(OwnTVIcon.PALETTE, R.string.settings_group_appearance, R.string.settings_card_appearance, 9),
@@ -267,7 +269,7 @@ internal fun SettingsPage(entry: FocusRequester, pinned: Int, onOpenGroup: (Int)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     OwnTVIcon(card.icon, if (focused) StageColors.Text else StageColors.Muted, Modifier.size(28.mpx))
                                     Spacer(Modifier.weight(1f))
-                                    Text((if (index == 1) profiles else card.count ?: pinned).toString(), style = stageText(17, 700), color = StageColors.Dim)
+                                    Text((if (index == 2) profiles else card.count ?: pinned).toString(), style = stageText(17, 700), color = StageColors.Dim)
                                 }
                                 Text(stringResource(card.nameRes), style = stageText(24, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 14.mpx))
                                 Text(stringResource(card.summaryRes), style = stageText(16, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.mpx))
