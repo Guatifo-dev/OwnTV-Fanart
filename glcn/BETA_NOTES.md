@@ -24,3 +24,5 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Sonidos de menú en «Desactivado»: la app queda en silencio. Antes seguían sonando los clics del propio Android TV.
 - Inicio Cine/Panel con estilos claros: el título y la sinopsis salen en texto oscuro y se leen (antes blanco sobre claro).
 - Sonidos de menú: «Suaves» de serie en instalaciones nuevas. Quien ya tenía la app conserva lo que tenía.
+- Margen de pantalla: el borde queda negro y limpio; el fondo animado de Inicio ya no se sale al margen.
+- «Atrás en el reproductor: Ventana»: con el botón Atrás del mando un canal en directo pasa a la ventana (antes solo funcionaba con el botón de atrás de la pantalla).

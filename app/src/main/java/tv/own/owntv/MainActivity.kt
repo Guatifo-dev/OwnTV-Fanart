@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -238,18 +240,6 @@ open class MainActivity : ComponentActivity() {
             runCatching { glcnSettings.applyGlcnRemoteV3Once() }
         }
         tv.own.owntv.glcn.PiconPrefetch.start(this, lifecycleScope)
-        // glcn: Settings › Fanart › Screen margin — the whole app, picture included, drawn that much inside
-        // the screen, for a TV that crops its edges. Black around it, where the TV's crop falls.
-        lifecycleScope.launch {
-            glcnSettings.glcnSafeArea.collect { pct ->
-                val content = findViewById<android.view.View>(android.R.id.content) ?: return@collect
-                val dm = resources.displayMetrics
-                val x = dm.widthPixels * pct / 100
-                val y = dm.heightPixels * pct / 100
-                if (pct > 0) window.decorView.setBackgroundColor(android.graphics.Color.BLACK)
-                content.setPadding(x, y, x, y)
-            }
-        }
         // glcn: the Fanart icon once, on a TV that had chosen another colour of the old icon.
         lifecycleScope.launch {
             runCatching {
@@ -460,8 +450,18 @@ open class MainActivity : ComponentActivity() {
                     // trigger the single documented Activity.recreate() across a script-family switch.
                     // Same-script switches apply instantly here. See docs/internationalization.md 0b.
                     tv.own.owntv.core.i18n.LocalizedContent(localeStore) {
+                    // glcn: Settings › Fanart › Screen margin — the whole app, picture included, drawn that
+                    // much inside the screen (black around it, where a cropping TV cuts), and clipped
+                    // there, so nothing — a zooming backdrop included — spills into the margin.
+                    val safeArea by glcnSettings.glcnSafeArea.collectAsStateWithLifecycle(initialValue = 0)
+                    Box(Modifier.fillMaxSize().background(Color.Black)) {
+                    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val mx = maxWidth * (safeArea / 100f)
+                    val my = maxHeight * (safeArea / 100f)
                     Box(
                         modifier = Modifier.fillMaxSize()
+                            .padding(horizontal = mx, vertical = my)
+                            .clipToBounds()
                             // Solid base color first (fallback if no image / image fails to load).
                             .background(OwnTVTheme.colors.background)
                             .onGloballyPositioned {
@@ -551,6 +551,8 @@ open class MainActivity : ComponentActivity() {
                         }
                         } // end foreground Box (above the background layer)
                     }
+                    } // end glcn safe-area BoxWithConstraints
+                    } // end glcn safe-area black frame
                     } // end LocalizedContent
                 }
             }

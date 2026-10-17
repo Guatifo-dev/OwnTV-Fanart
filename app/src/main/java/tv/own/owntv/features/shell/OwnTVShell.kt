@@ -915,7 +915,9 @@ fun OwnTVShell(
 
     BackHandler {
         when {
-            playerMode == PlayerMode.FULLSCREEN -> exitPlayer()
+            // glcn: "Back in the player: Window" — a live channel goes to the mini player instead of stopping.
+            playerMode == PlayerMode.FULLSCREEN ->
+                if (backToWindow && zapSource == MainSection.LIVE_TV && !catchupActive) dockPlayer() else exitPlayer()
             showAvatarPicker -> showAvatarPicker = false
             showPlaylistPicker -> showPlaylistPicker = false
             showExit -> showExit = false
