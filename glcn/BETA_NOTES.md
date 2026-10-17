@@ -16,3 +16,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Nuevo en Ajustes › Fanart: **Margen de pantalla** (2–8 %), para teles que recortan los bordes de la imagen.
 - **Reproductor en directo, nuevo diseño:** reloj arriba a la derecha y debajo la ficha del programa más grande, con su imagen y la sinopsis más larga. El canal (picón, número y nombre) pasa al panel de abajo con resolución · **fps** · **bitrate** · sonido. Ya no se repiten el motor ni el formato 16:9.
 - **Avatares:** de 10 a 24. Nuevos: Estrella, Luna, Sol, Llama, Gato, Huella, Palomitas, Claqueta, Auriculares, Baloncesto, Flor, Montaña, Planeta y Fantasma. Los perfiles existentes conservan el suyo.
+- Primera vez: «Crear perfil» se puede pulsar aunque no escribas nombre (se llama «Perfil»), como en el móvil. Antes el botón no dejaba llegar hasta él.

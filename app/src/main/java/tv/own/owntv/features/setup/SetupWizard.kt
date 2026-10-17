@@ -459,7 +459,10 @@ private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean,
     var isKids by remember { mutableStateOf(false) }
     var pin by remember { mutableStateOf("") }
     val nameFocus = rememberFirstFocus()
-    val valid = name.isNotBlank() && (pin.isEmpty() || pin.length >= 4)
+    // glcn: the name may be left empty, as on the phone — the profile then takes the default name — so Create is
+    // always reachable; only a PIN of one to three digits holds it back.
+    val valid = pin.isEmpty() || pin.length >= 4
+    val defaultName = stringResource(R.string.setup_default_profile)
     val nameLabel = stringResource(R.string.profiles_name)
     val pinLabel = stringResource(R.string.profiles_optional_pin)
     val fieldHelp = stringResource(R.string.settings_form_field_help)
@@ -468,7 +471,7 @@ private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean,
         title = stringResource(R.string.profiles_gate_title),
         sub = stringResource(R.string.setup_profile_sub),
         back = WizardAction(stringResource(R.string.common_back), onBack),
-        next = WizardAction(stringResource(R.string.setup_create_profile), { if (valid) onCreate(name, avatarId, isKids, pin.takeIf { it.isNotBlank() }) }, enabled = valid),
+        next = WizardAction(stringResource(R.string.setup_create_profile), { if (valid) onCreate(name.ifBlank { defaultName }, avatarId, isKids, pin.takeIf { it.isNotBlank() }) }, enabled = valid),
     ) {
         StageFieldRow(
             OwnTVIcon.PENCIL, nameLabel, name, { name = it }, SettingHelp(nameLabel, fieldHelp),
