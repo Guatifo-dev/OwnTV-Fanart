@@ -796,6 +796,7 @@ fun OwnTVShell(
                 else -> openShortcutSection(MainSection.LIVE_TV)
             }
             RemoteShortcutAction.TOGGLE_FAVORITE -> if (playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV) previewChannel?.let { liveVm.toggleFavorite(it) }
+            // glcn: the player's own actions, from the mini player or Audio Mode, bring the player up.
             RemoteShortcutAction.CHANNEL_NEXT,
             RemoteShortcutAction.CHANNEL_PREVIOUS,
             RemoteShortcutAction.RECORD,
@@ -803,18 +804,29 @@ fun OwnTVShell(
             RemoteShortcutAction.TOGGLE_ENGINE,
             RemoteShortcutAction.NEXT_AUDIO_TRACK,
             RemoteShortcutAction.TOGGLE_SUBTITLES,
-            RemoteShortcutAction.PAGE_TOWARD_FIRST,
-            RemoteShortcutAction.PAGE_TOWARD_LAST,
-            RemoteShortcutAction.JUMP_TO_FIRST,
-            RemoteShortcutAction.JUMP_TO_LAST,
             RemoteShortcutAction.OPEN_SUBTITLE_CONTROLS,
             RemoteShortcutAction.OPEN_AUDIO_CONTROLS,
             RemoteShortcutAction.OPEN_ASPECT_CONTROLS,
             RemoteShortcutAction.TOGGLE_PLAYBACK_INFO,
+            -> if (playerMode == PlayerMode.MINI || playerMode == PlayerMode.AUDIO) expandPlayer()
+            RemoteShortcutAction.PAGE_TOWARD_FIRST,
+            RemoteShortcutAction.PAGE_TOWARD_LAST,
+            RemoteShortcutAction.JUMP_TO_FIRST,
+            RemoteShortcutAction.JUMP_TO_LAST,
             -> Unit
         }
     }
     val latestRemoteShortcutDispatch by rememberUpdatedState(dispatchRemoteShortcut)
+    val glcnPlayerActions = remember {
+        setOf(
+            RemoteShortcutAction.CHANNEL_NEXT, RemoteShortcutAction.CHANNEL_PREVIOUS, RemoteShortcutAction.RECORD,
+            RemoteShortcutAction.SLEEP_TIMER, RemoteShortcutAction.TOGGLE_ENGINE, RemoteShortcutAction.NEXT_AUDIO_TRACK,
+            RemoteShortcutAction.TOGGLE_SUBTITLES, RemoteShortcutAction.OPEN_SUBTITLE_CONTROLS,
+            RemoteShortcutAction.OPEN_AUDIO_CONTROLS, RemoteShortcutAction.OPEN_ASPECT_CONTROLS,
+            RemoteShortcutAction.TOGGLE_PLAYBACK_INFO, RemoteShortcutAction.TOGGLE_FAVORITE,
+            RemoteShortcutAction.RETURN_TO_LIVE, RemoteShortcutAction.PREVIOUS_CHANNEL, RemoteShortcutAction.PLAY_PAUSE,
+        )
+    }
     val remoteShortcutEnvironment = remember(remoteShortcutsEnabled, remoteShortcutBindings) {
         RemoteShortcutEnvironment(
             enabled = remoteShortcutsEnabled,
@@ -990,7 +1002,9 @@ fun OwnTVShell(
                         it.action != RemoteShortcutAction.PAGE_TOWARD_FIRST &&
                         it.action != RemoteShortcutAction.PAGE_TOWARD_LAST &&
                         it.action != RemoteShortcutAction.JUMP_TO_FIRST &&
-                        it.action != RemoteShortcutAction.JUMP_TO_LAST
+                        it.action != RemoteShortcutAction.JUMP_TO_LAST &&
+                        // glcn: a player action with no player leaves the button free (it was swallowed).
+                        (it.action !in glcnPlayerActions || playerMode != PlayerMode.NONE)
                 }
                 if (remoteShortcutsEnabled && shellBindings.isNotEmpty()) {
                     when (e.type) {

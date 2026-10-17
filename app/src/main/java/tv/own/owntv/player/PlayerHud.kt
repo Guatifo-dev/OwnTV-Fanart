@@ -452,6 +452,8 @@ fun PlayerHud(
     val remoteShortcuts = LocalRemoteShortcuts.current
     var shortcutKeyCode by remember { mutableIntStateOf(android.view.KeyEvent.KEYCODE_UNKNOWN) }
     var shortcutPressedAt by remember { mutableStateOf(0L) }
+    // glcn: a held shortcut acts once it has been held long enough, not only on release.
+    var shortcutLongFired by remember { mutableStateOf(false) }
     var okHeldOpened by remember { mutableStateOf(false) }
     val dispatchPlayerShortcut: (RemoteShortcutAction) -> Unit = { action ->
         when (action) {
@@ -529,7 +531,7 @@ fun PlayerHud(
             // before configurable browse shortcuts so an OSD button, an engine handoff, or a paging binding
             // cannot temporarily claim it. KeyUp is swallowed too, keeping the complete press inside the HUD.
             if (canZap && (e.key == Key.ChannelUp || e.key == Key.ChannelDown)) {
-                if (e.type == KeyEventType.KeyDown) {
+                if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) {
                     zap(if (e.key == Key.ChannelUp) 1 else -1)
                 }
                 return@onPreviewKeyEvent true
@@ -553,6 +555,14 @@ fun PlayerHud(
                             if (shortcutKeyCode != keyCode) {
                                 shortcutKeyCode = keyCode
                                 shortcutPressedAt = e.nativeKeyEvent.eventTime
+                                shortcutLongFired = false
+                            } else if (!shortcutLongFired &&
+                                e.nativeKeyEvent.eventTime - shortcutPressedAt >= PLAYER_SHORTCUT_LONG_PRESS_MS
+                            ) {
+                                keyBindings.firstOrNull { it.press == RemoteShortcutPress.LONG }?.let {
+                                    shortcutLongFired = true
+                                    dispatchPlayerShortcut(it.action)
+                                }
                             }
                             return@onPreviewKeyEvent true
                         }
@@ -565,7 +575,8 @@ fun PlayerHud(
                                 keyBindings.firstOrNull { it.press == RemoteShortcutPress.SHORT }
                             }
                             shortcutKeyCode = android.view.KeyEvent.KEYCODE_UNKNOWN
-                            binding?.let { dispatchPlayerShortcut(it.action) }
+                            if (!shortcutLongFired) binding?.let { dispatchPlayerShortcut(it.action) }
+                            shortcutLongFired = false
                             return@onPreviewKeyEvent true
                         }
                     }
@@ -605,10 +616,11 @@ fun PlayerHud(
                 // de facto TV convention (Live Channels, YouTube TV, Pluto TV). All of these keys move
                 // the same way; there is deliberately no split between CH+ and D-pad Up. Wrapping is
                 // intended: CH-/Down from the first channel lands on the last, and vice versa.
-                canZap && e.key == Key.MediaNext -> { zap(1); true }
-                canZap && e.key == Key.MediaPrevious -> { zap(-1); true }
-                canZap && isLive && !controlsVisible && e.key == Key.DirectionUp -> { zap(1); true }
-                canZap && isLive && !controlsVisible && e.key == Key.DirectionDown -> { zap(-1); true }
+                // glcn: a held key changes one channel, not one per key repeat (it ran through the list).
+                canZap && e.key == Key.MediaNext -> { if (e.nativeKeyEvent.repeatCount == 0) zap(1); true }
+                canZap && e.key == Key.MediaPrevious -> { if (e.nativeKeyEvent.repeatCount == 0) zap(-1); true }
+                canZap && isLive && !controlsVisible && e.key == Key.DirectionUp -> { if (e.nativeKeyEvent.repeatCount == 0) zap(1); true }
+                canZap && isLive && !controlsVisible && e.key == Key.DirectionDown -> { if (e.nativeKeyEvent.repeatCount == 0) zap(-1); true }
                 // N6 — Left/Right with the controls hidden: reveal them on the timeline and take the first
                 // step, so the jump is seen and holding the key goes on scrubbing the bar itself. Physical
                 // keys, like the bars: left is back in time in every locale. A film always does this; a
