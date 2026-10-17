@@ -568,6 +568,8 @@ Each profile has its own favourites, history, resume points and layout. Add a **
 ### 🙂 Change your avatar
 **Where:** ⋯ More → OK on your avatar · or hold OK on the avatar at the bottom of the rail
 Pick a drawn avatar, or **Your own picture** — a file on this TV or a photo sent from your phone.
+A new profile can have its picture straight away: **Your own picture** is also in the window that
+creates a profile, and in Settings → **Profile** when you edit one.
 
 ### 🚀 Where a profile opens
 **Where:** Settings → App → **App startup**

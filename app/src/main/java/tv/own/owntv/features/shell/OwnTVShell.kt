@@ -175,8 +175,6 @@ fun OwnTVShell(
     var showExit by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
     var showAvatarChooser by remember { mutableStateOf(false) }
-    var showAvatarFilePicker by remember { mutableStateOf(false) }
-    var showAvatarRemote by remember { mutableStateOf(false) }
     var showPlaylistPicker by remember { mutableStateOf(false) }
     // Held by the Activity-scoped ShellViewModel, so a recreation (a script-family language switch)
     // does not close a film that is playing.
@@ -2045,42 +2043,12 @@ fun OwnTVShell(
                 onDismiss = { showAvatarPicker = false },
         )
     }
-    // A picture for the profile, taken the same two ways the background image is: a file on this
-    // television, or a photo a phone sends over the local network. Both hand over a File, which core
-    // copies and scales — nothing here knows or cares which one it was.
     if (showAvatarChooser) {
-        tv.own.owntv.ui.components.BackgroundImageChooserDialog(
+        tv.own.owntv.features.profiles.ProfilePictureChooser(
                 hasImage = avatarPath.isNotBlank(),
-                onPickLocal = { showAvatarChooser = false; showAvatarFilePicker = true },
-                onPickRemote = { showAvatarChooser = false; showAvatarRemote = true },
+                onPicked = { file -> onSetCustomAvatar(file); showAvatarChooser = false },
                 onClear = { onClearCustomAvatar(); showAvatarChooser = false },
                 onDismiss = { showAvatarChooser = false },
-            )
-    }
-    if (showAvatarFilePicker) {
-        tv.own.owntv.ui.components.StorageBrowser(
-                title = stringResource(R.string.profiles_avatar_own_picture),
-                mode = tv.own.owntv.ui.components.BrowseMode.FILE,
-                fileExtensions = setOf("png", "jpg", "jpeg", "webp", "bmp"),
-                onPick = { file -> onSetCustomAvatar(file); showAvatarFilePicker = false },
-                onDismiss = { showAvatarFilePicker = false },
-            )
-    }
-    if (showAvatarRemote) {
-        // The same companion listener the background image uses — one PIN-protected upload page, so
-        // a phone sends a profile picture exactly the way it already sends a wallpaper.
-        val avatarRemoteVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.settings.SettingsViewModel>()
-        val remoteState by avatarRemoteVm.remoteState.collectAsStateWithLifecycle()
-        tv.own.owntv.ui.components.RemoteBackgroundDialog(
-                state = remoteState,
-                images = avatarRemoteVm.remoteImages,
-                onStart = avatarRemoteVm::startRemoteImageListener,
-                onStop = avatarRemoteVm::stopRemoteListener,
-                onImageReceived = { file ->
-                    onSetCustomAvatar(file)
-                    showAvatarRemote = false
-                },
-                onDismiss = { showAvatarRemote = false; showAvatarChooser = true },
             )
     }
     if (showPlaylistPicker) {
