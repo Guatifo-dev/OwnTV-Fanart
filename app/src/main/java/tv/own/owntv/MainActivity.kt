@@ -232,6 +232,7 @@ open class MainActivity : ComponentActivity() {
         }
         // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
         lifecycleScope.launch { runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() } }
+        tv.own.owntv.glcn.PiconPrefetch.start(this, lifecycleScope)
         // glcn: the Fanart icon once, on a TV that had chosen another colour of the old icon.
         lifecycleScope.launch {
             runCatching {

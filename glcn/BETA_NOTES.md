@@ -9,3 +9,5 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Primera vez que se abre la app: dos pasos nuevos, **Elige tu estilo** (al moverte se aplica en toda la pantalla) y **¿Cómo quieres tu Inicio?** (Clásico, Cine o Panel).
 - Mando: mantener ▲/▼, CH± o ⏮⏭ viendo un canal cambia **un solo canal** (antes los iba saltando sin parar). Las pulsaciones largas de los atajos actúan a los 0,6 s también dentro del reproductor, sin esperar a soltar. Un atajo del reproductor pulsado con el mini‑reproductor lo abre; sin nada reproduciéndose, el botón queda libre en vez de no hacer nada.
 - Saltar intro: tras saltar, el botón desaparece (antes podía seguir en pantalla).
+- Picons: tras arrancar y después de cada sincronización, la app descarga en segundo plano los logos de todos los canales; la lista y la guía salen ya con sus logos. Misma calidad.
+- Info del reproductor (botón ⓘ): nueva línea **Arranque del canal**, lo que tardó el canal en mostrar imagen.
