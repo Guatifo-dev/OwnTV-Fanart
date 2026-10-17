@@ -388,6 +388,7 @@ fun HomeScreen(
     // The full-screen styles take over only where Home has no hero of its own.
     val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
+    val homeFocusManager = androidx.compose.ui.platform.LocalFocusManager.current
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxSize()) {
         // glcn (Panel): three live cards fill the width left beside the panel exactly.
@@ -435,9 +436,33 @@ fun HomeScreen(
                     // glcn: whichever row is first — the billboard, Keep watching or any other — reaching it
                     // brings the top of the page (the greeting) back, not just the row itself.
                     Box(
-                        if (row == renderRows.firstOrNull() && !fullBleed) Modifier.onFocusChanged {
+                        (if (row == renderRows.firstOrNull() && !fullBleed) Modifier.onFocusChanged {
                             if (it.hasFocus) homeScope.launch { scrollHomeToTop(listState) }
-                        } else Modifier,
+                        } else Modifier).then(
+                            // glcn: ▲ always reaches the row above. The row above can be off screen and
+                            // not laid out yet (a tall billboard above a short row), and then the D-pad
+                            // search found nothing and focus stayed put: bring it in first, then move.
+                            if (row != renderRows.firstOrNull() && row != firstRowUnderHero) Modifier.onPreviewKeyEvent { e ->
+                                if (e.key != Key.DirectionUp) return@onPreviewKeyEvent false
+                                if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent true
+                                val at = renderRows.indexOf(row)
+                                val above = renderRows.getOrNull(at - 1) ?: return@onPreviewKeyEvent false
+                                val greetingItems = if (!fullBleed && backdropStyle != 1) 1 else 0
+                                homeScope.launch {
+                                    if (above == renderRows.firstOrNull()) {
+                                        runCatching { listState.animateScrollToItem(0) }
+                                    } else {
+                                        val visible = listState.layoutInfo.visibleItemsInfo.any { it.index == at - 1 + greetingItems && it.offset >= 0 }
+                                        if (!visible) runCatching { listState.animateScrollToItem(at - 1 + greetingItems) }
+                                    }
+                                    androidx.compose.runtime.withFrameNanos { }
+                                    if (!homeFocusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Up)) {
+                                        rowFocusRequester(above)?.let { runCatching { it.requestFocus() } }
+                                    }
+                                }
+                                true
+                            } else Modifier,
+                        ),
                     ) {
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
