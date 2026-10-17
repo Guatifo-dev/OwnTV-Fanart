@@ -48,7 +48,7 @@ fun AvatarPickerDialog(
         width = 760.mpx,
         modifier = Modifier.longPressMenuGuard(),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.mpx)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.mpx)) {
             // Phase 7 — "no avatar" option showing the Rank 1 ProfileIcon (ID -1)
             AvatarTile(selected = selectedId == -1, onClick = { onSelect(-1); onDismiss() }, focus = selectedFocus.takeIf { selectedId == -1 }) {
                 ProfileIcon(color = stageAccent.accent, modifier = Modifier.size(56.mpx))
@@ -82,12 +82,13 @@ fun AvatarPickerDialog(
                 }
             }
 
-            (0 until OwnTVAvatars.COUNT).toList().chunked(5).forEach { rowIds ->
-                Row(horizontalArrangement = Arrangement.spacedBy(16.mpx)) {
+            // glcn: 24 avatars — six to a row in smaller tiles, so the set fits the popup.
+            (0 until OwnTVAvatars.COUNT).toList().chunked(6).forEach { rowIds ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
                     rowIds.forEach { id ->
                         val isSelected = id == selectedId
-                        AvatarTile(selected = isSelected, onClick = { onSelect(id); onDismiss() }, focus = selectedFocus.takeIf { isSelected }) {
-                            OwnTVAvatar(avatarId = id, modifier = Modifier.size(90.mpx))
+                        AvatarTile(selected = isSelected, onClick = { onSelect(id); onDismiss() }, focus = selectedFocus.takeIf { isSelected }, tile = 100) {
+                            OwnTVAvatar(avatarId = id, modifier = Modifier.size(76.mpx))
                         }
                     }
                 }
@@ -98,12 +99,12 @@ fun AvatarPickerDialog(
 
 /** One choice: a 120 px Stage tile, ringed in accent while it is the current avatar. */
 @Composable
-private fun AvatarTile(selected: Boolean, onClick: () -> Unit, focus: FocusRequester? = null, content: @Composable () -> Unit) {
+private fun AvatarTile(selected: Boolean, onClick: () -> Unit, focus: FocusRequester? = null, tile: Int = 120, content: @Composable () -> Unit) {
     val accent = stageAccent.accent
     tv.own.owntv.ui.stage.StageSurface(
         onClick = onClick,
         radius = 28.mpx,
-        modifier = (focus?.let { Modifier.focusRequester(it) } ?: Modifier).size(120.mpx),
+        modifier = (focus?.let { Modifier.focusRequester(it) } ?: Modifier).size(tile.mpx),
         focusStyle = tv.own.owntv.ui.stage.StageFocus.FX,
         idle = Modifier
             .background(StageColors.ControlFill, RoundedCornerShape(28.mpx))

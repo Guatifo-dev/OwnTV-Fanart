@@ -1021,6 +1021,12 @@ class SettingsViewModel(
     fun cycleZapPanel() { viewModelScope.launch { settings.setZapPanel((zapPanel.value + 1) % 2) } }
     val backToWindow: StateFlow<Boolean> = settings.backToWindow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun toggleBackToWindow() { viewModelScope.launch { settings.setBackToWindow(!backToWindow.value) } }
+    val safeArea: StateFlow<Int> = settings.glcnSafeArea.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleSafeArea() { viewModelScope.launch { settings.setGlcnSafeArea(if (safeArea.value >= 8) 0 else safeArea.value + 2) } }
+    val autoSkipIntro: StateFlow<Boolean> = settings.autoSkipIntro.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    val glcnStyle: StateFlow<tv.own.owntv.core.theme.GlcnStyle?> = settings.glcnStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    fun applyGlcnStyle(style: tv.own.owntv.core.theme.GlcnStyle?) { viewModelScope.launch { settings.applyGlcnStyle(style) } }
+    fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
 
     // glcn: Kodi-style extras.
     val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
@@ -1030,7 +1036,19 @@ class SettingsViewModel(
     val animStyle: StateFlow<Int> = settings.animStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun cycleAnimStyle() { viewModelScope.launch { settings.setAnimStyle((animStyle.value + 1) % 2) } }
     val uiSounds: StateFlow<Int> = settings.uiSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
-    fun cycleUiSounds() { viewModelScope.launch { settings.setUiSounds((uiSounds.value + 1) % 3) } }
+    // glcn: one Sounds setting — the opening chime goes with the menu sounds.
+    fun cycleUiSounds() { viewModelScope.launch { val next = (uiSounds.value + 1) % 3; settings.setUiSounds(next); settings.setStartupSound(next > 0) } }
+    /** glcn: one Animations setting — Off, Subtle, Full (the motion level and the card style together). */
+    fun cycleMotion() {
+        viewModelScope.launch {
+            val off = animationLevel.value == tv.own.owntv.core.theme.AnimationLevel.OFF
+            when {
+                off -> { settings.setAnimationLevel(tv.own.owntv.core.theme.AnimationLevel.FULL); settings.setAnimStyle(1) }
+                animStyle.value == 1 -> settings.setAnimStyle(0)
+                else -> settings.setAnimationLevel(tv.own.owntv.core.theme.AnimationLevel.OFF)
+            }
+        }
+    }
     val startupSound: StateFlow<Boolean> = settings.startupSound.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun setStartupSound(on: Boolean) { viewModelScope.launch { settings.setStartupSound(on) } }
 

@@ -100,19 +100,29 @@ private fun PinDialogBody(title: String, onSubmit: (String) -> Unit, onDismiss: 
  *
  * [takenNames] are the OTHER profiles' names (lowercased) — profile names must be unique (they're the
  * merge key for backup restore), so a collision blocks Create/Save with an inline error.
+ *
+ * A picture of the user's own: on an existing profile [onPickPicture] / [onClearPicture] apply it at
+ * once, as the phone does, and [customPath] is the one it has now. A new profile has no id to store
+ * one under yet, so the dialog holds the chosen file and hands it to [onConfirm] with the rest.
  */
 @Composable
 internal fun ProfileEditorDialog(
     initial: ProfileEntity?,
-    onConfirm: (name: String, avatarId: Int, isKids: Boolean, pin: String?) -> Unit,
+    onConfirm: (name: String, avatarId: Int, isKids: Boolean, pin: String?, picture: java.io.File?) -> Unit,
     onDismiss: () -> Unit,
     takenNames: Set<String> = emptySet(),
+    customPath: String = "",
+    onPickPicture: ((java.io.File) -> Unit)? = null,
+    onClearPicture: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var avatarId by remember { mutableIntStateOf(initial?.avatarId ?: -1) } // Phase 7 — new profiles default to no-avatar
     var isKids by remember { mutableStateOf(initial?.isKids ?: false) }
     var pin by remember { mutableStateOf("") }
     var removePin by remember { mutableStateOf(false) }
+    var pendingPicture by remember { mutableStateOf<java.io.File?>(null) }
+    var choosingPicture by remember { mutableStateOf(false) }
+    val picturePath = pendingPicture?.absolutePath ?: customPath
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     val nameTaken = name.trim().isNotEmpty() && name.trim().lowercase() in takenNames
@@ -124,7 +134,7 @@ internal fun ProfileEditorDialog(
             OwnTVButton(stringResource(R.string.common_cancel), onClick = onDismiss, style = OwnTVButtonStyle.SECONDARY)
             OwnTVButton(
                 label = stringResource(if (initial == null) R.string.profiles_create else R.string.profiles_save),
-                onClick = { onConfirm(name, avatarId, isKids, if (removePin) "" else pin.takeIf { it.isNotBlank() }) },
+                onClick = { onConfirm(name, avatarId, isKids, if (removePin) "" else pin.takeIf { it.isNotBlank() }, pendingPicture) },
                 enabled = name.isNotBlank() && !nameTaken && (removePin || pin.isEmpty() || pin.length >= 4),
             )
         },
@@ -153,6 +163,14 @@ internal fun ProfileEditorDialog(
                 }
             }
         }
+        tv.own.owntv.ui.stage.StagePopupOption(
+            title = stringResource(R.string.profiles_avatar_own_picture),
+            onClick = { choosingPicture = true },
+            leading = {
+                if (picturePath.isNotBlank()) OwnTVAvatar(avatarId = avatarId, imagePath = picturePath, modifier = Modifier.size(44.mpx))
+                else tv.own.owntv.ui.stage.StagePopupIcon(tv.own.owntv.ui.components.OwnTVIcon.IMAGE)
+            },
+        )
         tv.own.owntv.ui.stage.StagePopupDivider()
         ToggleRow(label = stringResource(R.string.profiles_kids), desc = stringResource(R.string.profiles_kids_description), checked = isKids) { isKids = it }
         if (initial?.pinHash != null) {
@@ -170,6 +188,20 @@ internal fun ProfileEditorDialog(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+    if (choosingPicture) {
+        ProfilePictureChooser(
+            hasImage = picturePath.isNotBlank(),
+            onPicked = { file ->
+                if (onPickPicture != null) onPickPicture(file) else pendingPicture = file
+                choosingPicture = false
+            },
+            onClear = {
+                if (onClearPicture != null) onClearPicture() else pendingPicture = null
+                choosingPicture = false
+            },
+            onDismiss = { choosingPicture = false },
+        )
     }
 }
 

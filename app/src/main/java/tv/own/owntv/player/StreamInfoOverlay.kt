@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +84,25 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
                     modifier = Modifier.weight(0.62f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        // glcn: how long this channel took to show its picture.
+        val startMs by tv.own.owntv.player.ZapTiming.lastStartMs.collectAsState()
+        startMs?.takeIf { player.isLiveContent }?.let { ms ->
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 5.dp)) {
+                Text(
+                    stringResource(R.string.glcn_start_time),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.weight(0.38f),
+                )
+                Text(
+                    String.format(java.util.Locale.getDefault(), "%.1f s", ms / 1000f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = hudInk,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.weight(0.62f),
                 )
             }
         }

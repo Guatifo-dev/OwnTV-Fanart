@@ -9,6 +9,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -215,6 +216,8 @@ private data class SettingsGroupCard(val icon: OwnTVIcon, val nameRes: Int, val 
 
 private val SettingsCards = listOf(
     SettingsGroupCard(OwnTVIcon.SPARKLE, R.string.settings_group_quick, R.string.settings_group_summary_quick, null),
+    // glcn: Fanart sits second in `SettingsGroup`, so its card must too, or every card after it opens the wrong group.
+    SettingsGroupCard(OwnTVIcon.IMAGE, R.string.glcn_fanart_group, R.string.glcn_fanart_summary, 10),
     SettingsGroupCard(OwnTVIcon.PERSON, R.string.settings_group_profile, R.string.settings_card_profile, 3),
     SettingsGroupCard(OwnTVIcon.LIST, R.string.settings_group_sources, R.string.settings_card_sources, 8),
     SettingsGroupCard(OwnTVIcon.PALETTE, R.string.settings_group_appearance, R.string.settings_card_appearance, 9),
@@ -251,7 +254,12 @@ internal fun SettingsPage(entry: FocusRequester, pinned: Int, onOpenGroup: (Int)
                 Text(stringResource(R.string.more_settings_search), style = stageText(19, 500), color = if (focused) StageColors.Text else StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        Column(Modifier.padding(top = 22.mpx), verticalArrangement = Arrangement.spacedBy(20.mpx)) {
+        // glcn: thirteen cards make five rows — scrollable, with room under the last, so App is reached
+        // whole instead of half off the bottom of the screen.
+        Column(
+            Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(top = 22.mpx, bottom = 60.mpx),
+            verticalArrangement = Arrangement.spacedBy(20.mpx),
+        ) {
             SettingsCards.chunked(3).forEach { row ->
                 // 150 at the default font; a larger app font grows the row rather than cutting the
                 // summary, and the row's cards keep one height.
@@ -267,7 +275,7 @@ internal fun SettingsPage(entry: FocusRequester, pinned: Int, onOpenGroup: (Int)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     OwnTVIcon(card.icon, if (focused) StageColors.Text else StageColors.Muted, Modifier.size(28.mpx))
                                     Spacer(Modifier.weight(1f))
-                                    Text((if (index == 1) profiles else card.count ?: pinned).toString(), style = stageText(17, 700), color = StageColors.Dim)
+                                    Text((if (index == 2) profiles else card.count ?: pinned).toString(), style = stageText(17, 700), color = StageColors.Dim)
                                 }
                                 Text(stringResource(card.nameRes), style = stageText(24, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 14.mpx))
                                 Text(stringResource(card.summaryRes), style = stageText(16, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.mpx))

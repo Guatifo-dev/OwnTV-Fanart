@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -174,10 +176,11 @@ open class MainActivity : ComponentActivity() {
         return error
     }
 
-    // glcn: with the app's own menu sounds on, Android TV's system clicks (Settings → Device
-    // preferences → Sound → System sounds) would play on top of them: the window stops asking for them.
+    // glcn: the app never asks for Android TV's system clicks (Settings → Device preferences → Sound →
+    // System sounds). With the app's sounds on they would play on top of them; with them Off, Off means
+    // a silent app — the system's own clicks were still heard, which read as the setting not working.
     private fun quietSystemClicks() {
-        val on = tv.own.owntv.glcn.UiSounds.level == 0
+        val on = false
         fun walk(v: android.view.View) {
             v.isSoundEffectsEnabled = on
             if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
@@ -225,13 +228,18 @@ open class MainActivity : ComponentActivity() {
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
         // glcn: menu sounds follow the setting; the opening chime plays once per cold start.
         lifecycleScope.launch {
+            runCatching { glcnSettings.keepUiSoundsForExistingOnce() }
             glcnSettings.uiSounds.collect {
                 tv.own.owntv.glcn.UiSounds.level = it
                 quietSystemClicks()
             }
         }
         // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
-        lifecycleScope.launch { runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() } }
+        lifecycleScope.launch {
+            runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() }
+            runCatching { glcnSettings.applyGlcnRemoteV3Once() }
+        }
+        tv.own.owntv.glcn.PiconPrefetch.start(this, lifecycleScope)
         // glcn: the Fanart icon once, on a TV that had chosen another colour of the old icon.
         lifecycleScope.launch {
             runCatching {
@@ -273,6 +281,7 @@ open class MainActivity : ComponentActivity() {
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
             val accent by viewModel.accent.collectAsStateWithLifecycle()
             val customAccent by viewModel.customAccent.collectAsStateWithLifecycle()
+            val glcnStyle by org.koin.compose.koinInject<tv.own.owntv.core.settings.SettingsRepository>().glcnStyle.collectAsStateWithLifecycle(initialValue = null)
             val focusHighlight by viewModel.focusHighlight.collectAsStateWithLifecycle()
             val focusHighlightWidth by viewModel.focusHighlightWidth.collectAsStateWithLifecycle()
             val uiZoomPercent by viewModel.uiZoomPercent.collectAsStateWithLifecycle()
@@ -378,6 +387,7 @@ open class MainActivity : ComponentActivity() {
                 popupFontFamily = fontCustomization.popupFamily,
                 popupFontSizePercent = fontCustomization.popupFontSizePercent,
                 popupSizePercent = fontCustomization.popupSizePercent,
+                glcnStyle = glcnStyle,
             ) {
                 val base = LocalDensity.current
                 // Glass is "always on" (Option B): panels go translucent whenever at least one surface is
@@ -440,8 +450,18 @@ open class MainActivity : ComponentActivity() {
                     // trigger the single documented Activity.recreate() across a script-family switch.
                     // Same-script switches apply instantly here. See docs/internationalization.md 0b.
                     tv.own.owntv.core.i18n.LocalizedContent(localeStore) {
+                    // glcn: Settings › Fanart › Screen margin — the whole app, picture included, drawn that
+                    // much inside the screen (black around it, where a cropping TV cuts), and clipped
+                    // there, so nothing — a zooming backdrop included — spills into the margin.
+                    val safeArea by glcnSettings.glcnSafeArea.collectAsStateWithLifecycle(initialValue = 0)
+                    Box(Modifier.fillMaxSize().background(Color.Black)) {
+                    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val mx = maxWidth * (safeArea / 100f)
+                    val my = maxHeight * (safeArea / 100f)
                     Box(
                         modifier = Modifier.fillMaxSize()
+                            .padding(horizontal = mx, vertical = my)
+                            .clipToBounds()
                             // Solid base color first (fallback if no image / image fails to load).
                             .background(OwnTVTheme.colors.background)
                             .onGloballyPositioned {
@@ -531,6 +551,8 @@ open class MainActivity : ComponentActivity() {
                         }
                         } // end foreground Box (above the background layer)
                     }
+                    } // end glcn safe-area BoxWithConstraints
+                    } // end glcn safe-area black frame
                     } // end LocalizedContent
                 }
             }

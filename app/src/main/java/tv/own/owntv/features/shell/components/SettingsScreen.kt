@@ -1,5 +1,6 @@
 package tv.own.owntv.features.shell.components
 
+import tv.own.owntv.glcn.label
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.features.settings.SettingValue
 import tv.own.owntv.features.settings.labelRes
@@ -373,8 +374,14 @@ fun SettingsScreen(
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
+    val safeArea by settingsVm.safeArea.collectAsStateWithLifecycle()
+    val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
+    val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
+    var showGlcnStyle by remember { mutableStateOf(false) }
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
+    val dialogueBoost by settingsVm.dialogueBoost.collectAsStateWithLifecycle()
+    val mpvPassthrough by settingsVm.mpvPassthrough.collectAsStateWithLifecycle()
     val ambientGlowPulse by settingsVm.ambientGlowPulse.collectAsStateWithLifecycle()
     LaunchedEffect(glassOn, themeMode) {
         if (glassOn || themeMode != ThemeMode.DARK) showAmbientGlow = false
@@ -551,6 +558,123 @@ fun SettingsScreen(
             chipTone = if (updateCheckOnStart) TileTone.PRIMARY else TileTone.SECONDARY,
             onClick = { settingsVm.setUpdateCheckOnStart(!updateCheckOnStart) },
         ),
+        // glcn: everything this version adds, on one page.
+        RootGroup("group_fanart", stringResource(R.string.glcn_fanart_group), OwnTVIcon.IMAGE, stringResource(R.string.glcn_fanart_summary)),
+        RootRow(
+            "glcn_style", TileTone.PRIMARY, OwnTVIcon.PALETTE,
+            heading = stringResource(R.string.glcn_part_home),
+            title = stringResource(R.string.glcn_style_title),
+            desc = stringResource(R.string.glcn_style_desc),
+            chip = glcnStyle?.label() ?: stringResource(R.string.common_off),
+            chipTone = if (glcnStyle != null) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { showGlcnStyle = true },
+        ),
+        RootRow(
+            "glcn_home_backdrop", TileTone.PRIMARY, OwnTVIcon.THEME,
+            title = stringResource(R.string.glcn_home_backdrop_title),
+            desc = stringResource(R.string.glcn_home_backdrop_desc),
+            chip = stringResource(
+                when (homeBackdrop) {
+                    1 -> R.string.glcn_home_backdrop_cinema
+                    2 -> R.string.glcn_home_backdrop_panel
+                    else -> R.string.glcn_home_backdrop_classic
+                },
+            ),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleHomeBackdropStyle() },
+        ),
+        RootRow(
+            "glcn_season", TileTone.SECONDARY, OwnTVIcon.THEME,
+            title = stringResource(R.string.glcn_season_title),
+            desc = stringResource(R.string.glcn_season_desc),
+            chip = stringResource(
+                when (seasonMode) {
+                    1 -> R.string.glcn_season_details
+                    2 -> R.string.glcn_season_animated
+                    else -> R.string.common_off
+                },
+            ),
+            chipTone = if (seasonMode > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleSeasonMode() },
+        ),
+        RootRow(
+            "glcn_safe_area", TileTone.SECONDARY, OwnTVIcon.LIST_GRID,
+            title = stringResource(R.string.glcn_safe_area_title),
+            desc = stringResource(R.string.glcn_safe_area_desc),
+            chip = if (safeArea > 0) "$safeArea %" else stringResource(R.string.common_off),
+            chipTone = if (safeArea > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleSafeArea() },
+        ),
+        RootRow(
+            "glcn_back_window", TileTone.SECONDARY, OwnTVIcon.LIVE_TV,
+            heading = stringResource(R.string.glcn_part_player),
+            title = stringResource(R.string.glcn_back_title),
+            desc = stringResource(R.string.glcn_back_desc),
+            chip = stringResource(if (backToWindow) R.string.glcn_back_window else R.string.glcn_back_stop),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.toggleBackToWindow() },
+        ),
+        RootRow(
+            "glcn_auto_skip_intro", TileTone.SECONDARY, OwnTVIcon.SERIES,
+            title = stringResource(R.string.glcn_auto_skip_title),
+            desc = stringResource(R.string.glcn_auto_skip_desc),
+            chip = stringResource(if (autoSkipIntro) R.string.common_on else R.string.common_off),
+            chipTone = if (autoSkipIntro) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.toggleAutoSkipIntro() },
+        ),
+        RootRow(
+            "glcn_dialogue", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
+            title = stringResource(R.string.glcn_dialogue_title),
+            desc = stringResource(R.string.glcn_dialogue_desc),
+            chip = stringResource(if (dialogueBoost) R.string.common_on else R.string.common_off),
+            chipTone = if (dialogueBoost) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.setDialogueBoost(!dialogueBoost) },
+        ),
+        RootRow(
+            "glcn_mpv_passthrough", TileTone.SECONDARY, OwnTVIcon.AUDIO,
+            title = stringResource(R.string.glcn_mpv_passthrough_title),
+            desc = stringResource(R.string.glcn_mpv_passthrough_desc),
+            chip = stringResource(if (mpvPassthrough) R.string.common_on else R.string.common_off),
+            chipTone = if (mpvPassthrough) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.setMpvPassthrough(!mpvPassthrough) },
+        ),
+        RootRow(
+            "glcn_ui_sounds", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
+            heading = stringResource(R.string.glcn_part_motion),
+            title = stringResource(R.string.glcn_ui_sounds_title),
+            desc = stringResource(R.string.glcn_ui_sounds_desc_all),
+            chip = stringResource(
+                when (uiSounds) {
+                    1 -> R.string.glcn_ui_sounds_soft
+                    2 -> R.string.glcn_ui_sounds_normal
+                    else -> R.string.common_off
+                },
+            ),
+            chipTone = if (uiSounds > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = {
+                val next = (uiSounds + 1) % 3
+                settingsVm.cycleUiSounds()
+                // Switching sounds on plays the opening chime, so the choice is heard straight away.
+                if (uiSounds == 0 && next > 0) tv.own.owntv.glcn.UiSounds.startup(
+                    if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.current() else tv.own.owntv.core.theme.Season.NONE,
+                )
+            },
+        ),
+        RootRow(
+            "animations", TileTone.SECONDARY, OwnTVIcon.MOTION,
+            title = stringResource(R.string.settings_animations),
+            desc = stringResource(R.string.glcn_motion_desc),
+            chip = stringResource(
+                when {
+                    animationLevel == tv.own.owntv.core.theme.AnimationLevel.OFF -> R.string.common_off
+                    animStyle == 1 -> R.string.glcn_anim_style_subtle
+                    else -> R.string.glcn_anim_style_full
+                },
+            ),
+            chipTone = if (animationLevel == tv.own.owntv.core.theme.AnimationLevel.OFF) TileTone.SECONDARY else TileTone.PRIMARY,
+            focus = animationsRowFocus,
+            onClick = { settingsVm.cycleMotion() },
+        ),
         RootGroup("group_profile", stringResource(R.string.settings_profile_group), OwnTVIcon.PERSON, stringResource(R.string.settings_group_summary_profile)),
         RootGroup("group_sources", stringResource(R.string.settings_group_sources), OwnTVIcon.PLAYLIST, stringResource(R.string.settings_group_summary_sources)),
         RootRow(
@@ -657,91 +781,6 @@ fun SettingsScreen(
             focus = ambientGlowRowFocus,
             onClick = { saveScroll(); dialogReturn = ambientGlowRowFocus; showAmbientGlow = true },
         ) else null,
-        // glcn: Home's background — Classic / Cinema / Panel.
-        RootRow(
-            "glcn_home_backdrop", TileTone.PRIMARY, OwnTVIcon.THEME,
-            title = stringResource(R.string.glcn_home_backdrop_title),
-            desc = stringResource(R.string.glcn_home_backdrop_desc),
-            chip = stringResource(
-                when (homeBackdrop) {
-                    1 -> R.string.glcn_home_backdrop_cinema
-                    2 -> R.string.glcn_home_backdrop_panel
-                    else -> R.string.glcn_home_backdrop_classic
-                },
-            ),
-            chipTone = TileTone.PRIMARY,
-            onClick = { settingsVm.cycleHomeBackdropStyle() },
-        ),
-        // glcn: beside the channel list over the player — the picture or the schedule.
-        RootRow(
-            "glcn_zap_panel", TileTone.SECONDARY, OwnTVIcon.EPG,
-            title = stringResource(R.string.glcn_zap_panel_title),
-            desc = stringResource(R.string.glcn_zap_panel_desc),
-            chip = stringResource(if (zapPanel == 1) R.string.glcn_zap_panel_schedule else R.string.glcn_zap_panel_preview),
-            chipTone = TileTone.PRIMARY,
-            onClick = { settingsVm.cycleZapPanel() },
-        ),
-        // glcn: what Back does on a live channel full screen.
-        RootRow(
-            "glcn_back_window", TileTone.SECONDARY, OwnTVIcon.LIVE_TV,
-            title = stringResource(R.string.glcn_back_title),
-            desc = stringResource(R.string.glcn_back_desc),
-            chip = stringResource(if (backToWindow) R.string.glcn_back_window else R.string.glcn_back_stop),
-            chipTone = TileTone.PRIMARY,
-            onClick = { settingsVm.toggleBackToWindow() },
-        ),
-        // glcn: animation style (Full / Subtle), menu sounds (Off / Soft / Normal), opening chime.
-        RootRow(
-            "glcn_anim_style", TileTone.SECONDARY, OwnTVIcon.GLOW,
-            title = stringResource(R.string.glcn_anim_style_title),
-            desc = stringResource(R.string.glcn_anim_style_desc),
-            chip = stringResource(if (animStyle == 1) R.string.glcn_anim_style_subtle else R.string.glcn_anim_style_full),
-            chipTone = TileTone.PRIMARY,
-            onClick = { settingsVm.cycleAnimStyle() },
-        ),
-        RootRow(
-            "glcn_ui_sounds", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
-            title = stringResource(R.string.glcn_ui_sounds_title),
-            desc = stringResource(R.string.glcn_ui_sounds_desc),
-            chip = stringResource(
-                when (uiSounds) {
-                    1 -> R.string.glcn_ui_sounds_soft
-                    2 -> R.string.glcn_ui_sounds_normal
-                    else -> R.string.common_off
-                },
-            ),
-            chipTone = if (uiSounds > 0) TileTone.PRIMARY else TileTone.SECONDARY,
-            onClick = { settingsVm.cycleUiSounds() },
-        ),
-        RootRow(
-            "glcn_startup_sound", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
-            title = stringResource(R.string.glcn_startup_sound_title),
-            desc = stringResource(R.string.glcn_startup_sound_desc),
-            chip = stringResource(if (startupSound) R.string.common_on else R.string.common_off),
-            chipTone = if (startupSound) TileTone.PRIMARY else TileTone.SECONDARY,
-            onClick = {
-                settingsVm.setStartupSound(!startupSound)
-                // Turning it on plays it, so the choice is heard straight away.
-                if (!startupSound) tv.own.owntv.glcn.UiSounds.startup(
-                    if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.current() else tv.own.owntv.core.theme.Season.NONE,
-                )
-            },
-        ),
-        // glcn: seasonal themes — OK steps Off → Details → Animated.
-        RootRow(
-            "glcn_season", TileTone.SECONDARY, OwnTVIcon.THEME,
-            title = stringResource(R.string.glcn_season_title),
-            desc = stringResource(R.string.glcn_season_desc),
-            chip = stringResource(
-                when (seasonMode) {
-                    1 -> R.string.glcn_season_details
-                    2 -> R.string.glcn_season_animated
-                    else -> R.string.common_off
-                },
-            ),
-            chipTone = if (seasonMode > 0) TileTone.PRIMARY else TileTone.SECONDARY,
-            onClick = { settingsVm.cycleSeasonMode() },
-        ),
         RootRow(
             "fonts", TileTone.SECONDARY, OwnTVIcon.TEXT_SIZE,
             title = stringResource(R.string.settings_font_customization),
@@ -766,13 +805,6 @@ fun SettingsScreen(
             chip = stringResource(R.string.common_percent, uiZoomPercent), chipTone = TileTone.SECONDARY,
             focus = zoomRowFocus,
             onClick = { saveScroll(); dialogReturn = zoomRowFocus; showZoom = true },
-        ),
-        RootRow(
-            "animations", TileTone.SECONDARY, OwnTVIcon.MOTION,
-            title = stringResource(R.string.settings_animations), desc = stringResource(R.string.settings_animations_description),
-            chip = stringResource(animationLevel.labelRes), chipTone = TileTone.SECONDARY,
-            focus = animationsRowFocus,
-            onClick = { saveScroll(); dialogReturn = animationsRowFocus; showAnimations = true },
         ),
         RootRow(
             tabRowKey(SettingsTab.WEATHER), TileTone.SECONDARY, OwnTVIcon.WEATHER,
@@ -1408,6 +1440,9 @@ fun SettingsScreen(
     if (showStartup) StartupDialogHost(settingsVm, startupMode, onClose = { showStartup = false }, onPickChannel = { showStartupChannelPicker = true })
     if (showStartupChannelPicker) StartupChannelPickerHost(settingsVm, startupChannel, onClose = { showStartupChannelPicker = false })
     if (showAnimations) AnimationsDialogHost(settingsVm, animationLevel, onClose = { showAnimations = false })
+    if (showGlcnStyle) {
+        tv.own.owntv.glcn.StylePickerPopup(glcnStyle, onPick = settingsVm::applyGlcnStyle, onDismiss = { showGlcnStyle = false })
+    }
     if (showNavigation) {
         NavigationPopupHost(settingsVm, onDismiss = { showNavigation = false })
     }

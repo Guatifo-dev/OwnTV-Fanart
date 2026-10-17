@@ -175,8 +175,6 @@ fun OwnTVShell(
     var showExit by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
     var showAvatarChooser by remember { mutableStateOf(false) }
-    var showAvatarFilePicker by remember { mutableStateOf(false) }
-    var showAvatarRemote by remember { mutableStateOf(false) }
     var showPlaylistPicker by remember { mutableStateOf(false) }
     // Held by the Activity-scoped ShellViewModel, so a recreation (a script-family language switch)
     // does not close a film that is playing.
@@ -227,6 +225,10 @@ fun OwnTVShell(
     val shellContentFocus = remember { FocusRequester() }
     // Stage navigation (P1, P1b): where the rail sits, what it shows, its length, the floating hide delay.
     val backToWindow by settingsRepo.backToWindow.collectAsStateWithLifecycle(initialValue = false)
+    val autoSkipIntro by settingsRepo.autoSkipIntro.collectAsStateWithLifecycle(initialValue = false)
+    var hudControlsVisible by remember { mutableStateOf(true) }
+    var introSkipVisible by remember { mutableStateOf(false) }
+    val introContext = androidx.compose.ui.platform.LocalContext.current
     val navStyle by settingsRepo.navStyle.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED)
     val navSize by settingsRepo.navSize.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT)
     val navWiden by settingsRepo.navWiden.collectAsStateWithLifecycle(initialValue = null)
@@ -792,6 +794,7 @@ fun OwnTVShell(
                 else -> openShortcutSection(MainSection.LIVE_TV)
             }
             RemoteShortcutAction.TOGGLE_FAVORITE -> if (playerMode != PlayerMode.NONE && zapSource == MainSection.LIVE_TV) previewChannel?.let { liveVm.toggleFavorite(it) }
+            // glcn: the player's own actions, from the mini player or Audio Mode, bring the player up.
             RemoteShortcutAction.CHANNEL_NEXT,
             RemoteShortcutAction.CHANNEL_PREVIOUS,
             RemoteShortcutAction.RECORD,
@@ -799,18 +802,29 @@ fun OwnTVShell(
             RemoteShortcutAction.TOGGLE_ENGINE,
             RemoteShortcutAction.NEXT_AUDIO_TRACK,
             RemoteShortcutAction.TOGGLE_SUBTITLES,
-            RemoteShortcutAction.PAGE_TOWARD_FIRST,
-            RemoteShortcutAction.PAGE_TOWARD_LAST,
-            RemoteShortcutAction.JUMP_TO_FIRST,
-            RemoteShortcutAction.JUMP_TO_LAST,
             RemoteShortcutAction.OPEN_SUBTITLE_CONTROLS,
             RemoteShortcutAction.OPEN_AUDIO_CONTROLS,
             RemoteShortcutAction.OPEN_ASPECT_CONTROLS,
             RemoteShortcutAction.TOGGLE_PLAYBACK_INFO,
+            -> if (playerMode == PlayerMode.MINI || playerMode == PlayerMode.AUDIO) expandPlayer()
+            RemoteShortcutAction.PAGE_TOWARD_FIRST,
+            RemoteShortcutAction.PAGE_TOWARD_LAST,
+            RemoteShortcutAction.JUMP_TO_FIRST,
+            RemoteShortcutAction.JUMP_TO_LAST,
             -> Unit
         }
     }
     val latestRemoteShortcutDispatch by rememberUpdatedState(dispatchRemoteShortcut)
+    val glcnPlayerActions = remember {
+        setOf(
+            RemoteShortcutAction.CHANNEL_NEXT, RemoteShortcutAction.CHANNEL_PREVIOUS, RemoteShortcutAction.RECORD,
+            RemoteShortcutAction.SLEEP_TIMER, RemoteShortcutAction.TOGGLE_ENGINE, RemoteShortcutAction.NEXT_AUDIO_TRACK,
+            RemoteShortcutAction.TOGGLE_SUBTITLES, RemoteShortcutAction.OPEN_SUBTITLE_CONTROLS,
+            RemoteShortcutAction.OPEN_AUDIO_CONTROLS, RemoteShortcutAction.OPEN_ASPECT_CONTROLS,
+            RemoteShortcutAction.TOGGLE_PLAYBACK_INFO, RemoteShortcutAction.TOGGLE_FAVORITE,
+            RemoteShortcutAction.RETURN_TO_LIVE, RemoteShortcutAction.PREVIOUS_CHANNEL, RemoteShortcutAction.PLAY_PAUSE,
+        )
+    }
     val remoteShortcutEnvironment = remember(remoteShortcutsEnabled, remoteShortcutBindings) {
         RemoteShortcutEnvironment(
             enabled = remoteShortcutsEnabled,
@@ -899,7 +913,9 @@ fun OwnTVShell(
 
     BackHandler {
         when {
-            playerMode == PlayerMode.FULLSCREEN -> exitPlayer()
+            // glcn: "Back in the player: Window" — a live channel goes to the mini player instead of stopping.
+            playerMode == PlayerMode.FULLSCREEN ->
+                if (backToWindow && zapSource == MainSection.LIVE_TV && !catchupActive) dockPlayer() else exitPlayer()
             showAvatarPicker -> showAvatarPicker = false
             showPlaylistPicker -> showPlaylistPicker = false
             showExit -> showExit = false
@@ -986,7 +1002,9 @@ fun OwnTVShell(
                         it.action != RemoteShortcutAction.PAGE_TOWARD_FIRST &&
                         it.action != RemoteShortcutAction.PAGE_TOWARD_LAST &&
                         it.action != RemoteShortcutAction.JUMP_TO_FIRST &&
-                        it.action != RemoteShortcutAction.JUMP_TO_LAST
+                        it.action != RemoteShortcutAction.JUMP_TO_LAST &&
+                        // glcn: a player action with no player leaves the button free (it was swallowed).
+                        (it.action !in glcnPlayerActions || playerMode != PlayerMode.NONE)
                 }
                 if (remoteShortcutsEnabled && shellBindings.isNotEmpty()) {
                     when (e.type) {
@@ -1746,6 +1764,7 @@ fun OwnTVShell(
                     // "End of programme" only at the live edge: rewound, the programme on air is not the one being watched.
                     sleepProgrammeEndMs = if (isTunedLive && !timeshifted) { { liveVm.nowNext.value?.now?.stopMs } } else null,
                     liveLeftRightRewinds = liveLeftRightRewinds,
+                    onControlsVisible = { hudControlsVisible = it },
                     timeshiftOffsetSec = if (isTunedLive) { { timeshiftOffsetState.value } } else null,
                     onTuneToNumber = if (directTuneEnabled && isTunedLive && isLiveStream && !timeshifted && previewChannel != null) liveVm::tuneByNumber else null,
                     directTuneContextKey = previewChannel?.id ?: 0L,
@@ -1821,15 +1840,38 @@ fun OwnTVShell(
                                         atMs = watching,
                                     )
                                 }
-                                tv.own.owntv.features.shell.components.LiveEpgCard(
-                                    epg = epg,
-                                    // glcn: while rewound, live is context — one line under the replayed programme.
-                                    compact = watching != null,
-                                    modifier = if (watching == null) Modifier else Modifier.alpha(0.85f),
-                                )
+                                if (watching == null) {
+                                    // glcn: the programme's picture beside it, as on the channel-change banner.
+                                    val artChannel = previewChannel
+                                    val art by androidx.compose.runtime.produceState<String?>(null, artChannel?.id, epg?.now?.startMs) {
+                                        value = artChannel?.let { runCatching { liveVm.nowFull(it).first?.imageUrl }.getOrNull() }
+                                    }
+                                    tv.own.owntv.features.shell.components.LiveEpgCardWithArt(epg = epg, art = art)
+                                } else {
+                                    tv.own.owntv.features.shell.components.LiveEpgCard(
+                                        epg = epg,
+                                        // glcn: while rewound, live is context — one line under the replayed programme.
+                                        compact = true,
+                                        modifier = Modifier.alpha(0.85f),
+                                    )
+                                }
                             }
                         }
                     } else null,
+                    modifier = Modifier.fillMaxSize().onPreviewKeyEvent { e ->
+                        // glcn: OK while "Skip intro" shows jumps the intro.
+                        val ok = e.key == Key.DirectionCenter || e.key == Key.Enter || e.key == Key.NumPadEnter
+                        if (!introSkipVisible || !ok) return@onPreviewKeyEvent false
+                        if (e.type == KeyEventType.KeyUp) tv.own.owntv.glcn.IntroSkip.skip(introContext, if (liveOnExo) liveVm.previewEngine else mpvEngine)
+                        true
+                    },
+                )
+                // glcn: "Skip intro" on series episodes — OK while it shows (controls hidden) jumps it.
+                if (!isLiveChannel) tv.own.owntv.glcn.IntroSkip.Chip(
+                    engine = if (liveOnExo) liveVm.previewEngine else mpvEngine,
+                    controlsHidden = !hudControlsVisible,
+                    autoSkip = autoSkipIntro,
+                    onVisible = { introSkipVisible = it },
                     modifier = Modifier.fillMaxSize(),
                 )
                 // OpenSubtitles search overlay (movies/episodes) — drawn above the HUD; the HUD is inert
@@ -1923,7 +1965,17 @@ fun OwnTVShell(
                     } else if (zapChannels.isNotEmpty()) {
                         // First Left — the channels of the current category. A browsed-to category may
                         // hold a single channel, so this renders for any non-empty list.
-                        tv.own.owntv.features.shell.components.ChannelListOverlay(
+                        // glcn: the poster view of the same list (▶ in the list switches views; ▲ comes back).
+                        if (glcnZapPanel == 2) tv.own.owntv.features.shell.components.ZapPosterOverlay(
+                            channels = zapChannels,
+                            currentId = previewChannel?.id,
+                            title = zapOverlayTitle,
+                            loadNow = { liveVm.nowMany(it) },
+                            onSelect = { liveVm.ensurePlaying(it); showChannelList = false },
+                            onListView = { scope.launch { settingsRepo.setZapPanel(0) } },
+                            onDismiss = { showChannelList = false },
+                            modifier = Modifier.fillMaxSize(),
+                        ) else tv.own.owntv.features.shell.components.ChannelListOverlay(
                             channels = zapChannels,
                             currentId = previewChannel?.id,
                             nowPlaying = overlayNowPlaying,
@@ -1937,6 +1989,7 @@ fun OwnTVShell(
                             onOpenCategories = { liveVm.showCategories() },
                             loadNow = { liveVm.nowFull(it) },
                             loadSchedule = if (glcnZapPanel == 1) ({ liveVm.scheduleFor(it) }) else null,
+                            onCyclePanel = { scope.launch { settingsRepo.setZapPanel((glcnZapPanel + 1) % 3) } },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1990,42 +2043,12 @@ fun OwnTVShell(
                 onDismiss = { showAvatarPicker = false },
         )
     }
-    // A picture for the profile, taken the same two ways the background image is: a file on this
-    // television, or a photo a phone sends over the local network. Both hand over a File, which core
-    // copies and scales — nothing here knows or cares which one it was.
     if (showAvatarChooser) {
-        tv.own.owntv.ui.components.BackgroundImageChooserDialog(
+        tv.own.owntv.features.profiles.ProfilePictureChooser(
                 hasImage = avatarPath.isNotBlank(),
-                onPickLocal = { showAvatarChooser = false; showAvatarFilePicker = true },
-                onPickRemote = { showAvatarChooser = false; showAvatarRemote = true },
+                onPicked = { file -> onSetCustomAvatar(file); showAvatarChooser = false },
                 onClear = { onClearCustomAvatar(); showAvatarChooser = false },
                 onDismiss = { showAvatarChooser = false },
-            )
-    }
-    if (showAvatarFilePicker) {
-        tv.own.owntv.ui.components.StorageBrowser(
-                title = stringResource(R.string.profiles_avatar_own_picture),
-                mode = tv.own.owntv.ui.components.BrowseMode.FILE,
-                fileExtensions = setOf("png", "jpg", "jpeg", "webp", "bmp"),
-                onPick = { file -> onSetCustomAvatar(file); showAvatarFilePicker = false },
-                onDismiss = { showAvatarFilePicker = false },
-            )
-    }
-    if (showAvatarRemote) {
-        // The same companion listener the background image uses — one PIN-protected upload page, so
-        // a phone sends a profile picture exactly the way it already sends a wallpaper.
-        val avatarRemoteVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.settings.SettingsViewModel>()
-        val remoteState by avatarRemoteVm.remoteState.collectAsStateWithLifecycle()
-        tv.own.owntv.ui.components.RemoteBackgroundDialog(
-                state = remoteState,
-                images = avatarRemoteVm.remoteImages,
-                onStart = avatarRemoteVm::startRemoteImageListener,
-                onStop = avatarRemoteVm::stopRemoteListener,
-                onImageReceived = { file ->
-                    onSetCustomAvatar(file)
-                    showAvatarRemote = false
-                },
-                onDismiss = { showAvatarRemote = false; showAvatarChooser = true },
             )
     }
     if (showPlaylistPicker) {

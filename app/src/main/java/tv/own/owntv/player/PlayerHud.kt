@@ -226,6 +226,8 @@ fun PlayerHud(
     // N6 — Settings → "Left and right rewind live TV": with the controls hidden, Left/Right on a
     // catch-up channel scrub instead of opening the lists. Films always seek.
     liveLeftRightRewinds: Boolean = false,
+    /** glcn: told whenever the controls show or hide (the intro-skip button lives under them). */
+    onControlsVisible: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // T14 — nothing that ticks is read in this root scope: with the controls hidden it used to recompose
@@ -284,6 +286,7 @@ fun PlayerHud(
         nextCardDue && !autoNextDismissed
 
     var controlsVisible by remember { mutableStateOf(true) }
+    LaunchedEffect(controlsVisible) { onControlsVisible(controlsVisible) }
     var showInfo by remember { mutableStateOf(false) } // stream technical-info overlay
     // Used only by "Report this stream", which writes the current readout into the playback log (F18).
     val reportContext = androidx.compose.ui.platform.LocalContext.current
@@ -416,7 +419,12 @@ fun PlayerHud(
     val hudScope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(forceShow) { if (forceShow) controlsVisible = true }
-    LaunchedEffect(controlsVisible, player) { if (controlsVisible) player.refreshStreamChips() }
+    // glcn: on live TV the chips (frame rate, bitrate) keep refreshing while the controls show.
+    LaunchedEffect(controlsVisible, player, isLive) {
+        if (!controlsVisible) return@LaunchedEffect
+        player.refreshStreamChips()
+        while (isLive) { kotlinx.coroutines.delay(2_500); player.refreshStreamChips() }
+    }
     DisposableEffect(showInfo, player) {
         if (showInfo) player.refreshStreamChips()
         player.setBitrateTrackingEnabled(showInfo)
@@ -449,6 +457,8 @@ fun PlayerHud(
     val remoteShortcuts = LocalRemoteShortcuts.current
     var shortcutKeyCode by remember { mutableIntStateOf(android.view.KeyEvent.KEYCODE_UNKNOWN) }
     var shortcutPressedAt by remember { mutableStateOf(0L) }
+    // glcn: a held shortcut acts once it has been held long enough, not only on release.
+    var shortcutLongFired by remember { mutableStateOf(false) }
     var okHeldOpened by remember { mutableStateOf(false) }
     val dispatchPlayerShortcut: (RemoteShortcutAction) -> Unit = { action ->
         when (action) {
@@ -526,7 +536,7 @@ fun PlayerHud(
             // before configurable browse shortcuts so an OSD button, an engine handoff, or a paging binding
             // cannot temporarily claim it. KeyUp is swallowed too, keeping the complete press inside the HUD.
             if (canZap && (e.key == Key.ChannelUp || e.key == Key.ChannelDown)) {
-                if (e.type == KeyEventType.KeyDown) {
+                if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) {
                     zap(if (e.key == Key.ChannelUp) 1 else -1)
                 }
                 return@onPreviewKeyEvent true
@@ -550,6 +560,14 @@ fun PlayerHud(
                             if (shortcutKeyCode != keyCode) {
                                 shortcutKeyCode = keyCode
                                 shortcutPressedAt = e.nativeKeyEvent.eventTime
+                                shortcutLongFired = false
+                            } else if (!shortcutLongFired &&
+                                e.nativeKeyEvent.eventTime - shortcutPressedAt >= PLAYER_SHORTCUT_LONG_PRESS_MS
+                            ) {
+                                keyBindings.firstOrNull { it.press == RemoteShortcutPress.LONG }?.let {
+                                    shortcutLongFired = true
+                                    dispatchPlayerShortcut(it.action)
+                                }
                             }
                             return@onPreviewKeyEvent true
                         }
@@ -562,7 +580,8 @@ fun PlayerHud(
                                 keyBindings.firstOrNull { it.press == RemoteShortcutPress.SHORT }
                             }
                             shortcutKeyCode = android.view.KeyEvent.KEYCODE_UNKNOWN
-                            binding?.let { dispatchPlayerShortcut(it.action) }
+                            if (!shortcutLongFired) binding?.let { dispatchPlayerShortcut(it.action) }
+                            shortcutLongFired = false
                             return@onPreviewKeyEvent true
                         }
                     }
@@ -602,10 +621,11 @@ fun PlayerHud(
                 // de facto TV convention (Live Channels, YouTube TV, Pluto TV). All of these keys move
                 // the same way; there is deliberately no split between CH+ and D-pad Up. Wrapping is
                 // intended: CH-/Down from the first channel lands on the last, and vice versa.
-                canZap && e.key == Key.MediaNext -> { zap(1); true }
-                canZap && e.key == Key.MediaPrevious -> { zap(-1); true }
-                canZap && isLive && !controlsVisible && e.key == Key.DirectionUp -> { zap(1); true }
-                canZap && isLive && !controlsVisible && e.key == Key.DirectionDown -> { zap(-1); true }
+                // glcn: a held key changes one channel, not one per key repeat (it ran through the list).
+                canZap && e.key == Key.MediaNext -> { if (e.nativeKeyEvent.repeatCount == 0) zap(1); true }
+                canZap && e.key == Key.MediaPrevious -> { if (e.nativeKeyEvent.repeatCount == 0) zap(-1); true }
+                canZap && isLive && !controlsVisible && e.key == Key.DirectionUp -> { if (e.nativeKeyEvent.repeatCount == 0) zap(1); true }
+                canZap && isLive && !controlsVisible && e.key == Key.DirectionDown -> { if (e.nativeKeyEvent.repeatCount == 0) zap(-1); true }
                 // N6 — Left/Right with the controls hidden: reveal them on the timeline and take the first
                 // step, so the jump is seen and holding the key goes on scrubbing the bar itself. Physical
                 // keys, like the bars: left is back in time in every locale. A film always does this; a
@@ -710,6 +730,20 @@ fun PlayerHud(
             // One unified strip: back · logo · chips-over-channel-name · Now/Next guide. The channel name
             // used to be drawn twice (here and in a floating card below), with the guide stranded on the
             // right edge — that space belongs to the history list now.
+            // glcn: live TV — the clock in the top-right corner with the programme card under it; the
+            // channel itself moves down into the dock (see the header below). Films keep the top bar.
+            if (isLive && error == null) {
+                // Side by side, card then clock, on one line along the top: stacked, the card reached down
+                // to the middle of the screen, where the play/pause controls sit.
+                Row(
+                    Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 28.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    liveEpgCard?.invoke()
+                    PlayerClock(watchingMs = watchingWallMs?.invoke())
+                }
+            } else {
             TopBar(
                 player, isLive, listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) }, duration, onBack,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -720,6 +754,7 @@ fun PlayerHud(
                     { PlayerClock(watchingMs = watchingWallMs?.invoke()) }
                 } else null,
             )
+            }
 
             // Hide the transport (play/seek/prev/next) and bottom bar while an error is up — the error
             // overlay owns the screen with its own Retry, so the play/rewind/forward must not show behind it.
@@ -771,6 +806,9 @@ fun PlayerHud(
                     onOpenDialog = { dialog = it }, onPip = onPip, onAudioMode = onAudioMode,
                     onMultiview = onMultiview, onRecordThis = onRecordThis, recordingThis = recordingThis, onBack = onBack,
                     modifier = Modifier.align(Alignment.BottomStart),
+                    header = if (isLive) {
+                        { LiveChannelHeader(player, streamChips.ifEmpty { listOfNotNull(videoRes) }, onBack) }
+                    } else null,
                 )
             }
         }

@@ -160,6 +160,55 @@ internal fun TopBar(
     }
 }
 
+/**
+ * glcn: live TV's channel, at the top of the dock — back, the channel's logo, its number and name, and
+ * the stream as chips: resolution, frame rate, bitrate, sound. The engine is on its own button below and
+ * the shape of the picture rarely tells anyone anything, so neither is repeated here.
+ */
+@Composable
+internal fun LiveChannelHeader(player: PlaybackEngine, chips: List<String>, onBack: () -> Unit) {
+    val meta by player.currentMeta.collectAsStateWithLifecycle()
+    val name = meta.title?.takeIf { it.isNotBlank() } ?: ""
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        CircleButton(OwnTVIcon.BACK, size = 40, onClick = onBack)
+        Spacer(Modifier.width(14.dp))
+        Box(
+            Modifier.size(width = 72.dp, height = 50.dp).clip(RoundedCornerShape(12.dp)).background(hudShade(0.45f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (!meta.logoUrl.isNullOrBlank()) {
+                AsyncImage(model = meta.logoUrl, contentDescription = null, modifier = Modifier.fillMaxSize().padding(5.dp))
+            } else {
+                Text(name.take(3).uppercase(), style = MaterialTheme.typography.labelLarge, color = hudInk, fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                meta.subtitle?.takeIf { it.isNotBlank() }?.let {
+                    Text(it, style = MaterialTheme.typography.titleMedium, color = hudInk.copy(alpha = 0.5f), fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Spacer(Modifier.width(10.dp))
+                }
+                Text(name, style = MaterialTheme.typography.titleLarge, color = hudInk, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            val shown = chips.filterNot { it.contains(':') || it == "MPV" || it == "EXO" }
+            if (shown.isNotEmpty()) {
+                Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    shown.forEach { label ->
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = hudInk.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(hudInk.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** The channel logo tile, falling back to the first letters of the channel name. */
 @Composable
 private fun ChannelLogo(logoUrl: String?, title: String?, size: Int, modifier: Modifier = Modifier) {
@@ -335,6 +384,8 @@ internal fun BottomBar(
     /** Given to whichever timeline is drawn, so Left/Right with the controls hidden can land on it (N6). */
     seekFocus: FocusRequester? = null,
     onBack: () -> Unit, modifier: Modifier = Modifier,
+    /** glcn: a row at the top of the dock — live TV puts the channel there (logo, name, stream chips). */
+    header: (@Composable () -> Unit)? = null,
 ) {
     // Changes only while rewound into the archive. The film position is read lower still, by
     // [VodTimeline], so the tool buttons do not redraw every second (T14).
@@ -343,6 +394,10 @@ internal fun BottomBar(
     val sleepLeft = org.koin.compose.koinInject<SleepTimer>().remainingMs.collectAsStateWithLifecycle()
     val sleepRunning by androidx.compose.runtime.remember { androidx.compose.runtime.derivedStateOf { sleepLeft.value != null } }
     Dock(modifier = modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 20.dp)) {
+        if (header != null) {
+            header()
+            Box(Modifier.fillMaxWidth().padding(vertical = 10.dp).height(1.dp).background(hudInk.copy(alpha = 0.10f)))
+        }
         // Band A — the instrument. The times are the bar's own end caps now; the separate time row is
         // gone, and on live the right cap is the state badge instead of a clock.
         when {

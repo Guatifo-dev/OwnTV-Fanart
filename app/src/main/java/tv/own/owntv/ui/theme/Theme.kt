@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ColorScheme
 import androidx.tv.material3.MaterialTheme
@@ -97,6 +98,8 @@ fun OwnTVTheme(
     popupFontFamily: AppFontFamily = AppFontFamily.PLUS_JAKARTA_SANS,
     popupFontSizePercent: Int = PopupFontScale.DEFAULT,
     popupSizePercent: Int = PopupSizeScale.DEFAULT,
+    /** glcn: a ready-made style's own page tones over the theme's palette. */
+    glcnStyle: tv.own.owntv.core.theme.GlcnStyle? = null,
     content: @Composable () -> Unit,
 ) {
     val useDark = when (themeMode) {
@@ -114,7 +117,22 @@ fun OwnTVTheme(
 
     CompositionLocalProvider(
         LocalOwnTVColors provides colors,
-        LocalStagePalette provides if (useDark) StagePalette.Dark else StagePalette.Light,
+        LocalStagePalette provides (if (useDark) StagePalette.Dark else StagePalette.Light).let { base ->
+            val st = glcnStyle?.takeIf { it.light == !useDark } ?: return@let base
+            val page = Color(st.page)
+            base.copy(
+                page = page,
+                wash = page,
+                glassTint = Color(st.glassTint),
+                glassOff = Color(st.glassTint),
+                text = Color(st.text),
+                itemText = Color(st.text),
+                menuItemText = Color(st.text),
+                muted = Color(st.muted),
+                navText = Color(st.muted),
+                body = Color(st.body),
+            )
+        },
         LocalThemeMode provides themeMode,
         LocalFocusBorderWidth provides focusBorderWidthDp.dp,
         LocalAnimationLevel provides animationLevel,

@@ -67,7 +67,7 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
-private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
+private enum class Step { WELCOME, DISPLAY_SIZE, DISCLAIMER, GLCN_STYLE, GLCN_HOME, SETUP_CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, ADD_SOURCE_REMOTE, ADD_SOURCE, IMPORTING, EXISTING, IMPORT_BACKUP_CHOOSER, IMPORT_BACKUP_REMOTE, IMPORT_BACKUP }
 
 /**
  * Onboarding for one profile (P10B-W1 … W9). [firstRun] shows language/welcome/disclaimer; otherwise it
@@ -115,8 +115,11 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 title = stringResource(R.string.setup_before_you_start),
                 sub = stringResource(R.string.setup_disclaimer),
                 back = WizardAction(stringResource(R.string.common_back), { step = Step.DISPLAY_SIZE }),
-                next = WizardAction(stringResource(R.string.setup_i_understand), { step = Step.SETUP_CHOICE }, rememberFirstFocus()),
+                next = WizardAction(stringResource(R.string.setup_i_understand), { step = Step.GLCN_STYLE }, rememberFirstFocus()),
             )
+            // glcn: the style and Home's layout, chosen before anything else so the rest of setup wears them.
+            Step.GLCN_STYLE -> StyleStep(onNext = { step = Step.GLCN_HOME }, onBack = { step = Step.DISCLAIMER })
+            Step.GLCN_HOME -> HomeLayoutStep(onNext = { step = Step.SETUP_CHOICE }, onBack = { step = Step.GLCN_STYLE })
             // First decision: start fresh or bring everything back from a backup (profiles included —
             // no point creating a profile first that the restore would replace).
             Step.SETUP_CHOICE -> {
@@ -125,7 +128,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                     step = WizardStep.PROFILE,
                     title = stringResource(R.string.setup_set_up_owntv),
                     sub = stringResource(R.string.setup_setup_choice_description),
-                    back = WizardAction(stringResource(R.string.common_back), { step = Step.DISCLAIMER }),
+                    back = WizardAction(stringResource(R.string.common_back), { step = Step.GLCN_HOME }),
                     next = null,
                 ) {
                     WizardCards(
@@ -148,7 +151,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onBack = { step = Step.SETUP_CHOICE },
             )
             Step.CREATE_PROFILE -> ProfileStep(
-                onCreate = { name, avatar, kids, pin -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin) { step = Step.ADD_CONTENT } },
+                onCreate = { name, avatar, kids, pin, picture -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin, picture) { step = Step.ADD_CONTENT } },
                 onBack = { if (firstRun) step = Step.SETUP_CHOICE else onCancel() },
             )
             Step.ADD_CONTENT -> AddContentStep(
@@ -288,7 +291,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
 
 /** A focus requester that takes focus once the step is on screen (the step's first control). */
 @Composable
-private fun rememberFirstFocus(): FocusRequester {
+internal fun rememberFirstFocus(): FocusRequester {
     val fr = remember { FocusRequester() }
     LaunchedEffect(Unit) { kotlinx.coroutines.delay(60); runCatching { fr.requestFocus() } }
     return fr
@@ -446,17 +449,23 @@ private fun AppIconSwatches(icons: List<AppIcon>, chosen: AppIcon) {
 }
 
 /**
- * W6, Who's watching?: Name, Avatar (◀ ▶ through the pictures, the letter first), Kids profile and an
- * optional PIN, then Create profile.
+ * W6, Who's watching?: Name, Avatar (◀ ▶ through the pictures, the letter first), a picture of the
+ * user's own, Kids profile and an optional PIN, then Create profile. The picture is held until then:
+ * the profile has no id to store it under before it exists.
  */
 @Composable
-private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean, pin: String?) -> Unit, onBack: () -> Unit) {
+private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean, pin: String?, picture: java.io.File?) -> Unit, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var avatarId by remember { mutableIntStateOf(-1) } // new profiles start on the letter
     var isKids by remember { mutableStateOf(false) }
     var pin by remember { mutableStateOf("") }
+    var picture by remember { mutableStateOf<java.io.File?>(null) }
+    var choosingPicture by remember { mutableStateOf(false) }
     val nameFocus = rememberFirstFocus()
-    val valid = name.isNotBlank() && (pin.isEmpty() || pin.length >= 4)
+    // glcn: the name may be left empty, as on the phone — the profile then takes the default name — so Create is
+    // always reachable; only a PIN of one to three digits holds it back.
+    val valid = pin.isEmpty() || pin.length >= 4
+    val defaultName = stringResource(R.string.setup_default_profile)
     val nameLabel = stringResource(R.string.profiles_name)
     val pinLabel = stringResource(R.string.profiles_optional_pin)
     val fieldHelp = stringResource(R.string.settings_form_field_help)
@@ -465,7 +474,7 @@ private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean,
         title = stringResource(R.string.profiles_gate_title),
         sub = stringResource(R.string.setup_profile_sub),
         back = WizardAction(stringResource(R.string.common_back), onBack),
-        next = WizardAction(stringResource(R.string.setup_create_profile), { if (valid) onCreate(name, avatarId, isKids, pin.takeIf { it.isNotBlank() }) }, enabled = valid),
+        next = WizardAction(stringResource(R.string.setup_create_profile), { if (valid) onCreate(name.ifBlank { defaultName }, avatarId, isKids, pin.takeIf { it.isNotBlank() }, picture) }, enabled = valid),
     ) {
         StageFieldRow(
             OwnTVIcon.PENCIL, nameLabel, name, { name = it }, SettingHelp(nameLabel, fieldHelp),
@@ -482,6 +491,13 @@ private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean,
             onStep = { dir -> avatarId = ids[(at + dir + ids.size) % ids.size] },
         )
         StageSettingRow(
+            icon = OwnTVIcon.IMAGE,
+            title = stringResource(R.string.profiles_avatar_own_picture),
+            desc = null,
+            value = picture?.let { file -> SettingValue.Custom { OwnTVAvatar(avatarId = avatarId, imagePath = file.absolutePath, modifier = Modifier.size(34.mpx)) } },
+            onClick = { choosingPicture = true },
+        )
+        StageSettingRow(
             icon = OwnTVIcon.FAVORITE,
             title = stringResource(R.string.profiles_kids),
             desc = stringResource(R.string.profiles_kids_description),
@@ -491,6 +507,14 @@ private fun ProfileStep(onCreate: (name: String, avatarId: Int, isKids: Boolean,
         StageFieldRow(
             OwnTVIcon.PENCIL, pinLabel, pin, { if (it.length <= 6 && it.all(Char::isDigit)) pin = it }, SettingHelp(pinLabel, fieldHelp),
             placeholder = stringResource(R.string.profiles_pin_digits), password = true, keyboardType = KeyboardType.NumberPassword,
+        )
+    }
+    if (choosingPicture) {
+        tv.own.owntv.features.profiles.ProfilePictureChooser(
+            hasImage = picture != null,
+            onPicked = { picture = it; choosingPicture = false },
+            onClear = { picture = null; choosingPicture = false },
+            onDismiss = { choosingPicture = false },
         )
     }
 }

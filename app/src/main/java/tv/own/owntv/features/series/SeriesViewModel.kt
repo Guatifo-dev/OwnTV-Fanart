@@ -65,6 +65,7 @@ import tv.own.owntv.core.launcher.LauncherIntegrationRepository
 import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.util.throttleLatest
 import tv.own.owntv.core.download.DownloadManager
+import tv.own.owntv.core.repository.EpisodeLoad
 import tv.own.owntv.core.repository.SeriesRepository
 import tv.own.owntv.core.storage.StorageAccess
 import tv.own.owntv.core.storage.MediaFolders
@@ -338,6 +339,10 @@ class SeriesViewModel(
 
     private val _episodesLoading = MutableStateFlow(false)
     val episodesLoading: StateFlow<Boolean> = _episodesLoading.asStateFlow()
+
+    /** Why the opened show has no episodes when the provider refused or failed the request; null otherwise. */
+    private val _episodesFailure = MutableStateFlow<String?>(null)
+    val episodesFailure: StateFlow<String?> = _episodesFailure.asStateFlow()
 
     /**
      * The queue item the player is actually on, pinned when it starts playing — the only thing a
@@ -880,7 +885,8 @@ class SeriesViewModel(
         Log.d(TAG, "openSeries seriesId=${s.id} profile=${ctx.value.profileId}")
         viewModelScope.launch {
             _episodesLoading.value = true
-            seriesRepository.loadEpisodes(s)
+            _episodesFailure.value = null
+            _episodesFailure.value = (seriesRepository.loadEpisodes(s) as? EpisodeLoad.Failed)?.reason
             // Jump to where you left off: seed the last-watched episode (and its season) from saved progress
             // BEFORE clearing loading, so the screen's focus effect lands on it instead of episode 1 (#22).
             val eps = seriesDao.episodesBySeries(s.id).first()

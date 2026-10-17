@@ -1235,6 +1235,7 @@ private fun EpisodeView(
     val researchingTmdbMessage = stringResource(R.string.content_researching_tmdb)
     val episodes by vm.episodes.collectAsStateWithLifecycle()
     val loading by vm.episodesLoading.collectAsStateWithLifecycle()
+    val episodesFailure by vm.episodesFailure.collectAsStateWithLifecycle()
     val favoriteIds by vm.favoriteIds.collectAsStateWithLifecycle()
     val downloads by vm.episodeDownloads.collectAsStateWithLifecycle()
     val selectedSeason by vm.selectedSeason.collectAsStateWithLifecycle()
@@ -1564,7 +1565,12 @@ private fun EpisodeView(
         when {
             loading && episodes.isEmpty() -> Box(epArea, contentAlignment = Alignment.Center) { OwnTVSpinner(sizeDp = 48) }
             episodes.isEmpty() -> Box(epArea, contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.content_no_episodes), style = stageText(20, 500), color = StageColors.Muted)
+                val failure = episodesFailure
+                Text(
+                    if (failure != null) stringResource(R.string.content_episodes_load_failed, failure)
+                    else stringResource(R.string.content_no_episodes),
+                    style = stageText(20, 500), color = StageColors.Muted,
+                )
             }
             isEpisodeGrid -> {
                 // 336 × 189 stills 26 apart, 5 across at 1920; a wider screen gains columns.
