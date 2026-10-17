@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -75,9 +76,19 @@ fun ZapPosterOverlay(
             window.forEach { programmes[it.id] = got[it.id] }
         }
     }
+    // Opened by holding OK, the same OK is still down — and its repeats and release would land on the
+    // focused card and pick it at once, closing the strip. OK counts only from a fresh press.
+    var okArmed by remember { androidx.compose.runtime.mutableStateOf(false) }
     val now = remember { System.currentTimeMillis() }
     val shade = tv.own.owntv.ui.theme.stageTone(Color(2, 5, 6), Color(244, 247, 245))
-    Box(modifier.fillMaxSize()) {
+    Box(
+        modifier.fillMaxSize().onPreviewKeyEvent { e ->
+            val ok = e.key == Key.DirectionCenter || e.key == Key.Enter || e.key == Key.NumPadEnter
+            if (!ok) return@onPreviewKeyEvent false
+            if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) okArmed = true
+            !okArmed
+        },
+    ) {
         Column(
             Modifier
                 .align(Alignment.BottomStart)

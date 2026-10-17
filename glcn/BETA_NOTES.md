@@ -17,3 +17,6 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - **Reproductor en directo, nuevo diseño:** reloj arriba a la derecha y debajo la ficha del programa más grande, con su imagen y la sinopsis más larga. El canal (picón, número y nombre) pasa al panel de abajo con resolución · **fps** · **bitrate** · sonido. Ya no se repiten el motor ni el formato 16:9.
 - **Avatares:** de 10 a 24. Nuevos: Estrella, Luna, Sol, Llama, Gato, Huella, Palomitas, Claqueta, Auriculares, Baloncesto, Flor, Montaña, Planeta y Fantasma. Los perfiles existentes conservan el suyo.
 - Primera vez: «Crear perfil» se puede pulsar aunque no escribas nombre (se llama «Perfil»), como en el móvil. Antes el botón no dejaba llegar hasta él.
+- Inicio: la última fila (Esta noche) ya no queda pegada al borde de abajo.
+- Reproductor con estilos claros: la ficha del programa se lee bien (antes texto oscuro sobre fondo oscuro).
+- Vista Pósters de la lista de canales: abierta manteniendo OK ya no se cierra sola al soltar.

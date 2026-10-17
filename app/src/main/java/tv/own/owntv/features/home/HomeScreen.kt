@@ -343,11 +343,14 @@ fun HomeScreen(
     // channels leaves Keep watching and the folded title where they are). The TV default instead pins
     // the focused item a third of the way down, which slid the whole page up on every ▼. The hero
     // itself never scrolls.
-    val homeBringIntoViewSpec = remember {
+    // glcn: a row brought up from below stops this far above the bottom edge, not flush with it — the last
+    // row ("Tonight") sat on the very edge, and on a TV that crops its edges it was cut.
+    val bottomRoomPx = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
+    val homeBringIntoViewSpec = remember(bottomRoomPx) {
         object : BringIntoViewSpec {
             override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float): Float {
                 if (heroFocused.value) return 0f
-                val trailing = offset + size - containerSize
+                val trailing = offset + size + bottomRoomPx - containerSize
                 return when {
                     offset >= 0f && trailing <= 0f -> 0f
                     offset < 0f || size > containerSize -> offset
@@ -428,7 +431,7 @@ fun HomeScreen(
                     // of the list remembers its focused child.
                     .focusGroup(),
                 state = listState,
-                contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
+                contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 120.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
                 if (!fullBleed && backdropStyle != 1) item("glcn-greeting") { HomeGreeting(state.profileName, contentStart, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null) }

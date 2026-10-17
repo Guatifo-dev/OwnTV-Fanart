@@ -1,6 +1,7 @@
 package tv.own.owntv.features.shell.components
 
 import tv.own.owntv.ui.theme.hudInk
+import tv.own.owntv.ui.theme.hudShade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -79,7 +80,7 @@ fun LiveEpgCard(
     Column(
         modifier = modifier
             .widthIn(min = 300.dp, max = if (bare) 470.dp else 500.dp)
-            .then(if (bare) Modifier else Modifier.clip(RoundedCornerShape(10.dp)).background(Color.Black.copy(alpha = 0.66f)))
+            .then(if (bare) Modifier else Modifier.clip(RoundedCornerShape(10.dp)).background(hudShade(0.72f)))
             .then(
                 if (archive) Modifier
                     .background(colors.primary.copy(alpha = 0.09f))
@@ -172,7 +173,7 @@ fun LiveEpgCardWithArt(epg: EpgNowNext?, art: String?, modifier: Modifier = Modi
     Row(
         modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.Black.copy(alpha = 0.66f))
+            .background(hudShade(0.72f))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
