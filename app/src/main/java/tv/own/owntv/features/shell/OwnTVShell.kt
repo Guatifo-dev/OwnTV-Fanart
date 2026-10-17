@@ -1923,7 +1923,17 @@ fun OwnTVShell(
                     } else if (zapChannels.isNotEmpty()) {
                         // First Left — the channels of the current category. A browsed-to category may
                         // hold a single channel, so this renders for any non-empty list.
-                        tv.own.owntv.features.shell.components.ChannelListOverlay(
+                        // glcn: the poster view of the same list (▶ in the list switches views; ▲ comes back).
+                        if (glcnZapPanel == 2) tv.own.owntv.features.shell.components.ZapPosterOverlay(
+                            channels = zapChannels,
+                            currentId = previewChannel?.id,
+                            title = zapOverlayTitle,
+                            loadNow = { liveVm.nowMany(it) },
+                            onSelect = { liveVm.ensurePlaying(it); showChannelList = false },
+                            onListView = { scope.launch { settingsRepo.setZapPanel(0) } },
+                            onDismiss = { showChannelList = false },
+                            modifier = Modifier.fillMaxSize(),
+                        ) else tv.own.owntv.features.shell.components.ChannelListOverlay(
                             channels = zapChannels,
                             currentId = previewChannel?.id,
                             nowPlaying = overlayNowPlaying,
@@ -1937,6 +1947,7 @@ fun OwnTVShell(
                             onOpenCategories = { liveVm.showCategories() },
                             loadNow = { liveVm.nowFull(it) },
                             loadSchedule = if (glcnZapPanel == 1) ({ liveVm.scheduleFor(it) }) else null,
+                            onCyclePanel = { scope.launch { settingsRepo.setZapPanel((glcnZapPanel + 1) % 3) } },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }

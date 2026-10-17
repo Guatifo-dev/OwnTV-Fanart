@@ -169,6 +169,10 @@ class LiveViewModel(
     suspend fun nowFull(channel: ChannelEntity): Pair<tv.own.owntv.core.database.entity.EpgProgrammeEntity?, tv.own.owntv.core.database.entity.EpgProgrammeEntity?> =
         nowArt.nowAndNext(channel)
 
+    /** glcn: what [channels] show now, with their pictures — the poster view of the zapping list. */
+    suspend fun nowMany(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.database.entity.EpgProgrammeEntity> =
+        nowArt.many(channels)
+
     // --- "Record what I'm watching" (Plan D, D3 mode b) -----------------------------------------
 
     /**

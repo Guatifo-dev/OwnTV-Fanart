@@ -98,6 +98,8 @@ fun ChannelListOverlay(
     loadNow: (suspend (ChannelEntity) -> Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>)? = null,
     /** glcn: the focused channel's coming schedule; when set it takes the picture panel's place, right beside the list. */
     loadSchedule: (suspend (ChannelEntity) -> List<EpgProgrammeEntity>)? = null,
+    /** glcn: ▶ steps the view — picture, schedule, posters — remembered for next time. */
+    onCyclePanel: (() -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
@@ -146,6 +148,12 @@ fun ChannelListOverlay(
                 .width(if (history) 760.mpx else 720.mpx)
                 .stageGlass(StageRadii.Sheet, overContent = true)
                 .onPreviewKeyEvent { e ->
+                    if (onCyclePanel != null && !alignEnd && e.type == KeyEventType.KeyDown &&
+                        e.key.horizontalDirection(layoutDirection) == HorizontalDirection.END
+                    ) {
+                        onCyclePanel()
+                        return@onPreviewKeyEvent true
+                    }
                     if (e.type == KeyEventType.KeyDown && e.key.horizontalDirection(layoutDirection) == dismissDirection) {
                         // Pushing outward from the Start panel opens categories when they are wired;
                         // pushing outward from the End panel closes it. Back always closes.
@@ -258,6 +266,7 @@ fun ChannelListOverlay(
                         else -> null
                     },
                     "CH±" to stringResource(R.string.content_key_page),
+                    if (onCyclePanel != null && !alignEnd) "▶" to stringResource(R.string.glcn_zap_view_next) else null,
                     stringResource(R.string.common_back) to stringResource(R.string.content_close),
                 ),
                 textSize = 16,
