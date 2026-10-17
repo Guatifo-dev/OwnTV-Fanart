@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,7 +75,12 @@ fun HomeLiveRow(
     if (shown.isEmpty()) return
     Column(modifier) {
         HomeRowHeader(title, small = if (onNow) stringResource(R.string.home_row_on_now) else null, start = start)
+        // glcn: a channel that moves to the front (the one just watched) shows as the first card, whole,
+        // instead of the row holding its old place and leaving it half off the left edge.
+        val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
+        LaunchedEffect(shown.firstOrNull()?.id) { runCatching { rowState.scrollToItem(0) } }
         LazyRow(
+            state = rowState,
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),

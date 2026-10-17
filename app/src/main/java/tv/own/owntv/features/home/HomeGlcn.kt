@@ -338,7 +338,12 @@ internal fun ArtLiveRow(
     if (channels.isEmpty()) return
     Column(modifier) {
         HomeRowHeader(title, small = stringResource(R.string.home_row_on_now), start = start)
+        // glcn: a channel that moves to the front (the one just watched) shows as the first card, whole,
+        // instead of the row holding its old place and leaving it half off the left edge.
+        val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
+        LaunchedEffect(channels.firstOrNull()?.id) { runCatching { rowState.scrollToItem(0) } }
         LazyRow(
+            state = rowState,
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),
