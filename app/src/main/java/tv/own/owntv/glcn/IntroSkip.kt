@@ -71,12 +71,16 @@ object IntroSkip {
         // Learning: a forward jump early in the episode, then watching on, marks the intro's end.
         var last by remember(meta) { mutableLongStateOf(-1L) }
         var candidate by remember(meta) { mutableLongStateOf(-1L) }
+        // Once the viewer has jumped past the start (with the button or by seeking), the button is done
+        // for this episode — a first skip of a typical length could otherwise land still inside its window.
+        var jumped by remember(meta) { mutableStateOf(false) }
         LaunchedEffect(position, series) {
             if (series == null) return@LaunchedEffect
             val prev = last
             last = position
             if (prev > 3_000L && position - prev > JUMP_MS && prev < WINDOW_MS && position < WINDOW_MS + DEFAULT_JUMP_MS) {
                 candidate = position
+                jumped = true
             }
         }
         LaunchedEffect(candidate) {
@@ -100,7 +104,7 @@ object IntroSkip {
                 engine.seekBy(learnedEnd - position)
             }
         }
-        val visible = inWindow && controlsHidden && !(autoSkip && learnedEnd > 0)
+        val visible = inWindow && !jumped && controlsHidden && !(autoSkip && learnedEnd > 0)
         LaunchedEffect(visible) { onVisible(visible) }
         Box(modifier) {
             AnimatedVisibility(visible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomEnd)) {
