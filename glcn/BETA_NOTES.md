@@ -21,3 +21,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Reproductor con estilos claros: la ficha del programa se lee bien (antes texto oscuro sobre fondo oscuro).
 - Vista Pósters de la lista de canales: abierta manteniendo OK ya no se cierra sola al soltar.
 - Arreglado: en Ajustes, cada tarjeta abría el grupo anterior (Apariencia abría Fuentes y guía). Faltaba la tarjeta Fanart; ya está, y cada tarjeta abre su grupo.
+- Sonidos de menú en «Desactivado»: la app queda en silencio. Antes seguían sonando los clics del propio Android TV.

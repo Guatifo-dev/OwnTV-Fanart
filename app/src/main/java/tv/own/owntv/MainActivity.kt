@@ -174,10 +174,11 @@ open class MainActivity : ComponentActivity() {
         return error
     }
 
-    // glcn: with the app's own menu sounds on, Android TV's system clicks (Settings → Device
-    // preferences → Sound → System sounds) would play on top of them: the window stops asking for them.
+    // glcn: the app never asks for Android TV's system clicks (Settings → Device preferences → Sound →
+    // System sounds). With the app's sounds on they would play on top of them; with them Off, Off means
+    // a silent app — the system's own clicks were still heard, which read as the setting not working.
     private fun quietSystemClicks() {
-        val on = tv.own.owntv.glcn.UiSounds.level == 0
+        val on = false
         fun walk(v: android.view.View) {
             v.isSoundEffectsEnabled = on
             if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
