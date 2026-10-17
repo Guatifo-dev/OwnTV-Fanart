@@ -12,3 +12,5 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - Picons: tras arrancar y después de cada sincronización, la app descarga en segundo plano los logos de todos los canales; la lista y la guía salen ya con sus logos. Misma calidad.
 - Info del reproductor (botón ⓘ): nueva línea **Arranque del canal**, lo que tardó el canal en mostrar imagen.
 - La precarga de picons va ahora de uno en uno, con pausas, para no saturar el servidor de logos.
+- Mando SHIELD: **mantener ⏯ abre la Guía**. Mantener ≡ lo usa la propia SHIELD para su menú de ajustes, así que la app nunca lo recibía. Se cambia solo una vez en instalaciones existentes, sin tocar botones personalizados. Favorito se marca desde la lista de canales.
+- Nuevo en Ajustes › Fanart: **Margen de pantalla** (2–8 %), para teles que recortan los bordes de la imagen.

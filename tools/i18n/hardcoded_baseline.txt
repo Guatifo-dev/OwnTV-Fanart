@@ -76,12 +76,14 @@
 2	app/src/main/java/tv/own/owntv/features/shell/components/LiveEpgCard.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/LiveEpgCard.kt	·
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	$safeArea %
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	github.com/carlosglcn/OwnTV-Fanart
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_auto_skip_intro
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_back_window
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_dialogue
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_backdrop
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_mpv_passthrough
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_safe_area
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_season
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_style
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds

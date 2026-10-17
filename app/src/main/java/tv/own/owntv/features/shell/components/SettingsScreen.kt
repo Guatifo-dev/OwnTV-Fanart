@@ -374,6 +374,7 @@ fun SettingsScreen(
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
+    val safeArea by settingsVm.safeArea.collectAsStateWithLifecycle()
     val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
     val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
     var showGlcnStyle by remember { mutableStateOf(false) }
@@ -595,6 +596,14 @@ fun SettingsScreen(
             ),
             chipTone = if (seasonMode > 0) TileTone.PRIMARY else TileTone.SECONDARY,
             onClick = { settingsVm.cycleSeasonMode() },
+        ),
+        RootRow(
+            "glcn_safe_area", TileTone.SECONDARY, OwnTVIcon.LIST_GRID,
+            title = stringResource(R.string.glcn_safe_area_title),
+            desc = stringResource(R.string.glcn_safe_area_desc),
+            chip = if (safeArea > 0) "$safeArea %" else stringResource(R.string.common_off),
+            chipTone = if (safeArea > 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleSafeArea() },
         ),
         RootRow(
             "glcn_back_window", TileTone.SECONDARY, OwnTVIcon.LIVE_TV,

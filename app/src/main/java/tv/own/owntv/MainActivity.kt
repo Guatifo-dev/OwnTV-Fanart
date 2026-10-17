@@ -231,8 +231,23 @@ open class MainActivity : ComponentActivity() {
             }
         }
         // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
-        lifecycleScope.launch { runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() } }
+        lifecycleScope.launch {
+            runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() }
+            runCatching { glcnSettings.applyGlcnRemoteV3Once() }
+        }
         tv.own.owntv.glcn.PiconPrefetch.start(this, lifecycleScope)
+        // glcn: Settings › Fanart › Screen margin — the whole app, picture included, drawn that much inside
+        // the screen, for a TV that crops its edges. Black around it, where the TV's crop falls.
+        lifecycleScope.launch {
+            glcnSettings.glcnSafeArea.collect { pct ->
+                val content = findViewById<android.view.View>(android.R.id.content) ?: return@collect
+                val dm = resources.displayMetrics
+                val x = dm.widthPixels * pct / 100
+                val y = dm.heightPixels * pct / 100
+                if (pct > 0) window.decorView.setBackgroundColor(android.graphics.Color.BLACK)
+                content.setPadding(x, y, x, y)
+            }
+        }
         // glcn: the Fanart icon once, on a TV that had chosen another colour of the old icon.
         lifecycleScope.launch {
             runCatching {
