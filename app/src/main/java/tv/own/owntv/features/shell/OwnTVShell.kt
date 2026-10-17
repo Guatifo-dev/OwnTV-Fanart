@@ -227,6 +227,10 @@ fun OwnTVShell(
     val shellContentFocus = remember { FocusRequester() }
     // Stage navigation (P1, P1b): where the rail sits, what it shows, its length, the floating hide delay.
     val backToWindow by settingsRepo.backToWindow.collectAsStateWithLifecycle(initialValue = false)
+    val autoSkipIntro by settingsRepo.autoSkipIntro.collectAsStateWithLifecycle(initialValue = false)
+    var hudControlsVisible by remember { mutableStateOf(true) }
+    var introSkipVisible by remember { mutableStateOf(false) }
+    val introContext = androidx.compose.ui.platform.LocalContext.current
     val navStyle by settingsRepo.navStyle.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED)
     val navSize by settingsRepo.navSize.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT)
     val navWiden by settingsRepo.navWiden.collectAsStateWithLifecycle(initialValue = null)
@@ -1746,6 +1750,7 @@ fun OwnTVShell(
                     // "End of programme" only at the live edge: rewound, the programme on air is not the one being watched.
                     sleepProgrammeEndMs = if (isTunedLive && !timeshifted) { { liveVm.nowNext.value?.now?.stopMs } } else null,
                     liveLeftRightRewinds = liveLeftRightRewinds,
+                    onControlsVisible = { hudControlsVisible = it },
                     timeshiftOffsetSec = if (isTunedLive) { { timeshiftOffsetState.value } } else null,
                     onTuneToNumber = if (directTuneEnabled && isTunedLive && isLiveStream && !timeshifted && previewChannel != null) liveVm::tuneByNumber else null,
                     directTuneContextKey = previewChannel?.id ?: 0L,
@@ -1830,6 +1835,20 @@ fun OwnTVShell(
                             }
                         }
                     } else null,
+                    modifier = Modifier.fillMaxSize().onPreviewKeyEvent { e ->
+                        // glcn: OK while "Skip intro" shows jumps the intro.
+                        val ok = e.key == Key.DirectionCenter || e.key == Key.Enter || e.key == Key.NumPadEnter
+                        if (!introSkipVisible || !ok) return@onPreviewKeyEvent false
+                        if (e.type == KeyEventType.KeyUp) tv.own.owntv.glcn.IntroSkip.skip(introContext, if (liveOnExo) liveVm.previewEngine else mpvEngine)
+                        true
+                    },
+                )
+                // glcn: "Skip intro" on series episodes — OK while it shows (controls hidden) jumps it.
+                if (!isLiveChannel) tv.own.owntv.glcn.IntroSkip.Chip(
+                    engine = if (liveOnExo) liveVm.previewEngine else mpvEngine,
+                    controlsHidden = !hudControlsVisible,
+                    autoSkip = autoSkipIntro,
+                    onVisible = { introSkipVisible = it },
                     modifier = Modifier.fillMaxSize(),
                 )
                 // OpenSubtitles search overlay (movies/episodes) — drawn above the HUD; the HUD is inert

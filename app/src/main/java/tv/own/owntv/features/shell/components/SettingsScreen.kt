@@ -373,6 +373,7 @@ fun SettingsScreen(
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
+    val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val dialogueBoost by settingsVm.dialogueBoost.collectAsStateWithLifecycle()
@@ -592,6 +593,14 @@ fun SettingsScreen(
             chip = stringResource(if (backToWindow) R.string.glcn_back_window else R.string.glcn_back_stop),
             chipTone = TileTone.PRIMARY,
             onClick = { settingsVm.toggleBackToWindow() },
+        ),
+        RootRow(
+            "glcn_auto_skip_intro", TileTone.SECONDARY, OwnTVIcon.SERIES,
+            title = stringResource(R.string.glcn_auto_skip_title),
+            desc = stringResource(R.string.glcn_auto_skip_desc),
+            chip = stringResource(if (autoSkipIntro) R.string.common_on else R.string.common_off),
+            chipTone = if (autoSkipIntro) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.toggleAutoSkipIntro() },
         ),
         RootRow(
             "glcn_dialogue", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,

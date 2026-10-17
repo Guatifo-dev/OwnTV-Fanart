@@ -1021,6 +1021,8 @@ class SettingsViewModel(
     fun cycleZapPanel() { viewModelScope.launch { settings.setZapPanel((zapPanel.value + 1) % 2) } }
     val backToWindow: StateFlow<Boolean> = settings.backToWindow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun toggleBackToWindow() { viewModelScope.launch { settings.setBackToWindow(!backToWindow.value) } }
+    val autoSkipIntro: StateFlow<Boolean> = settings.autoSkipIntro.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
 
     // glcn: Kodi-style extras.
     val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)

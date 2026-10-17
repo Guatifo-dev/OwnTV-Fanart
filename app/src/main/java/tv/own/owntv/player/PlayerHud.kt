@@ -226,6 +226,8 @@ fun PlayerHud(
     // N6 — Settings → "Left and right rewind live TV": with the controls hidden, Left/Right on a
     // catch-up channel scrub instead of opening the lists. Films always seek.
     liveLeftRightRewinds: Boolean = false,
+    /** glcn: told whenever the controls show or hide (the intro-skip button lives under them). */
+    onControlsVisible: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     // T14 — nothing that ticks is read in this root scope: with the controls hidden it used to recompose
@@ -284,6 +286,7 @@ fun PlayerHud(
         nextCardDue && !autoNextDismissed
 
     var controlsVisible by remember { mutableStateOf(true) }
+    LaunchedEffect(controlsVisible) { onControlsVisible(controlsVisible) }
     var showInfo by remember { mutableStateOf(false) } // stream technical-info overlay
     // Used only by "Report this stream", which writes the current readout into the playback log (F18).
     val reportContext = androidx.compose.ui.platform.LocalContext.current
