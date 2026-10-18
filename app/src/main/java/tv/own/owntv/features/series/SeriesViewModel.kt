@@ -1418,4 +1418,15 @@ class SeriesViewModel(
             LiveRailItem(LiveKey.All),
         )
     }
+
+    /** glcn: "Related" on the details page — the best-rated others of the series' category. */
+    suspend fun relatedTo(series: tv.own.owntv.core.database.entity.SeriesEntity): List<tv.own.owntv.features.shell.components.RelatedUi> {
+        val cat = series.categoryId ?: return emptyList()
+        return seriesDao.inCategoryTop(cat, 40)
+            .filter { it.id != series.id }
+            .distinctBy { it.name.trim().lowercase() }
+            .sortedByDescending { !it.posterUrl.isNullOrBlank() }
+            .take(8)
+            .map { tv.own.owntv.features.shell.components.RelatedUi(it.name, it.posterUrl, it.year) }
+    }
 }

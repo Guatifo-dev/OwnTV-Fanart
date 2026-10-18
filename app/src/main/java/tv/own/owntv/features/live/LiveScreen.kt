@@ -666,6 +666,7 @@ fun LiveScreen(
                 showVideo = effectivePreview,
                 singleSessionBlocked = previewBlockedSingleSession,
                 loadProgrammes = { list, from, to -> vm.cardProgrammesFor(list, from, to) },
+                loadSimilar = { t, c, y, id -> vm.similarTo(t, c, y, id) },
                 header = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(28.mpx)) {
                         LiveHeader(category = headerLabel, count = count, showChevron = true, modifier = Modifier.weight(1f, fill = false))
