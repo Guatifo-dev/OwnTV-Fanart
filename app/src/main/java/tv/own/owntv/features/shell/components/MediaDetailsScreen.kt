@@ -74,7 +74,13 @@ data class MediaDetailsUi(
     val genres: List<String> = emptyList(),
     val plot: String? = null,
     val cast: List<tv.own.owntv.core.metadata.CastMember> = emptyList(),
+    /** glcn: "Related" — other titles of the same category; filled in by the caller once loaded. */
+    val related: List<RelatedUi> = emptyList(),
 )
+
+/** glcn: one related title on the details page. */
+@Immutable
+data class RelatedUi(val name: String, val posterUrl: String?, val year: Int?)
 
 /**
  * TMDB details as a Stage page in its own full-screen window: the backdrop edge to edge,
@@ -170,6 +176,33 @@ fun MediaDetailsScreen(details: MediaDetailsUi, onExit: () -> Unit, modifier: Mo
                 if (details.cast.isNotEmpty()) {
                     DetailsLabel(stringResource(R.string.content_media_cast))
                     CastGrid(details.cast)
+                }
+                if (details.related.isNotEmpty()) {
+                    DetailsLabel(stringResource(R.string.glcn_related_title))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(24.mpx), verticalArrangement = Arrangement.spacedBy(24.mpx)) {
+                        details.related.forEach { r ->
+                            Column(Modifier.width(150.mpx)) {
+                                Box(
+                                    Modifier.fillMaxWidth().aspectRatio(2f / 3f).clip(RoundedCornerShape(14.mpx))
+                                        .background(StageColors.Ink.copy(alpha = 0.06f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (!r.posterUrl.isNullOrBlank()) {
+                                        AsyncImage(model = r.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                                    } else {
+                                        Text(
+                                            r.name.take(1).uppercase(), style = stageText(34, 800), color = StageColors.Muted,
+                                        )
+                                    }
+                                }
+                                Text(
+                                    r.name, style = stageText(15, 600), color = StageColors.ItemText,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.mpx),
+                                )
+                                r.year?.let { Text(it.toString(), style = stageText(13, 500), color = StageColors.Dim, maxLines = 1) }
+                            }
+                        }
+                    }
                 }
                 Text(stringResource(R.string.content_media_press_back), style = stageText(16, 600), color = StageColors.Dim, modifier = Modifier.padding(top = 40.mpx))
             }

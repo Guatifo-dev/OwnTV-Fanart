@@ -1095,4 +1095,15 @@ class MovieViewModel(
             LiveRailItem(LiveKey.All),
         )
     }
+
+    /** glcn: "Related" on the details page — the best-rated others of the movie's category. */
+    suspend fun relatedTo(movie: MovieEntity): List<tv.own.owntv.features.shell.components.RelatedUi> {
+        val cat = movie.categoryId ?: return emptyList()
+        return movieDao.inCategoryTop(cat, 40)
+            .filter { it.id != movie.id && it.canonicalTitle != movie.canonicalTitle }
+            .distinctBy { it.canonicalTitle.ifBlank { it.name } }
+            .sortedByDescending { !it.posterUrl.isNullOrBlank() }
+            .take(8)
+            .map { tv.own.owntv.features.shell.components.RelatedUi(it.name, it.posterUrl, it.year ?: it.parsedYear) }
+    }
 }

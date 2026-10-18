@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -90,6 +91,7 @@ internal fun LiveCinematicPane(
     showVideo: Boolean,
     singleSessionBlocked: Boolean,
     loadProgrammes: suspend (List<ChannelEntity>, Long, Long) -> Map<Long, List<EpgProgrammeEntity>>,
+    loadSimilar: suspend (String?, String?, Int?, Long?) -> List<tv.own.owntv.core.live.SimilarNow.Entry>,
     header: @Composable () -> Unit,
     cardModifier: (index: Int, channel: ChannelEntity) -> Modifier,
     onFocus: (ChannelEntity) -> Unit,
@@ -129,6 +131,19 @@ internal fun LiveCinematicPane(
         programmes = programmes + want.associate { it.id to found[it.id].orEmpty() }
         loadedMinute = loadedMinute + want.associate { it.id to minute }
     }
+
+    // glcn: "You may like" — what else is on soon in the focused programme's genre. Kept while the next
+    // answer loads, so zapping along the row does not make the strip flicker.
+    var similar by remember { mutableStateOf<List<tv.own.owntv.core.live.SimilarNow.Entry>>(emptyList()) }
+    val focusTitle = nowNext?.now?.title
+    val focusCategories = nowNext?.nowDetails?.categories
+    val focusYear = nowNext?.nowDetails?.year
+    LaunchedEffect(previewChannel?.id, focusTitle) {
+        if (focusTitle == null) { similar = emptyList(); return@LaunchedEffect }
+        delay(500)
+        similar = runCatching { loadSimilar(focusTitle, focusCategories, focusYear, previewChannel?.id) }.getOrDefault(emptyList())
+    }
+    val similarFirst = remember { androidx.compose.ui.focus.FocusRequester() }
 
     val focusedProgrammes = previewChannel?.let { programmes[it.id] }.orEmpty()
     val heroArt = nowNext?.nowDetails?.imageUrl
@@ -184,7 +199,9 @@ internal fun LiveCinematicPane(
                                         now = now,
                                         onClick = { onClick(channel) },
                                         onLongClick = { onLongClick(channel) },
-                                        modifier = cardModifier(index, channel)
+                                        modifier = Modifier
+                                            .onDownToSimilar(similar.isNotEmpty(), similarFirst)
+                                            .then(cardModifier(index, channel))
                                             .onFocusChanged { if (it.hasFocus) onFocus(channel) },
                                     )
                                     Spacer(Modifier.height(14.mpx))
@@ -197,8 +214,92 @@ internal fun LiveCinematicPane(
                         }
                     }
                 }
+                if (similar.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.glcn_similar_title), style = stageText(20, 700), color = StageColors.Text,
+                        modifier = Modifier.padding(start = 64.mpx, top = 2.mpx),
+                    )
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(18.mpx),
+                        contentPadding = PaddingValues(start = 64.mpx, end = 64.mpx, top = 8.mpx, bottom = 8.mpx),
+                        modifier = Modifier.fillMaxWidth().focusGroup(),
+                    ) {
+                        items(count = similar.size, key = { similar[it].programme.id }) { i ->
+                            val e = similar[i]
+                            SimilarCard(
+                                entry = e,
+                                now = now,
+                                onClick = { onClick(e.channel) },
+                                modifier = (if (i == 0) Modifier.focusRequester(similarFirst) else Modifier),
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+/** glcn: Down from a channel card goes to the "You may like" strip when there is one. */
+private fun Modifier.onDownToSimilar(has: Boolean, target: androidx.compose.ui.focus.FocusRequester): Modifier =
+    androidx.compose.ui.Modifier.onPreviewKeyEvent { e ->
+        if (has && e.type == androidx.compose.ui.input.key.KeyEventType.KeyDown &&
+            e.key == androidx.compose.ui.input.key.Key.DirectionDown
+        ) { runCatching { target.requestFocus() }.isSuccess } else false
+    }.then(this)
+
+private const val SIM_W = 230
+private const val SIM_H = 130
+
+/** glcn: one suggestion — the programme's picture, when it starts, then its title and channel under it. */
+@Composable
+private fun SimilarCard(
+    entry: tv.own.owntv.core.live.SimilarNow.Entry,
+    now: Long,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val formatTime = rememberSystemTimeFormatter()
+    val p = entry.programme
+    val shape = RoundedCornerShape(12.mpx)
+    Column(Modifier.width(SIM_W.mpx)) {
+        StageSurface(
+            onClick = onClick,
+            radius = 12.mpx,
+            focusStyle = StageFocus.POSTER,
+            modifier = modifier.size(SIM_W.mpx, SIM_H.mpx),
+            contentAlignment = Alignment.TopStart,
+        ) { _ ->
+            Box(Modifier.fillMaxSize().clip(shape).background(Color(0xFF15191C))) {
+                if (!p.imageUrl.isNullOrBlank()) {
+                    tv.own.owntv.ui.components.ProgrammeArt(url = p.imageUrl!!, modifier = Modifier.fillMaxSize())
+                } else {
+                    ChannelLogoTile(
+                        logoUrl = entry.channel.displayLogoUrl,
+                        modifier = Modifier.align(Alignment.Center).size(110.mpx, 70.mpx),
+                        fill = Color.Transparent,
+                    ) { OwnTVIcon(OwnTVIcon.LIVE_TV, tint = StageColors.Dim, modifier = Modifier.size(34.mpx)) }
+                }
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f)),
+                    ),
+                )
+                Text(
+                    if (p.startMs <= now) stringResource(R.string.glcn_similar_now) else formatTime(p.startMs),
+                    style = stageText(14, 700), color = Color.White, maxLines = 1,
+                    modifier = Modifier.align(Alignment.BottomStart).padding(start = 10.mpx, bottom = 7.mpx),
+                )
+            }
+        }
+        Text(
+            tv.own.owntv.core.live.SportsNow.displayTitle(p.title), style = stageText(16, 700), color = StageColors.Text,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.mpx),
+        )
+        Text(
+            ProviderTags.parse(entry.channel.name).name, style = stageText(13, 500), color = StageColors.Muted,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
