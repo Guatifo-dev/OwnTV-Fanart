@@ -73,6 +73,16 @@ jobs:
             -Pglcn.beta=${{ github.ref == 'refs/heads/dev' }} \
             --stacktrace --console=plain 2>&1 | tee build.log
 
+      # glcn: the compiler's errors, readable from git when a build fails (branch ci-status, file dev.log).
+      - name: Publish build errors
+        if: failure() && steps.build.conclusion == 'failure'
+        run: |
+          mkdir -p /tmp/cis && cd /tmp/cis
+          git init -q . && git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git fetch -q origin ci-status && git checkout -q -b ci-status FETCH_HEAD || git checkout -q --orphan ci-status
+          { echo "run=${{ github.run_id }} sha=${{ github.sha }}"; grep -E "^e: |error:|FAILED|What went wrong|Execution failed|Unresolved|Could not" -A2 "$GITHUB_WORKSPACE/build.log" | head -120; } > "${{ github.ref_name }}.log" || true
+          git add -A && git -c user.name=ci -c user.email=ci@example.com commit -q -m "build errors ${{ github.sha }}" && git push -q origin ci-status || true
+
       - name: Package APK
         if: success()
         run: |
