@@ -326,6 +326,9 @@ fun SettingsScreen(
     val safeArea by settingsVm.safeArea.collectAsStateWithLifecycle()
     val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
     val habitLearning by settingsVm.habitLearning.collectAsStateWithLifecycle()
+    val osdSeconds by settingsVm.osdSeconds.collectAsStateWithLifecycle()
+    val homeCover by settingsVm.homeCover.collectAsStateWithLifecycle()
+    val homeCoverDim by settingsVm.homeCoverDim.collectAsStateWithLifecycle()
     val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
     var showGlcnStyle by remember { mutableStateOf(false) }
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
@@ -532,6 +535,28 @@ fun SettingsScreen(
             onClick = { settingsVm.cycleHomeBackdropStyle() },
         ),
         RootRow(
+            "glcn_home_cover", TileTone.PRIMARY, OwnTVIcon.IMAGE,
+            title = stringResource(R.string.glcn_home_cover_title),
+            desc = stringResource(R.string.glcn_home_cover_desc),
+            chip = stringResource(if (homeCover == 1) R.string.glcn_home_cover_app else R.string.glcn_home_cover_art),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleHomeCover() },
+        ),
+        RootRow(
+            "glcn_home_dim", TileTone.SECONDARY, OwnTVIcon.GLOW,
+            title = stringResource(R.string.glcn_home_dim_title),
+            desc = stringResource(R.string.glcn_home_dim_desc),
+            chip = stringResource(
+                when (homeCoverDim) {
+                    1 -> R.string.glcn_home_dim_soft
+                    2 -> R.string.glcn_home_dim_softer
+                    else -> R.string.glcn_home_dim_normal
+                },
+            ),
+            chipTone = TileTone.SECONDARY,
+            onClick = { settingsVm.cycleHomeCoverDim() },
+        ),
+        RootRow(
             "glcn_season", TileTone.SECONDARY, OwnTVIcon.THEME,
             title = stringResource(R.string.glcn_season_title),
             desc = stringResource(R.string.glcn_season_desc),
@@ -569,6 +594,18 @@ fun SettingsScreen(
             chip = stringResource(if (autoSkipIntro) R.string.common_on else R.string.common_off),
             chipTone = if (autoSkipIntro) TileTone.PRIMARY else TileTone.SECONDARY,
             onClick = { settingsVm.toggleAutoSkipIntro() },
+        ),
+        RootRow(
+            "glcn_osd", TileTone.SECONDARY, OwnTVIcon.CLOCK,
+            title = stringResource(R.string.glcn_osd_title),
+            desc = stringResource(R.string.glcn_osd_desc),
+            chip = when {
+                osdSeconds == tv.own.owntv.core.settings.OsdRules.UNTIL_BACK -> stringResource(R.string.glcn_osd_until_back)
+                osdSeconds > 0 -> stringResource(R.string.glcn_osd_seconds, osdSeconds)
+                else -> stringResource(R.string.glcn_osd_standard)
+            },
+            chipTone = if (osdSeconds != 0) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.cycleOsdSeconds() },
         ),
         RootRow(
             "glcn_habits", TileTone.SECONDARY, OwnTVIcon.BELL,

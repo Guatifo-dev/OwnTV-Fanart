@@ -1003,6 +1003,12 @@ class SettingsViewModel(
     val glcnStyle: StateFlow<tv.own.owntv.core.theme.GlcnStyle?> = settings.glcnStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     fun applyGlcnStyle(style: tv.own.owntv.core.theme.GlcnStyle?) { viewModelScope.launch { settings.applyGlcnStyle(style) } }
     fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
+    val homeCover: StateFlow<Int> = settings.homeCover.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleHomeCover() { viewModelScope.launch { settings.setHomeCover((homeCover.value + 1) % 2) } }
+    val homeCoverDim: StateFlow<Int> = settings.homeCoverDim.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleHomeCoverDim() { viewModelScope.launch { settings.setHomeCoverDim((homeCoverDim.value + 1) % 3) } }
+    val osdSeconds: StateFlow<Int> = settings.osdSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    fun cycleOsdSeconds() { viewModelScope.launch { settings.setOsdSeconds(tv.own.owntv.core.settings.OsdRules.next(osdSeconds.value)) } }
     val habitLearning: StateFlow<Boolean> = settings.habitLearning.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     fun toggleHabitLearning() { viewModelScope.launch { settings.setHabitLearning(!habitLearning.value) } }
 

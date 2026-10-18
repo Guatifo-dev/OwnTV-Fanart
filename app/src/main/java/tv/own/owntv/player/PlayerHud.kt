@@ -304,7 +304,10 @@ fun PlayerHud(
     val canZap = onChannelUp != null && onChannelDown != null
     var channelFlash by remember { mutableIntStateOf(0) }
     var showFlash by remember { mutableStateOf(false) }
-    LaunchedEffect(channelFlash) { if (channelFlash > 0) { showFlash = true; delay(3000); showFlash = false } }
+    // glcn: how long the controls and the channel banner stay up (Settings → On-screen info time).
+    val osdSetting by org.koin.compose.koinInject<tv.own.owntv.core.settings.SettingsRepository>().osdSeconds
+        .collectAsStateWithLifecycle(initialValue = 0)
+    LaunchedEffect(channelFlash) { if (channelFlash > 0) { showFlash = true; delay(tv.own.owntv.core.settings.OsdRules.bannerMs(osdSetting)); showFlash = false } }
 
     // Engine-switch confirmation toast: a brief "Switched to MPV/ExoPlayer" at the bottom-center when the
     // user flips the engine via the HUD toggle. Mirrors the channel-flash pattern above.
@@ -434,9 +437,11 @@ fun PlayerHud(
         player.setBitrateTrackingEnabled(showInfo)
         onDispose { player.setBitrateTrackingEnabled(false) }
     }
-    LaunchedEffect(controlsVisible, wakeTick, forceShow, inert) {
+    LaunchedEffect(controlsVisible, wakeTick, forceShow, inert, osdSetting) {
         // Don't auto-hide under an overlay — hiding is what triggers the catch-all focus grab below.
-        if (controlsVisible && !forceShow && !inert) { delay(4500); controlsVisible = false }
+        // "Until Back" never hides them by itself; Back (the BackHandler above) does.
+        val hideAfter = tv.own.owntv.core.settings.OsdRules.controlsMs(osdSetting)
+        if (controlsVisible && !forceShow && !inert && hideAfter != null) { delay(hideAfter); controlsVisible = false }
     }
     LaunchedEffect(controlsVisible, error, dialog, inert, showNextCard) {
         // Never steal focus while a dialog is open (its rows own it) or while a shell overlay is up

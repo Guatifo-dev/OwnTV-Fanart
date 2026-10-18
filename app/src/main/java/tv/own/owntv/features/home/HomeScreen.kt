@@ -381,6 +381,10 @@ fun HomeScreen(
     // glcn: the billboard brings its own picture; the backdrop steps back while it has focus.
     var billboardFocused by remember { mutableStateOf(false) }
     val backdropSetting by seasonSettings.homeBackdropStyle.collectAsStateWithLifecycle(initialValue = 0)
+    // glcn: 1 = the app's own background behind Home, no cover; the strength fades the cover back.
+    val homeCover by seasonSettings.homeCover.collectAsStateWithLifecycle(initialValue = 0)
+    val homeCoverDim by seasonSettings.homeCoverDim.collectAsStateWithLifecycle(initialValue = 0)
+    val coverArt = if (homeCover == 1) null else focusArt
     // The full-screen styles take over only where Home has no hero of its own.
     val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
@@ -391,16 +395,25 @@ fun HomeScreen(
         val panelCardWidth = if (backdropStyle == 2) ((maxWidth - PANEL_WIDTH - 48.mpx - contentStart - 40.mpx) / 3).coerceIn(220.mpx, 400.mpx) else null
         if (trendingItem == null && posterItem == null) when (backdropStyle) {
             // Before anything has focus, the first featured title stands in the picture.
-            1 -> HomeCinemaBackdrop(focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }, focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
+            1 -> HomeCinemaBackdrop(if (homeCover == 1) null else (focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }), focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
                 HomeGreeting(state.profileName, 0.mpx, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null)
             }, start = contentStart)
-            2 -> HomePanelBackdrop(focusArt)
+            2 -> HomePanelBackdrop(coverArt)
             // glcn: quieter once the rows have scrolled over it, so the cards read on a calm page.
             else -> {
                 val scrolledAway by remember { androidx.compose.runtime.derivedStateOf { listState.firstVisibleItemIndex > 1 } }
                 val calm by androidx.compose.animation.core.animateFloatAsState(if (billboardFocused) 0f else if (scrolledAway) 0.4f else 1f, label = "backdropCalm")
-                HomeFocusBackdrop(focusArt, Modifier.graphicsLayer { alpha = calm })
+                HomeFocusBackdrop(coverArt, Modifier.graphicsLayer { alpha = calm })
             }
+        }
+        // glcn: Cover strength — a veil over the cover (not Cinema, whose words sit in the same layer).
+        if (homeCover == 0 && homeCoverDim > 0 && backdropStyle != 1) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    tv.own.owntv.ui.theme.stageTone(Color(0xFF070B0E), tv.own.owntv.ui.theme.LocalStagePalette.current.page)
+                        .copy(alpha = if (homeCoverDim == 1) 0.4f else 0.7f),
+                ),
+            )
         }
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
