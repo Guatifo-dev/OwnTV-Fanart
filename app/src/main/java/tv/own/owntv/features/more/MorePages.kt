@@ -2,6 +2,7 @@ package tv.own.owntv.features.more
 
 import tv.own.owntv.ui.theme.stageTone
 import androidx.activity.compose.BackHandler
+import tv.own.owntv.ui.components.longPressMenuGuard
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -308,8 +309,19 @@ internal fun FavouritesPage(
     val itemFocus = remember { HashMap<Pair<MediaType, Long>, FocusRequester>() }
     fun focusOf(type: MediaType, id: Long) = itemFocus.getOrPut(type to id) { FocusRequester() }
     var returnTo by remember { mutableStateOf<FocusRequester?>(null) }
-    LaunchedEffect(menu, move) {
-        if (menu == null && move == null) returnTo?.let { withFrameNanos { }; runCatching { it.requestFocus() }; returnTo = null }
+    // glcn: several live channels at once — the marked ones, the actions sheet, and the category picker.
+    var selecting by remember { mutableStateOf<List<Long>?>(null) }
+    var batchActions by remember { mutableStateOf(false) }
+    var moveIds by remember { mutableStateOf<List<Long>?>(null) }
+    var creatingCategory by remember { mutableStateOf(false) }
+    val moveTargets by vm.moveTargets.collectAsStateWithLifecycle()
+    fun toggleSelected(id: Long) {
+        val cur = selecting ?: return
+        selecting = if (id in cur) cur - id else cur + id
+    }
+    androidx.activity.compose.BackHandler(enabled = selecting != null && menu == null && !batchActions && moveIds == null) { selecting = null }
+    LaunchedEffect(menu, move, batchActions, moveIds, creatingCategory) {
+        if (menu == null && move == null && !batchActions && moveIds == null && !creatingCategory) returnTo?.let { withFrameNanos { }; runCatching { it.requestFocus() }; returnTo = null }
     }
 
     val showLive = filter == FavFilter.ALL || filter == FavFilter.LIVE
@@ -348,13 +360,26 @@ internal fun FavouritesPage(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(20.mpx), contentPadding = PaddingValues(end = 24.mpx)) {
                 items(lists.live, key = { it.id }) { ch ->
                     val f = focusOf(MediaType.LIVE, ch.id)
-                    OnNowCard(
-                        channel = ch, programme = lists.onNow[ch.id]?.now, now = lists.now,
-                        onClick = { onPlayChannel(ch.id) },
-                        onLongClick = { returnTo = f; menu = Triple(MediaType.LIVE, ch.id, ch.name) },
-                        width = 420.mpx, oneLine = true,
-                        modifier = Modifier.focusRequester(f),
-                    )
+                    Box {
+                        OnNowCard(
+                            channel = ch, programme = lists.onNow[ch.id]?.now, now = lists.now,
+                            onClick = { if (selecting != null) toggleSelected(ch.id) else onPlayChannel(ch.id) },
+                            onLongClick = {
+                                returnTo = f
+                                if (selecting != null) batchActions = true else menu = Triple(MediaType.LIVE, ch.id, ch.name)
+                            },
+                            width = 420.mpx, oneLine = true,
+                            modifier = Modifier.focusRequester(f),
+                        )
+                        if (selecting?.contains(ch.id) == true) {
+                            val accent = tv.own.owntv.ui.theme.stageAccent
+                            Box(
+                                Modifier.align(Alignment.TopEnd).padding(10.mpx).size(30.mpx)
+                                    .clip(androidx.compose.foundation.shape.CircleShape).background(accent.accent),
+                                contentAlignment = Alignment.Center,
+                            ) { OwnTVIcon(OwnTVIcon.CHECK, accent.onAccent, Modifier.size(20.mpx)) }
+                        }
+                    }
                 }
             }
         }
@@ -397,13 +422,65 @@ internal fun FavouritesPage(
             val first = remember { FocusRequester() }
             LaunchedEffect(Unit) { withFrameNanos { }; runCatching { first.requestFocus() } }
             BackHandler { close() }
-            Box(Modifier.fillMaxSize().background(stageTone(Color.Black.copy(alpha = 0.45f), StageColors.Scrim)).trapAllFocusExit().focusGroup(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().background(stageTone(Color.Black.copy(alpha = 0.45f), StageColors.Scrim)).longPressMenuGuard().trapAllFocusExit().focusGroup(), contentAlignment = Alignment.Center) {
                 StageMenu(Modifier.width(440.mpx)) {
                     StageMenuHeader(name, null)
                     StageMenuItem(stringResource(R.string.content_remove_favourite), onClick = { vm.removeFavourite(type, id); returnTo = segFocus; close() }, icon = OwnTVIcon.FAVORITE, modifier = Modifier.focusRequester(first))
                     StageMenuItem(stringResource(R.string.content_move), onClick = { close(); vm.startMove(type, id) }, icon = OwnTVIcon.MOVE)
+                    // glcn: live channels can also go into a category of their own, one or several at a time.
+                    if (type == MediaType.LIVE) {
+                        StageMenuItem(stringResource(R.string.content_move_to_category), onClick = { close(); moveIds = listOf(id) }, icon = OwnTVIcon.FOLDER)
+                        StageMenuItem(stringResource(R.string.glcn_select_many), onClick = { close(); selecting = listOf(id) }, icon = OwnTVIcon.CHECK)
+                    }
                 }
             }
+        }
+    }
+    if (batchActions) {
+        val sel = selecting.orEmpty()
+        tv.own.owntv.ui.stage.StagePopup(
+            onDismiss = { batchActions = false },
+            title = stringResource(R.string.glcn_selected_count, sel.size),
+            width = 620.mpx,
+        ) {
+            if (sel.isNotEmpty()) {
+                tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_move_to_category),
+                    onClick = { batchActions = false; moveIds = sel },
+                )
+                tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_remove_favourite),
+                    onClick = { vm.removeFavourites(MediaType.LIVE, sel); batchActions = false; selecting = null },
+                )
+            }
+            tv.own.owntv.ui.stage.StagePopupOption(
+                title = stringResource(R.string.glcn_select_done),
+                onClick = { batchActions = false; selecting = null },
+            )
+        }
+    }
+    if (creatingCategory) {
+        tv.own.owntv.ui.components.TextInputDialog(
+            title = stringResource(R.string.settings_customize_new_category_title),
+            hint = stringResource(R.string.settings_customize_new_category_description),
+            confirmLabel = stringResource(R.string.common_create),
+            allowBlank = false,
+            onConfirm = { vm.createCustomCategory(it); creatingCategory = false },
+            onDismiss = { creatingCategory = false },
+        )
+    } else {
+        moveIds?.let { ids ->
+            tv.own.owntv.features.customize.MoveToCategoryDialog(
+                moveTargets = moveTargets,
+                originName = stringResource(R.string.content_category_favorites),
+                onNewCategory = { creatingCategory = true },
+                onMove = { targetId, keep ->
+                    vm.moveChannelsToCategory(ids, targetId, keep)
+                    moveIds = null
+                    selecting = null
+                },
+                onDismiss = { moveIds = null },
+            )
         }
     }
     move?.let { m ->

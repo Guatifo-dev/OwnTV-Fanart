@@ -100,6 +100,7 @@ class MoreCountsViewModel(
     private val userDataWriter: UserDataWriter,
     private val guide: GuideReader,
     private val customize: CustomizationStore,
+    private val customCategoryDao: tv.own.owntv.core.database.dao.CustomCategoryDao,
     private val settings: SettingsRepository,
     sourceDao: SourceDao,
     localSync: LocalSyncManager,
@@ -193,6 +194,53 @@ class MoreCountsViewModel(
             )
         }
         return HistoryLists(live, movies, series)
+    }
+
+    /** glcn: this profile's Live TV customizations, for the custom categories a favourite can move into. */
+    private val liveCustom: StateFlow<tv.own.owntv.core.customize.SectionCustomizations> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(tv.own.owntv.core.customize.SectionCustomizations())
+            else customize.observe(c.profileId, MediaType.LIVE)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.customize.SectionCustomizations())
+
+    /** glcn: the custom categories with member counts — the list "Move to category" offers. */
+    val moveTargets: StateFlow<List<tv.own.owntv.features.customize.MoveTarget>> = combine(ctx, liveCustom) { c, cust -> c to cust }
+        .flatMapLatest { (c, cust) ->
+            if (c.profileId < 0 || cust.customCategories.isEmpty()) flowOf(emptyList())
+            else customCategoryDao.observeCountsByContexts(
+                c.profileId, MediaType.LIVE, cust.customCategories.map { it.id }, ids(c, MediaType.LIVE),
+            ).map { counts ->
+                cust.customCategories.map { cc ->
+                    tv.own.owntv.features.customize.MoveTarget(
+                        id = cc.id,
+                        displayName = cust.categoryNames[cc.id] ?: cc.name,
+                        count = counts.firstOrNull { it.contextKey == cc.id }?.count ?: 0,
+                    )
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun createCustomCategory(name: String) {
+        val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return
+        viewModelScope.launch { customize.createCustomCategory(pid, MediaType.LIVE, name) }
+    }
+
+    /** glcn: one or several favourite channels into a custom category, one after the other so their places don't race. */
+    fun moveChannelsToCategory(channelIds: List<Long>, targetId: String, keepInFavourites: Boolean) {
+        val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return
+        viewModelScope.launch {
+            for (id in channelIds) {
+                customCategoryDao.appendItem(pid, MediaType.LIVE, targetId, id)
+                if (!keepInFavourites) userDataWriter.removeFavorite(pid, MediaType.LIVE, id)
+            }
+        }
+    }
+
+    fun removeFavourites(type: MediaType, ids: List<Long>) {
+        val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return
+        viewModelScope.launch { ids.forEach { userDataWriter.removeFavorite(pid, type, it) } }
     }
 
     fun removeFavourite(type: MediaType, id: Long) {
