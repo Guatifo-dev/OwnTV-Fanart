@@ -146,6 +146,8 @@ internal fun LiveCinematicPane(
         similar = runCatching { loadSimilar(focusTitle, focusCategories, focusYear, previewChannel?.id, previewChannel?.name) }.getOrDefault(emptyList())
     }
     val similarFirst = remember { androidx.compose.ui.focus.FocusRequester() }
+    // ▲ from a suggestion goes back to the card of the channel the strip was built for.
+    val returnTo = remember { androidx.compose.ui.focus.FocusRequester() }
 
     val focusedProgrammes = previewChannel?.let { programmes[it.id] }.orEmpty()
     val heroArt = nowNext?.nowDetails?.imageUrl
@@ -203,6 +205,7 @@ internal fun LiveCinematicPane(
                                         onLongClick = { onLongClick(channel) },
                                         modifier = Modifier
                                             .onDownToSimilar(similar.isNotEmpty(), similarFirst)
+                                            .then(if (channel.id == previewChannel?.id) Modifier.focusRequester(returnTo) else Modifier)
                                             .then(cardModifier(index, channel))
                                             .onFocusChanged { if (it.hasFocus) onFocus(channel) },
                                     )
@@ -232,7 +235,12 @@ internal fun LiveCinematicPane(
                                 entry = e,
                                 now = now,
                                 onClick = { onClick(e.channel) },
-                                modifier = (if (i == 0) Modifier.focusRequester(similarFirst) else Modifier),
+                                modifier = (if (i == 0) Modifier.focusRequester(similarFirst) else Modifier)
+                                    .onPreviewKeyEvent { ev ->
+                                        if (ev.type == androidx.compose.ui.input.key.KeyEventType.KeyDown &&
+                                            ev.key == androidx.compose.ui.input.key.Key.DirectionUp
+                                        ) { runCatching { returnTo.requestFocus() }.isSuccess } else false
+                                    },
                             )
                         }
                     }
