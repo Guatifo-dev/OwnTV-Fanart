@@ -79,10 +79,9 @@ fun ChannelLogoTile(
         contrastRatio(Color(ink).luminance(), surfaceLuminance) < minContrast
     val background = when {
         !showLogo -> fill
-        needsPlate -> when {
-            surfaceLuminance >= 0.5f -> DarkPlate
-            mode == 0 -> LightPlate.copy(alpha = 0.72f)
-            else -> LightPlate
+        needsPlate -> {
+            val plate = if (surfaceLuminance >= 0.5f) DarkPlate else LightPlate
+            if (mode == 0) plate.copy(alpha = 0.6f) else plate
         }
         else -> Color.Transparent
     }
