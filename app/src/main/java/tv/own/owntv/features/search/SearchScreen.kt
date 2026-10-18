@@ -148,7 +148,7 @@ private const val ALL_TAB_CHANNELS = 4
 /**
  * Global search in the Stage design (SR-01 … SR-07): the title band, the field, tabs over grouped
  * results on the left, and on the right the focused result — Live TV's own preview pane for a channel,
- * the poster panel for a movie or series. Search only shows: OK goes to the item (issue #233), where
+ * the poster panel for a movie or series. Search only shows: OK goes to the item, where
  * playing, downloading and every option already live. Back clears the search first, then leaves.
  */
 @Composable
@@ -588,7 +588,7 @@ private fun SearchRow(
     leading: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Hold OK does nothing here (owner, #233): the item's options live where OK takes you.
+    // Hold OK does nothing here: the item's options live where OK takes you.
     StageRow(onClick = onClick, onLongClick = {}, height = 84.mpx, horizontalPadding = 18.mpx, gap = 18.mpx, modifier = modifier.fillMaxWidth()) { focused ->
         leading()
         Column(Modifier.weight(1f)) {

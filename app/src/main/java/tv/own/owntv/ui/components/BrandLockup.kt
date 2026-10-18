@@ -29,7 +29,6 @@ import tv.own.owntv.core.brand.AppIcon
 import tv.own.owntv.core.brand.AppIconSwitcher
 import tv.own.owntv.core.brand.PixelMark as CorePixelMark
 import tv.own.owntv.core.settings.SettingsRepository
-import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.ui.theme.stageAccent
 
 /**
@@ -102,7 +101,7 @@ private val PixelSide = Color(CorePixelMark.SIDE)
 private val PixelPower = Color(CorePixelMark.POWER)
 
 /**
- * The #227 wordmark by @m3th0d93 (D5): lowercase "own" in cream, "tv" in [tv] (the accent), drawn from
+ * The wordmark: lowercase "own" in cream, "tv" in [tv] (the accent), drawn from
  * core's two vectors at [width]; its height follows the 988 × 182 drawing.
  */
 @Composable
@@ -116,8 +115,8 @@ fun Wordmark(width: Dp, modifier: Modifier = Modifier, tv: Color = stageAccent.a
 val WordmarkCream = Color(0xFFFFF6EE)
 
 /**
- * The lockup (Brand tab, C column): the mark, then the #227 wordmark at 2.75 × the mark's width (62 →
- * 170 in the mockup). Side by side the gap is 0.23 × the mark (14 / 62); [stacked] (the preview pane)
+ * The lockup (Brand tab, C column): the mark, then the wordmark at 2.75 × the mark's width (62 →
+ * 170 in the design). Side by side the gap is 0.23 × the mark (14 / 62); [stacked] (the preview pane)
  * puts the mark above with a 0.2 × gap.
  */
 @Composable
@@ -127,11 +126,10 @@ fun BrandLockup(
     stacked: Boolean = false,
 ) {
     val icon = rememberAppliedIcon()
-    val colors = OwnTVTheme.colors
     val parts = @Composable {
         BrandMark(icon, markSize.dp)
         // On a light theme "own" takes the text colour; the cream is for dark surfaces.
-        Wordmark((markSize * 2.75f).dp, own = if (colors.isDark) WordmarkCream else colors.textPrimary)
+        Wordmark((markSize * 2.75f).dp, own = if (tv.own.owntv.ui.theme.LocalStagePalette.current.isLight) tv.own.owntv.ui.theme.StageColors.Text else WordmarkCream)
     }
     if (stacked) {
         Column(

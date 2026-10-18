@@ -40,12 +40,12 @@ import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
 
 /**
- * Phase 11 — cross-section search over a profile's channels, movies and series.
+ * Cross-section search over a profile's channels, movies and series.
  *
  * The searching itself is core's [SearchReader]: the FTS expression, the hidden items and
  * categories, the kids filter and the Customize renames are the same rules on a phone as on a
  * television, so they are not written twice. What stays here is the screen's own behaviour —
- * debouncing and the recents list. A result is never played here: OK goes to it (issue #233).
+ * debouncing and the recents list. A result is never played here: OK goes to it.
  */
 class SearchViewModel(
     private val profileDao: ProfileDao,

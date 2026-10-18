@@ -73,10 +73,10 @@ fun AvatarPickerDialog(
                         modifier = Modifier.weight(1f),
                     )
                     if (customPath.isNotBlank() && onClearCustom != null) {
-                        tv.own.owntv.ui.components.OwnTVButton(
-                            label = stringResource(R.string.common_clear),
+                        tv.own.owntv.ui.stage.StagePopupButton(
+                            stringResource(R.string.common_clear),
                             onClick = onClearCustom,
-                            style = tv.own.owntv.ui.components.OwnTVButtonStyle.SECONDARY,
+                            primary = false,
                         )
                     }
                 }

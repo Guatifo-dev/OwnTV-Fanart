@@ -34,9 +34,6 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.core.database.entity.ProfileEntity
 import tv.own.owntv.ui.components.OwnTVAvatar
 import tv.own.owntv.ui.components.OwnTVAvatars
-import tv.own.owntv.ui.components.OwnTVButton
-import tv.own.owntv.ui.components.OwnTVButtonStyle
-import tv.own.owntv.ui.components.OwnTVTextField
 
 /** The profile dialogs' Stage popup: [title], [content], [buttons] bottom right. It scrolls, so small
  *  screens still reach the lower controls; the popup window keeps D-pad focus inside. */
@@ -71,24 +68,29 @@ private fun PinDialogBody(title: String, onSubmit: (String) -> Unit, onDismiss: 
     ProfileScrim(
         onDismiss, title = title, width = if (compact) 560.mpx else 700.mpx,
         buttons = {
-            OwnTVButton(
-                stringResource(R.string.common_cancel), onClick = onDismiss, style = OwnTVButtonStyle.SECONDARY,
+            tv.own.owntv.ui.stage.StagePopupButton(
+                stringResource(R.string.common_cancel),
+                onClick = onDismiss,
                 modifier = Modifier.focusRequester(cancelFocus).focusProperties { end = okFocus },
+                primary = false,
             )
-            OwnTVButton(
-                stringResource(R.string.common_ok), onClick = { onSubmit(pin) }, enabled = pin.length >= 4,
+            tv.own.owntv.ui.stage.StagePopupButton(
+                stringResource(R.string.common_ok),
+                onClick = { onSubmit(pin) },
                 modifier = Modifier.focusRequester(okFocus).focusProperties { start = cancelFocus },
+                enabled = pin.length >= 4,
             )
         },
     ) {
-        OwnTVTextField(
+        tv.own.owntv.features.settings.StageFieldRow(
+            icon = tv.own.owntv.ui.components.OwnTVIcon.PENCIL,
+            label = stringResource(R.string.profiles_pin),
             value = pin,
             onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) pin = it },
-            label = stringResource(R.string.profiles_pin),
-            placeholder = stringResource(R.string.profiles_pin_placeholder),
-            keyboardType = KeyboardType.NumberPassword,
-            isPassword = true,
             modifier = Modifier.fillMaxWidth().focusRequester(focus),
+            placeholder = stringResource(R.string.profiles_pin_placeholder),
+            password = true,
+            keyboardType = KeyboardType.NumberPassword,
         )
     }
 }
@@ -116,7 +118,7 @@ internal fun ProfileEditorDialog(
     onClearPicture: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
-    var avatarId by remember { mutableIntStateOf(initial?.avatarId ?: -1) } // Phase 7 — new profiles default to no-avatar
+    var avatarId by remember { mutableIntStateOf(initial?.avatarId ?: -1) } // new profiles default to no avatar
     var isKids by remember { mutableStateOf(initial?.isKids ?: false) }
     var pin by remember { mutableStateOf("") }
     var removePin by remember { mutableStateOf(false) }
@@ -131,15 +133,22 @@ internal fun ProfileEditorDialog(
         onDismiss,
         title = stringResource(if (initial == null) R.string.profiles_new else R.string.profiles_edit),
         buttons = {
-            OwnTVButton(stringResource(R.string.common_cancel), onClick = onDismiss, style = OwnTVButtonStyle.SECONDARY)
-            OwnTVButton(
-                label = stringResource(if (initial == null) R.string.profiles_create else R.string.profiles_save),
+            tv.own.owntv.ui.stage.StagePopupButton(stringResource(R.string.common_cancel), onClick = onDismiss, primary = false)
+            tv.own.owntv.ui.stage.StagePopupButton(
+                stringResource(if (initial == null) R.string.profiles_create else R.string.profiles_save),
                 onClick = { onConfirm(name, avatarId, isKids, if (removePin) "" else pin.takeIf { it.isNotBlank() }, pendingPicture) },
                 enabled = name.isNotBlank() && !nameTaken && (removePin || pin.isEmpty() || pin.length >= 4),
             )
         },
     ) {
-        OwnTVTextField(name, { name = it }, label = stringResource(R.string.profiles_name), placeholder = stringResource(R.string.profiles_name_hint), modifier = Modifier.fillMaxWidth().focusRequester(focus))
+        tv.own.owntv.features.settings.StageFieldRow(
+            icon = tv.own.owntv.ui.components.OwnTVIcon.PENCIL,
+            label = stringResource(R.string.profiles_name),
+            value = name,
+            onValueChange = { name = it },
+            modifier = Modifier.fillMaxWidth().focusRequester(focus),
+            placeholder = stringResource(R.string.profiles_name_hint),
+        )
         if (nameTaken) {
             Text(
                 stringResource(R.string.profiles_name_taken),
@@ -150,7 +159,7 @@ internal fun ProfileEditorDialog(
         tv.own.owntv.ui.stage.StagePopupLabel(stringResource(R.string.profiles_avatar).uppercase(), Modifier.padding(top = 18.mpx))
         val accent = stageAccent.accent
         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.mpx), contentPadding = androidx.compose.foundation.layout.PaddingValues(6.mpx)) {
-            items((-1 until OwnTVAvatars.COUNT).toList()) { id -> // Phase 7 — includes "no avatar" (-1)
+            items((-1 until OwnTVAvatars.COUNT).toList()) { id -> // includes "no avatar" (-1)
                 tv.own.owntv.ui.stage.StageSurface(
                     onClick = { avatarId = id },
                     radius = 44.mpx,
@@ -178,14 +187,15 @@ internal fun ProfileEditorDialog(
         }
         if (!removePin) {
             Spacer(Modifier.height(14.mpx))
-            OwnTVTextField(
+            tv.own.owntv.features.settings.StageFieldRow(
+                icon = tv.own.owntv.ui.components.OwnTVIcon.PENCIL,
+                label = if (initial?.pinHash != null) stringResource(R.string.profiles_change_pin) else stringResource(R.string.profiles_optional_pin),
                 value = pin,
                 onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) pin = it },
-                label = if (initial?.pinHash != null) stringResource(R.string.profiles_change_pin) else stringResource(R.string.profiles_optional_pin),
-                placeholder = stringResource(R.string.profiles_pin_digits),
-                keyboardType = KeyboardType.NumberPassword,
-                isPassword = true,
                 modifier = Modifier.fillMaxWidth(),
+                placeholder = stringResource(R.string.profiles_pin_digits),
+                password = true,
+                keyboardType = KeyboardType.NumberPassword,
             )
         }
     }

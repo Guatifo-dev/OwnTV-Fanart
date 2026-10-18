@@ -39,8 +39,8 @@ internal fun profileCount(): Int {
 }
 
 /**
- * Settings › Profile (P9-02): the profiles themselves, then Add a profile. OK edits a profile (the same
- * editor as before), a held OK offers to delete it while more than one exists. The panel explains
+ * Settings › Profile: the profiles themselves, then Add a profile. OK edits a profile (the profile
+ * editor), a held OK offers to delete it while more than one exists. The panel explains
  * profiles as a whole.
  */
 @Composable

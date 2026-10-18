@@ -7,9 +7,16 @@
 > Issue numbers that are part of a title are fine; explanatory parentheticals are not. The detail —
 > what, why, files and verification — belongs in the commit message, never here.
 
-## Unreleased
+## v5.2.0 — 2026-10-17
 
 ### ✨ New features
+- **🏆 Sports: a new section with live scores, today's and tomorrow's matches, and match pages**
+- **🔎 Find channels: the channels in your guide that show a match, ranked, with a preview**
+- **📺 Broadcasts tab, venue and round on every match page**
+- **🏷️ Pick several sports and leagues at once on the Sports page**
+- **↕️ Hold OK to put your sports and leagues in your own order**
+- **🏠 Sports row on Home with a LIVE mark**
+- **⚙️ Settings → Sports: leagues, auto rebuild, live refresh, playlist and strict channel filters**
 - **↩️ Restore a category, or the playlists shown, to the playlist default** (community PR #235 by @tvdev-android)
 - **🔄 "Stream interrupted. Reconnecting…" while a live channel recovers** (community PR #237 by @tvdev-android)
 - **🖼️ Title art in Home's trending banner**
@@ -33,6 +40,29 @@
 - **🗂️ Downloads and recordings whose file is gone say "File missing"**
 
 ### 🐛 Fixes
+- **↕️ Move opens straight from a category's menu and moves as many items as you like before Save**
+- **🌍 Channels named "UK: …" or "IT: …" get their country and language, like "UK| …"**
+- **🧹 Find channels leaves out playlist divider rows and other matches' event channels**
+- **📺 Broadcasts lists one channel per row, by country**
+- **🎨 Every popup, menu, form field and player control in the current design**
+- **📏 Multiview tile and category menus at the same size as every other menu**
+- **🖼️ Your own picture can be chosen while creating or editing any profile**
+- **📺 Series no longer show "No episodes" when one episode is oddly written by the provider**
+- **💬 A series the provider refused says why instead of "No episodes"**
+- **📺 Live TV falls back to the other player and gives up on time again**
+- **🔊 Opening a previewed channel keeps its volume; unmute returns to the level before**
+- **🔈 Changing sound settings during a film no longer starts a second copy**
+- **🗣️ Audio language and the episode queue survive a reload**
+- **🚫 A dead film link shows its error in seconds**
+- **🕒 Catch-up time zone "Automatic" uses the playlist's own zone**
+- **⏪ M3U catch-up and Xtream rewind start at the right moment**
+- **▶️ External player starts where you left off**
+- **🏷️ Categories keep their country ("UK|") when a list mixes countries**
+- **✏️ Bulk rename and ✨ Auto cleanup for categories**
+- **🔁 Retry works after a live channel gives up**
+- **👤 "Account already in use" says so, instead of loading forever**
+- **🔍 ◀ from a search opens the categories, with or without results**
+- **🌙 Home and the screensaver bring back the episode queue**
 - **🔤 Hebrew and Arabic subtitles read right to left on every line (#259)**
 - **🎯 ▶ into a page that is still opening no longer does nothing** (community PR #264 by @Kevsosmooth)
 - **⌨️ Settings search from More opens the keyboard on the first OK**

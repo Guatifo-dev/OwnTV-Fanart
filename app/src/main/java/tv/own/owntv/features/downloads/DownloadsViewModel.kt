@@ -30,7 +30,7 @@ import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.player.OwnTVPlayer
 
-/** Phase 12 — lists the active profile's downloads and plays completed ones from local storage. */
+/** Lists the active profile's downloads and plays completed ones from local storage. */
 class DownloadsViewModel(
     /** Only to check whether finished files are still there. */
     appContext: android.content.Context,
@@ -57,7 +57,7 @@ class DownloadsViewModel(
         viewModelScope.launch { settings.setDownloadWatchChoice(choice) }
     }
 
-    /** The one transfer running now, with its speed (G3), for the focused row's "12.4 MB/s · 3 min left". */
+    /** The one transfer running now, with its speed, for the focused row's "12.4 MB/s · 3 min left". */
     val active: StateFlow<tv.own.owntv.core.download.DownloadActivityTracker.ActiveDownload?> = tracker.active
 
     /**
@@ -157,7 +157,7 @@ class DownloadsViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /**
-     * Where downloads are written. Plan Z moved this preference out of Settings and onto the gear
+     * Where downloads are written. This preference sits on the gear
      * beside this screen's title — it is the one thing on the screen it is about.
      */
     val downloadRoot: StateFlow<String> = settings.downloadRoot
@@ -178,7 +178,7 @@ class DownloadsViewModel(
         kotlinx.coroutines.flow.combine(settings.externalPlayerMovies, settings.externalPlayerSeries) { m, s -> m || s }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** Phase B: always play this download in an external player, regardless of the global toggle. */
+    /** Always play this download in an external player, regardless of the global toggle. */
     fun playExternal(download: DownloadEntity) {
         val path = download.filePath ?: return
         viewModelScope.launch {
@@ -208,8 +208,8 @@ class DownloadsViewModel(
     }
 
     /**
-     * Downloaded movies/episodes get the same external-subtitle experience as streams (subtitle plan
-     * §3.3): previously downloaded subs re-list offline (§9), local files attach, and a new search —
+     * Downloaded movies/episodes get the same external-subtitle experience as streams:
+     * previously downloaded subs re-list offline, local files attach, and a new search —
      * when online — carries the optional moviehash enhancer via [localPath]. Best-effort: a download
      * whose source item was deleted just plays without a subtitle context, as before.
      */

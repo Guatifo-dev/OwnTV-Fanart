@@ -14,7 +14,7 @@ import tv.own.owntv.core.util.Pin
 import tv.own.owntv.core.settings.SettingsRepository
 
 /**
- * Phase 6.5 — profile creation/switching and the launch gate's data. Shared by the "Who's watching?"
+ * Profile creation/switching and the launch gate's data. Shared by the "Who's watching?"
  * gate and the Settings → Profiles management screen.
  */
 class ProfilesViewModel(
@@ -95,10 +95,6 @@ class ProfilesViewModel(
 
     fun rename(profile: ProfileEntity, name: String) {
         viewModelScope.launch { profileDao.update(profile.copy(name = name.ifBlank { profile.name })) }
-    }
-
-    fun setKids(profile: ProfileEntity, isKids: Boolean) {
-        viewModelScope.launch { profileDao.update(profile.copy(isKids = isKids)) }
     }
 
     fun setPin(profile: ProfileEntity, pin: String?) {

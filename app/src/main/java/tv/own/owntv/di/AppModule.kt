@@ -1,5 +1,8 @@
 package tv.own.owntv.di
 
+import tv.own.owntv.features.sports.SportsPlayback
+import tv.own.owntv.features.sports.SportsSettingsViewModel
+import tv.own.owntv.features.sports.SportsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -57,6 +60,8 @@ val appModule = module {
     single { tv.own.owntv.core.live.NowArt(get(), get(), get()) }
     singleOf(::SearchReader)
     singleOf(::HomeFeedReader)
+    // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
+    singleOf(::SportsPlayback)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).
     single<kotlinx.coroutines.CoroutineScope> {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
@@ -99,6 +104,8 @@ val appModule = module {
         )
     }
     viewModelOf(::MovieViewModel)
+    viewModelOf(::SportsViewModel)
+    viewModelOf(::SportsSettingsViewModel)
     viewModelOf(::SeriesViewModel)
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)
@@ -115,7 +122,6 @@ val appModule = module {
             sourceDao = get(),
             sourceRepository = get(),
             settings = get(),
-            epgDao = get(),
             importFinalizer = get(),
             channelDao = get(),
             categoryDao = get(),

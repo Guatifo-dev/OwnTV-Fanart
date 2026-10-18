@@ -230,7 +230,7 @@ internal fun glassBackgroundSummary(background: BackgroundConfig, glass: tv.own.
     return bg + dotSeparator() + g
 }
 
-/** The value a row shows when it does not apply right now: dim text, no chevron (the mockup's `off()`). */
+/** The value a row shows when it does not apply right now: dim text, no chevron. */
 private fun dimValue(text: String) = SettingValue.Custom {
     Text(text, style = stageText(18, 700), color = StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }

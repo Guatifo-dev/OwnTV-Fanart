@@ -38,7 +38,6 @@ import tv.own.owntv.ui.components.rememberDialogFocusRestore
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.OwnTVSpinner
 import tv.own.owntv.ui.components.trapAllFocusExit
-import tv.own.owntv.ui.theme.OwnTVTheme
 import tv.own.owntv.core.sync.work.EpgSyncState
 import tv.own.owntv.core.util.classifySyncFailure
 import tv.own.owntv.ui.components.displayText
@@ -55,7 +54,6 @@ fun EpgSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier, startOnA
     val autoRefreshMap by vm.autoRefresh.collectAsStateWithLifecycle()
     val useLogosIds by vm.useLogos.collectAsStateWithLifecycle()
     val deletingIds by vm.deletingIds.collectAsStateWithLifecycle()
-    val colors = OwnTVTheme.colors
 
     var editing by remember { mutableStateOf<EpgSource?>(null) }
     var adding by remember { mutableStateOf(startOnAdd) }
@@ -122,7 +120,7 @@ fun EpgSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier, startOnA
         return
     }
 
-    // P10B-11: the guides as rows; the focused one's Re-sync / Edit / Delete in the panel.
+    // The guides as rows; the focused one's Re-sync / Edit / Delete in the panel.
     val actionsFocus = remember { FocusRequester() }
     StageFullPage(
         parents = listOf(stringResource(R.string.settings_group_sources)),
@@ -227,7 +225,7 @@ private fun EpgRow(
     val subtitle = if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(source.url) != null) {
         stringResource(R.string.settings_epg_sources_portal_guide)
     } else {
-        // Never the account's user name and password (F2): an XMLTV address often carries both.
+        // Never the account's user name and password: an XMLTV address often carries both.
         tv.own.owntv.core.network.HttpClient.redactUrl(source.url)
     }
     val catchupNote = count?.third?.takeIf { it > 0 }?.let {
@@ -300,7 +298,7 @@ private fun EpgRow(
         keepPanel = keepPanel,
         help = SettingHelp(
             title = source.name,
-            // The address on one line, the counts under it (owner).
+            // The address on one line, the counts under it.
             text = subtitle,
             hints = listOf(
                 "▶" to stringResource(R.string.settings_key_actions),
@@ -345,7 +343,7 @@ internal fun EpgSourceForm(
     val fillFocus = remember { FocusRequester() }
     val submitFocus = remember { FocusRequester() }
 
-    // P10B-12: the fields as rows, Add & sync in the panel (▶ from any row).
+    // The fields as rows, Add & sync in the panel (▶ from any row).
     val parent = stringResource(R.string.settings_epg_sources_title)
     val ok = stringResource(R.string.common_ok)
     val back = stringResource(R.string.common_back)
@@ -481,7 +479,7 @@ private fun PlaylistEpgPicker(
     onDismiss: () -> Unit,
 ) {
     val options by produceState<List<EpgSourcesViewModel.PlaylistEpg>?>(initialValue = null) { value = runCatching { load() }.getOrDefault(emptyList()) }
-    // A list picked from: in the page's panel (owner, P12), a Stage popup elsewhere.
+    // A list picked from: in the page's panel, a Stage popup elsewhere.
     val list: @Composable () -> Unit = {
         val firstFocus = remember { FocusRequester() }
         LaunchedEffect(options) { if (!options.isNullOrEmpty()) { kotlinx.coroutines.delay(60); runCatching { firstFocus.requestFocus() } } }

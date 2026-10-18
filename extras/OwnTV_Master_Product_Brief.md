@@ -60,7 +60,8 @@ Each engine is chosen automatically by content type, with fallback between them.
 - **Track memory** — the audio and subtitle language picked in the player is remembered per
   channel, film and series (per profile), on both engines.
 - **Per-playlist provider quirks** — catch-up time zone, "give up after" time and an HTTP Referer
-  can be set for one playlist without touching the others.
+  can be set for one playlist without touching the others. The catch-up time zone defaults to
+  **Automatic**: the Xtream panel's own zone, read at every sync.
 - **The fallback ladder** — a failing live channel walks up to four rungs, each tried once:
   `ExoPlayer+HLS → ExoPlayer+TS → mpv+HLS → mpv+TS`, or the same list led by mpv. **Give up on a
   channel after** (15/30/60 s or Never, default 30 s) bounds the whole tune; provider-requested
@@ -225,6 +226,13 @@ its own category or page, and Back returns to Search with the query kept. Empty,
 recent searches and Continue watching. A **TV Shows** group lists stored-guide programmes whose title
 matches, on now or in the next 12 hours, and OK goes to the channel.
 
+**Sports** — live scores, today's and tomorrow's matches and match pages from ESPN, for the
+sports and leagues the profile follows (none at first; Settings → App → Sports). A match page has the
+score, venue, timeline, stats, line-ups, table, form and Broadcasts, and **Find channels** ranks the
+channels in the user's own guide that show it (from 30 minutes before kick-off), with a filter by
+language, country, picture and playlist. Matching runs on the device; no playlist data leaves it.
+A Home **Sports** row shows followed matches that are live or about to start.
+
 **More** — a glass section list with the profile row: Settings, Favourites, History, Backup &
 Restore, Local sync, Error log and About, each an enterable page beside the list.
 
@@ -247,11 +255,10 @@ player, TMDB, backup, auto refresh and the playlist switcher.
 
 ### 3.5 Layout
 
-The **Stage** interface (v5.1.0, designed in #227) replaced the old docked sidebar, top bar and card
-screens entirely — there is no "classic" mode. Every screen sits on a full-width Stage page in the
+The **Stage** interface (designed in #227) is the app's one interface. Every screen sits on a full-width Stage page in the
 **Plus Jakarta Sans** font, with one line-icon set, CSS-exact focus glows and a shared Stage popup kit.
 
-- **Navigation rail** — Search, Home, Live TV, TV Guide, Movies, Series, Downloads and More, the
+- **Navigation rail** — Search, Home, Live TV, Sports, TV Guide, Movies, Series, Downloads and More, the
   wordmark at the top and the profile's avatar (or own picture) at the bottom; a **Now playing** item
   appears while something is docked or in Audio mode. Settings → Layout → **Navigation**: **Floating**
   (a capsule over the content that opens on ◀ and hides after 2 / 4 / 8 s) or **Docked** (always
@@ -284,7 +291,7 @@ Folder rails with Favorites and History per section; full category names, never 
 category search box. **Customize** (per profile) hides, renames and reorders categories and
 individual items, recovers hidden ones, filters to All/Visible/Hidden, and can be **PIN-locked**.
 **Bulk rename** applies ordered prefix/suffix rules with automatic cleanup, a review step and a
-restore-original undo. **Custom combined categories** gather items from anywhere. A category can also
+restore-original undo — over a category's items, or over the category names themselves (⋯ menu). **Custom combined categories** gather items from anywhere. A category can also
 be hidden, moved or restored to the playlist's default (hidden items, items moved out and custom
 order are listed and undone together) straight from the browse screen by holding OK; **Restore
 playlist defaults** in Customize's More menu does the same for the playlists shown in a section. All

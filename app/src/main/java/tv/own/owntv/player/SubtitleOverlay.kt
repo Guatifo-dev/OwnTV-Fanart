@@ -38,12 +38,12 @@ import tv.own.owntv.ui.theme.asComposeFamily
 fun SubtitleOverlay(
     player: OwnTVPlayer,
     modifier: Modifier = Modifier,
-    /** Shrinks text and insets so the same overlay fits the docked mini-player (F19b); 1f = full screen. */
+    /** Shrinks text and insets so the same overlay fits the docked mini-player; 1f = full screen. */
     sizeScale: Float = 1f,
 ) {
     val text by player.subText.collectAsStateWithLifecycle()
     val settings = koinInject<SettingsRepository>()
-    // Subtitle appearance (#96) — every option left on its own "Default" (and everything, while the
+    // Subtitle appearance — every option left on its own "Default" (and everything, while the
     // master toggle is off) resolves to the exact look this overlay has always had: white text on a
     // 45%-black box, centred 56dp above the bottom edge.
     val styleOn by settings.subtitleStyleEnabled.collectAsStateWithLifecycle(initialValue = false)
@@ -101,7 +101,7 @@ fun SubtitleOverlay(
 
 /**
  * Whether a cue reads right to left: more Hebrew/Arabic letters than Latin ones. Decided once for the
- * whole cue (#259) — left to Compose, every line took the app's own direction, so a Hebrew line ended
+ * whole cue — left to Compose, every line took the app's own direction, so a Hebrew line ended
  * up with its full stop, dash or number on the wrong side unless the file carried bidi marks.
  */
 internal fun isRtlSubtitle(text: String): Boolean {

@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The direction the app-drawn subtitle overlay lays a cue out in (#259). One direction for the whole
+ * The direction the app-drawn subtitle overlay lays a cue out in. One direction for the whole
  * cue, so a Hebrew line that starts with a dash, a number or a Latin word still reads right to left.
  */
 class SubtitleDirectionTest {

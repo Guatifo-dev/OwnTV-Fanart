@@ -225,6 +225,13 @@ The channel menu is grouped **Watch · Channel · Guide data · Organise** and a
 **Catch-up**, **Record**, **Move**, **Add to Multiview**, **Remove from this category** (inside a
 custom category) and **Play in external player**.
 
+### ↕️ Move
+**Where:** **Move** in a channel's, film's or show's menu, **hold OK** on a category → **Move**, or
+⋯ More → Favourites → hold OK → **Move**
+The Move window opens with that item picked up. **▲ ▼** carry it a row, **CH+ / CH−** a page, and a
+**long press** of them to the first or last place. **OK** puts it down or picks up another, so several
+can move in one go. **Save** keeps the new order; **Cancel** or **Back** leaves it as it was.
+
 ### 🏷️ What the row tells you
 Number, logo, name, the programme on now with its time left and a progress bar, the provider's tags
 (quality, country), a catch-up mark, a heart for favourites and the playlist's mark.
@@ -395,6 +402,53 @@ OwnTV measures this once, at a playlist's first sync, and warns before refusing 
 is inside Info — it stops anything playing and takes a few minutes.
 
 ---
+
+## 🏆 Sports
+
+Live scores, fixtures and match details come from ESPN. OwnTV then looks in **your own TV guide** for
+the channels that show a match — nothing is streamed from ESPN.
+
+### 🏁 First time
+**Where:** rail → **Sports**
+Nothing is followed at first. Open **Settings → App → Sports → Sports and leagues**, choose a sport on the
+left and switch on its leagues on the right. The more you choose, the longer loading takes.
+**Sport buttons → All sports** fetches every league instead.
+
+### 🗂️ The Sports page
+Two rows of buttons filter the page: sports (and ★ My teams) on top, that sport's leagues below.
+**OK** switches a button on or off, so you can pick Bundesliga and Premier League together; none
+chosen shows everything. The choice stays until you close the app. **⟳** at the end of the top row
+rebuilds the sports data now; the bottom status pill says **Rebuilding sports…** while it runs.
+Rows: **Live now** (red LIVE mark), **Sport on your channels now** (from your guide) and
+**Starting soon**. **OK** on a match opens its page.
+
+### 📋 A match page
+The box at the top shows the score, the time, the round and the venue with its city and country.
+Tabs show the timeline, statistics, line-ups, the table, each side's form and **Broadcasts**.
+**Find channels** searches your guide for that match — from **30 minutes before kick-off until 30
+minutes after the end**; earlier, the page says when it opens. The found channels appear on the
+right, best first, with a preview. **OK** plays one full screen; **Back** returns to the match page.
+**Filter channels** narrows the list by language, country, picture and playlist. **Strict filtering**
+on hides the others; off lists them below. **Remember** keeps the filter for every match.
+
+### 📺 Broadcasts
+**In your guide** lists the channels Find channels found, one per row under their country, in order;
+**▲ ▼** scroll a long list. **From ESPN** is ESPN's own list, which covers the United States only.
+A channel's country comes from its name: "UK| …" and "UK: …" both count.
+
+### ↕️ Your own order
+**Where:** Settings → App → Sports → Sports and leagues → **hold OK** on a sport, or on a league you
+switched on. In the Move window, **▲ ▼** choose a row, **OK** picks it up and puts it down, and
+**Save** keeps the new order. The Sports page and the Home row follow it.
+
+### ⚙️ Settings → App → Sports
+**Auto rebuild** every 1, 2, 4 or 8 hours, on every app start, or by hand. **Live refresh** updates
+live scores every 30–120 seconds while something sports is on screen. **Refresh sports data now**
+shows when it last updated. Also here: My teams, goal alerts, playlist and channel filters.
+
+### 🏠 Sports on Home
+**Settings → Home** can show a **Sports** row: live and upcoming matches of your leagues and teams,
+in your order. **OK** opens the match page.
 
 ## 🎬 Movies & Series
 
@@ -727,7 +781,8 @@ sheet and the **Details height** — lower it for another row of posters, **0%**
 **Where:** long-press a category → **Customize**, or Settings → Content & metadata → **Customize categories & items**
 Hide, rename, reorder, and **unhide**. Highlights:
 - **Bulk rename** — add or strip a prefix/suffix across a whole category, with **Auto cleanup** for
-  country, quality and codec tags, a review step, and **Restore original names** as the undo.
+  country, quality and codec tags, a review step, and **Restore original names** as the undo. For the
+  **category names themselves**: **⋯ → Bulk rename** or **⋯ → ✨ Auto cleanup** on the categories page.
 - **Custom combined categories** — **＋ New category**, then **Move to category…** from any item.
   **Remove from this category** (long-press a channel inside it, or here) takes it out of that category
   only. Hiding a channel's own provider category no longer hides it from your custom categories.
@@ -773,6 +828,7 @@ all settings** lists every setting whose name contains what you type, with its p
 | **Live latency** | Live TV | How close to the live edge to play. Lower = less delay, more stutter risk |
 | **Pre-buffer live streams** | Live TV | Collect a few seconds first on a flaky provider |
 | **Give up on a channel after** | Live TV | 30 s default — bounds how long a dead channel can spin (+ per playlist) |
+| **Catch-up time zone** | Sources & guide | **Automatic** (default) uses the Xtream panel's own zone; Device or a fixed offset otherwise |
 | **Catch-up time zone per playlist** | Sources & guide | One provider's archive on a different clock (quarter-hour zones such as +05:30 included) |
 | **Hardware decoder** | Picture | On for smooth 4K; off only to diagnose |
 | **HDR (mpv only)** | Picture | Use HDR output when the video and TV support it. ExoPlayer always passes HDR through |
@@ -786,7 +842,7 @@ all settings** lists every setting whose name contains what you type, with its p
 | **Reset saved live TV player choices** | Player | Every channel follows the Live TV player setting again |
 | **Forget learned stream fixes** | Player | For a provider that has fixed its streams. Catch-up lessons also expire after 14 days |
 | **Custom DNS** | App → DNS | System, Google, Cloudflare, Quad9, or DNS-over-HTTPS |
-| **External player** | Player | Separate switches for Live TV, Movies and Series |
+| **External player** | Player | Separate switches for Live TV, Movies and Series; VLC and MX Player start where you left off |
 | **Resume a saved channel** | Live TV | Ask, always or never resume a channel saved by Pause and rewind |
 | **Programme reminders** · **Reminder time** | Sources & guide | Ask to switch, switch, or notify; how early |
 | **Measured stream stats** | App | Live fps, bitrate and dropped frames in Stream info |

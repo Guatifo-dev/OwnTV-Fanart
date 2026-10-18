@@ -96,7 +96,7 @@ class RecordingsViewModel(
     /** Drops a scheduled recording. Nothing on disk is touched, because nothing is there yet. */
     fun cancel(recording: RecordingEntity) = recordings.cancel(recording)
 
-    /** Removes the row **and** the file. The only thing here that deletes anything (D2). */
+    /** Removes the row **and** the file. The only thing here that deletes anything. */
     fun delete(recording: RecordingEntity) = recordings.delete(recording)
 
     /**
