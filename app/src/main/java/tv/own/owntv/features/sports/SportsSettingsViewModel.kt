@@ -2,6 +2,8 @@ package tv.own.owntv.features.sports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -100,12 +102,12 @@ class SportsSettingsViewModel(
     /** Where each team found by the search plays: following it also follows that league, or the hub would never show it. */
     private val teamLeague = HashMap<String, String>()
 
-    private suspend fun indexOf(keys: Collection<String>): List<Pair<FollowedTeam, String>> = kotlinx.coroutines.coroutineScope {
+    private suspend fun indexOf(keys: Collection<String>): List<Pair<FollowedTeam, String>> = coroutineScope {
         keys.mapNotNull { SportsCatalog.league(it) }
             .filter { it.sport != tv.own.owntv.core.sports.model.Sport.TENNIS && it.sport != tv.own.owntv.core.sports.model.Sport.RACING &&
                 it.sport != tv.own.owntv.core.sports.model.Sport.MMA && it.sport != tv.own.owntv.core.sports.model.Sport.CRICKET }
             .map { league ->
-                kotlinx.coroutines.async {
+                async {
                     val teams: List<Team> = runCatching { source.teams(league) }.getOrDefault(emptyList())
                     teams.map { t ->
                         teamLeague.putIfAbsent("${league.sport.path}/${t.id}", league.key)
