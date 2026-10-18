@@ -90,7 +90,7 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
                 Text(
                     stringResource(R.string.glcn_start_time),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant,
+                    color = hudInk.copy(alpha = 0.62f),
                     modifier = Modifier.weight(0.38f),
                 )
                 Text(
