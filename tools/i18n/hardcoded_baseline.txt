@@ -100,6 +100,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_backdrop
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_cover
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_dim
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_image
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_mpv_passthrough
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_osd
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_safe_area

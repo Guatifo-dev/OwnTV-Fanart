@@ -329,6 +329,7 @@ fun SettingsScreen(
     val habitLearning by settingsVm.habitLearning.collectAsStateWithLifecycle()
     val osdSeconds by settingsVm.osdSeconds.collectAsStateWithLifecycle()
     val homeCover by settingsVm.homeCover.collectAsStateWithLifecycle()
+    val homeImagePath by settingsVm.homeImage.collectAsStateWithLifecycle()
     val homeCoverDim by settingsVm.homeCoverDim.collectAsStateWithLifecycle()
     val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
     var showGlcnStyle by remember { mutableStateOf(false) }
@@ -541,7 +542,15 @@ fun SettingsScreen(
             desc = stringResource(R.string.glcn_home_cover_desc),
             chip = stringResource(when (homeCover) { 1 -> R.string.glcn_home_cover_app; 2 -> R.string.glcn_home_cover_mine; else -> R.string.glcn_home_cover_art }),
             chipTone = TileTone.PRIMARY,
-            onClick = { if (settingsVm.cycleHomeCover() == 2) showHomePicker = true },
+            onClick = { settingsVm.cycleHomeCover() },
+        ),
+        RootRow(
+            "glcn_home_image", TileTone.PRIMARY, OwnTVIcon.IMAGE,
+            title = stringResource(R.string.glcn_home_image_title),
+            desc = stringResource(R.string.glcn_home_image_desc),
+            chip = stringResource(if (homeImagePath.isBlank()) R.string.glcn_home_image_none else R.string.glcn_home_image_change),
+            chipTone = TileTone.PRIMARY,
+            onClick = { showHomePicker = true },
         ),
         RootRow(
             "glcn_home_dim", TileTone.SECONDARY, OwnTVIcon.GLOW,
