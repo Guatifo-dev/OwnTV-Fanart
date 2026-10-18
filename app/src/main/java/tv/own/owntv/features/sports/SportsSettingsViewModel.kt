@@ -95,38 +95,44 @@ class SportsSettingsViewModel(
 
     fun suggestions(c: SportsConfig): List<SportsSuggestion> = SportsMemory.suggestions(c, c.followedLeagues())
 
-    /** Teams of the followed leagues, rebuilt when that set changes, for the My teams search. */
-    private var teamIndex: Pair<Set<String>, List<Pair<FollowedTeam, String>>>? = null
-    /** Teams of every catalogue league (athlete sports left out), fetched once per page visit, for a name no followed league has. */
-    private var wideIndex: List<Pair<FollowedTeam, String>>? = null
+    /** Teams per catalogue league, kept once fetched; a league that failed is asked again on the next search. */
+    private val leagueTeams = HashMap<String, List<Pair<FollowedTeam, String>>>()
     /** Where each team found by the search plays: following it also follows that league, or the hub would never show it. */
     private val teamLeague = HashMap<String, String>()
 
-    private suspend fun indexOf(keys: Collection<String>): List<Pair<FollowedTeam, String>> = coroutineScope {
-        keys.mapNotNull { SportsCatalog.league(it) }
-            .filter { it.sport != tv.own.owntv.core.sports.model.Sport.TENNIS && it.sport != tv.own.owntv.core.sports.model.Sport.RACING &&
-                it.sport != tv.own.owntv.core.sports.model.Sport.MMA && it.sport != tv.own.owntv.core.sports.model.Sport.CRICKET }
-            .map { league ->
+    private suspend fun indexOf(keys: Collection<String>): List<Pair<FollowedTeam, String>> {
+        val sports = tv.own.owntv.core.sports.model.Sport.values().filter {
+            it != tv.own.owntv.core.sports.model.Sport.TENNIS && it != tv.own.owntv.core.sports.model.Sport.RACING &&
+                it != tv.own.owntv.core.sports.model.Sport.MMA && it != tv.own.owntv.core.sports.model.Sport.CRICKET
+        }.toSet()
+        val leagues = keys.mapNotNull { SportsCatalog.league(it) }.filter { it.sport in sports }
+        coroutineScope {
+            leagues.filter { it.key !in leagueTeams }.map { league ->
                 async {
-                    val teams: List<Team> = runCatching { source.teams(league) }.getOrDefault(emptyList())
-                    teams.map { t ->
-                        teamLeague.putIfAbsent("${league.sport.path}/${t.id}", league.key)
-                        FollowedTeam(league.sport, t.id, t.name, t.abbreviation) to t.name
+                    val teams = runCatching { source.teams(league) }.getOrNull()
+                    if (!teams.isNullOrEmpty()) {
+                        leagueTeams[league.key] = teams.map { t ->
+                            teamLeague.putIfAbsent("${league.sport.path}/${t.id}", league.key)
+                            FollowedTeam(league.sport, t.id, t.name, t.abbreviation) to
+                                listOf(t.name, t.shortName, t.location.orEmpty(), t.abbreviation).joinToString(" ")
+                        }
                     }
                 }
-            }.flatMap { it.await() }
-    }.distinctBy { it.first.key }
+            }.forEach { it.await() }
+        }
+        return leagues.flatMap { leagueTeams[it.key].orEmpty() }.distinctBy { it.first.key }
+    }
+
+    private fun fold(s: String): String =
+        java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "").lowercase()
 
     suspend fun searchTeams(query: String): List<FollowedTeam> {
         if (query.trim().length < 2) return emptyList()
-        val followed = config.value.followedLeagues()
-        val cached = teamIndex?.takeIf { it.first == followed }
-        val index = cached?.second ?: indexOf(followed).also { teamIndex = followed to it }
-        val q = query.trim().lowercase()
-        val own = index.filter { (_, name) -> name.lowercase().contains(q) }.map { it.first }.take(30)
+        val q = fold(query.trim())
+        fun hits(index: List<Pair<FollowedTeam, String>>) = index.filter { (_, text) -> fold(text).contains(q) }.map { it.first }.take(30)
+        val own = hits(indexOf(config.value.followedLeagues()))
         if (own.isNotEmpty()) return own
         // Nothing among the followed leagues: look in the whole catalogue.
-        val wide = wideIndex ?: indexOf(SportsCatalog.leagues.map { it.key }).also { wideIndex = it }
-        return wide.filter { (_, name) -> name.lowercase().contains(q) }.map { it.first }.take(30)
+        return hits(indexOf(SportsCatalog.leagues.map { it.key }))
     }
 }
