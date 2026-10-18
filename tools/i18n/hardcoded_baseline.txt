@@ -124,6 +124,11 @@
 1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	artTint
 1	app/src/main/java/tv/own/owntv/ui/components/ArtColor.kt	★
 1	app/src/main/java/tv/own/owntv/ui/components/ColorPicker.kt	#%06X
+1	app/src/main/java/tv/own/owntv/ui/components/StorageBrowser.kt	bmp
+1	app/src/main/java/tv/own/owntv/ui/components/StorageBrowser.kt	jpeg
+1	app/src/main/java/tv/own/owntv/ui/components/StorageBrowser.kt	jpg
+1	app/src/main/java/tv/own/owntv/ui/components/StorageBrowser.kt	png
+1	app/src/main/java/tv/own/owntv/ui/components/StorageBrowser.kt	webp
 1	app/src/main/java/tv/own/owntv/ui/components/TextInputDialog.kt	\0
 1	app/src/main/java/tv/own/owntv/ui/components/TvImeMetrics.kt	$trigger visible=${next.visible} source=${next.source} displayH=$displayHeight
 1	app/src/main/java/tv/own/owntv/ui/components/TvImeMetrics.kt	OwnTV-IME

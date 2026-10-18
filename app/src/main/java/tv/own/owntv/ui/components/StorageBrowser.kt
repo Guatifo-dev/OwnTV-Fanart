@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -167,7 +168,10 @@ private fun StorageBrowserContent(
                 } else {
                     item { BrowserRow(OwnTVIcon.BACK, stringResource(R.string.setup_from_current_folder), Modifier.focusRequester(firstFocus)) { current = dir.parentFile } }
                     itemsIndexed(folders) { _, f -> BrowserRow(OwnTVIcon.DOWNLOADS, f.name) { current = f } }
-                    itemsIndexed(files) { _, f -> BrowserRow(OwnTVIcon.PLAYLIST, f.name) { onPick(f) } }
+                    itemsIndexed(files) { _, f ->
+                        if (f.extension.lowercase() in IMAGE_EXTENSIONS) ThumbRow(f) { onPick(f) }
+                        else BrowserRow(OwnTVIcon.PLAYLIST, f.name) { onPick(f) }
+                    }
                 }
             }
 
@@ -222,5 +226,29 @@ private fun BrowserRow(icon: OwnTVIcon, label: String, modifier: Modifier = Modi
     tv.own.owntv.ui.stage.StagePopupOption(
         title = label, onClick = onClick, modifier = modifier,
         leading = { tv.own.owntv.ui.stage.StagePopupIcon(icon) },
+    )
+}
+
+private val IMAGE_EXTENSIONS = setOf("png", "jpg", "jpeg", "webp", "bmp")
+
+/** glcn: an image file, with a small preview in place of the icon. Decoded at thumbnail size only. */
+@Composable
+private fun ThumbRow(file: File, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val request = remember(file) {
+        coil3.request.ImageRequest.Builder(context).data(file).size(240, 136).build()
+    }
+    tv.own.owntv.ui.stage.StagePopupOption(
+        title = file.name, onClick = onClick,
+        leading = {
+            coil3.compose.AsyncImage(
+                model = request,
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier
+                    .width(96.mpx).height(54.mpx)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.mpx)),
+            )
+        },
     )
 }
