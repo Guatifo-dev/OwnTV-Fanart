@@ -72,10 +72,18 @@ fun ChannelLogoTile(
     }
 
     val surfaceLuminance = tv.own.owntv.ui.theme.StageColors.GlassOff.luminance()
-    val needsPlate = ink != LOGO_INK_NONE && contrastRatio(Color(ink).luminance(), surfaceLuminance) < MIN_CONTRAST
+    // glcn: 0 soft (fewer logos, calmer plate), 1 classic (upstream), 2 none.
+    val mode = LogoPlate.mode
+    val minContrast = if (mode == 0) SOFT_MIN_CONTRAST else MIN_CONTRAST
+    val needsPlate = mode != 2 && ink != LOGO_INK_NONE &&
+        contrastRatio(Color(ink).luminance(), surfaceLuminance) < minContrast
     val background = when {
         !showLogo -> fill
-        needsPlate -> if (surfaceLuminance < 0.5f) LightPlate else DarkPlate
+        needsPlate -> when {
+            surfaceLuminance >= 0.5f -> DarkPlate
+            mode == 0 -> LightPlate.copy(alpha = 0.72f)
+            else -> LightPlate
+        }
         else -> Color.Transparent
     }
 
@@ -121,6 +129,14 @@ private const val LOGO_INK_NONE = 0
 
 /** Below this contrast ratio between the logo's ink and the surface behind it, the logo gets a plate. */
 private const val MIN_CONTRAST = 3f
+
+/** glcn: the soft mode only plates logos that would really vanish. */
+private const val SOFT_MIN_CONTRAST = 2f
+
+/** glcn: plate mode, set from the shell (like [tv.own.owntv.ui.stage.GlcnMotion]). */
+object LogoPlate {
+    var mode by mutableStateOf(0)
+}
 
 /** Upper bound on the ink cache, so a very large catalog cannot grow it without limit. */
 private const val MAX_MEASURED_LOGOS = 4096

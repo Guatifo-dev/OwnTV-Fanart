@@ -193,6 +193,8 @@ fun OwnTVShell(
     val glcnAnimStyle by settingsRepo.animStyle.collectAsStateWithLifecycle(initialValue = 0)
     val glcnZapPanel by settingsRepo.zapPanel.collectAsStateWithLifecycle(initialValue = 0)
     LaunchedEffect(glcnAnimStyle) { tv.own.owntv.ui.stage.GlcnMotion.subtle = glcnAnimStyle == 1 }
+    val glcnLogoPlate by settingsRepo.logoPlate.collectAsStateWithLifecycle(initialValue = 0)
+    LaunchedEffect(glcnLogoPlate) { tv.own.owntv.ui.components.LogoPlate.mode = glcnLogoPlate }
     LaunchedEffect(playerMode) { tv.own.owntv.glcn.UiSounds.suppressed = playerMode != PlayerMode.NONE }
     val ambientGlowPulse by settingsRepo.ambientGlowPulse.collectAsStateWithLifecycle(initialValue = true)
     val shellAnimationLevel by settingsRepo.animationLevel.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.theme.AnimationLevel.FULL)

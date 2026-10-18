@@ -319,6 +319,7 @@ fun SettingsScreen(
     val ambientGlowEnabled by settingsVm.ambientGlowEnabled.collectAsStateWithLifecycle()
     val seasonMode by settingsVm.seasonMode.collectAsStateWithLifecycle()
     val animStyle by settingsVm.animStyle.collectAsStateWithLifecycle()
+    val logoPlate by settingsVm.logoPlate.collectAsStateWithLifecycle()
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
@@ -620,6 +621,20 @@ fun SettingsScreen(
             chipTone = if (animationLevel == tv.own.owntv.core.theme.AnimationLevel.OFF) TileTone.SECONDARY else TileTone.PRIMARY,
             focus = animationsRowFocus,
             onClick = { settingsVm.cycleMotion() },
+        ),
+        RootRow(
+            "logo_plate", TileTone.SECONDARY, OwnTVIcon.IMAGE,
+            title = stringResource(R.string.glcn_logo_plate_title),
+            desc = stringResource(R.string.glcn_logo_plate_desc),
+            chip = stringResource(
+                when (logoPlate) {
+                    1 -> R.string.glcn_logo_plate_classic
+                    2 -> R.string.glcn_logo_plate_none
+                    else -> R.string.glcn_logo_plate_soft
+                },
+            ),
+            chipTone = TileTone.PRIMARY,
+            onClick = { settingsVm.cycleLogoPlate() },
         ),
         RootGroup("group_profile", stringResource(R.string.settings_profile_group), OwnTVIcon.PERSON, stringResource(R.string.settings_group_summary_profile)),
         RootGroup("group_sources", stringResource(R.string.settings_group_sources), OwnTVIcon.PLAYLIST, stringResource(R.string.settings_group_summary_sources)),
