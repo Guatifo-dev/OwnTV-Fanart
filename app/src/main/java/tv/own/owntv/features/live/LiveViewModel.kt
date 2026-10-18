@@ -148,12 +148,6 @@ class LiveViewModel(
     suspend fun sportsNow(): List<tv.own.owntv.core.live.SportsNow.Entry> =
         sports.find(ctx.value.sourceIds, custom.value, epgOffset.value)
 
-    private val similarNow by lazy { tv.own.owntv.core.live.SimilarNow(channelDao, guideReader) }
-
-    /** glcn: "You may like" — what is on soon in the same genre as the focused programme. */
-    suspend fun similarTo(title: String?, categories: String?, year: Int?, channelId: Long?) =
-        similarNow.find(title, categories, year, channelId, ctx.value.sourceIds, custom.value, epgOffset.value)
-
     suspend fun cardProgrammesFor(
         channels: List<ChannelEntity>,
         from: Long,
