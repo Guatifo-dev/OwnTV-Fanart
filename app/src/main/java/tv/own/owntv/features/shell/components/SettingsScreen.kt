@@ -198,6 +198,7 @@ fun SettingsScreen(
     var showAfrWarning by remember { mutableStateOf(false) }
     var showLivePreviewPanelWarning by remember { mutableStateOf(false) }
     var showBgImageChooser by remember { mutableStateOf(false) }
+    var showHomePicker by remember { mutableStateOf(false) }
     var showBgPicker by remember { mutableStateOf(false) }
     var showBgRemote by remember { mutableStateOf(false) }
     var showAmbientGlow by remember { mutableStateOf(false) }
@@ -267,13 +268,13 @@ fun SettingsScreen(
         }
         onStartConsumed()
     }
-    val anyDialogOpen = showZoom || showPopupSize || showTheme || showAccent || showUpdate || showCatchupTime || showCatchupSources || showCatchupSourceValue || showEpgOffset || showGuideDays || showAnimations || showStartup || showStartupChannelPicker || showAfrWarning || showLivePreviewPanelWarning || showBgImageChooser || showBgPicker || showAmbientGlow || showFocusHighlight || showBgRemote || showVodLayout || showNavigation || showLiveLayout || stageSettings.open != null
+    val anyDialogOpen = showZoom || showPopupSize || showTheme || showAccent || showUpdate || showCatchupTime || showCatchupSources || showCatchupSourceValue || showEpgOffset || showGuideDays || showAnimations || showStartup || showStartupChannelPicker || showAfrWarning || showLivePreviewPanelWarning || showBgImageChooser || showBgPicker || showHomePicker || showAmbientGlow || showFocusHighlight || showBgRemote || showVodLayout || showNavigation || showLiveLayout || stageSettings.open != null
     // When a dialog closes, restore focus to the row that opened it. NOTE: this restore crosses
     // INTO the root focus group from outside (the dialog), but onEnter does NOT fire for programmatic
     // requestsFocus (only for directional entry) — so dialogReturn must be cleared HERE, not in onEnter.
     // If it's left set, the next directional entry (e.g. sidebar→here) would re-route to a stale row.
     var dialogReturn by remember { mutableStateOf<FocusRequester?>(null) }
-    LaunchedEffect(showZoom, showPopupSize, showTheme, showAccent, showUpdate, showCatchupTime, showCatchupSources, showCatchupSourceValue, showEpgOffset, showGuideDays, showAnimations, showStartup, showStartupChannelPicker, showAfrWarning, showLivePreviewPanelWarning, showBgImageChooser, showBgPicker, showAmbientGlow, showFocusHighlight, showBgRemote, showVodLayout, showNavigation, showLiveLayout, stageSettings.open) {
+    LaunchedEffect(showZoom, showPopupSize, showTheme, showAccent, showUpdate, showCatchupTime, showCatchupSources, showCatchupSourceValue, showEpgOffset, showGuideDays, showAnimations, showStartup, showStartupChannelPicker, showAfrWarning, showLivePreviewPanelWarning, showBgImageChooser, showBgPicker, showHomePicker, showAmbientGlow, showFocusHighlight, showBgRemote, showVodLayout, showNavigation, showLiveLayout, stageSettings.open) {
         // Only after a popup really closed: on first composition there is no opener, and holding a stale
         // offset for the settle frames bounced the page.
         if (!anyDialogOpen && dialogReturn != null) {
@@ -538,9 +539,9 @@ fun SettingsScreen(
             "glcn_home_cover", TileTone.PRIMARY, OwnTVIcon.IMAGE,
             title = stringResource(R.string.glcn_home_cover_title),
             desc = stringResource(R.string.glcn_home_cover_desc),
-            chip = stringResource(if (homeCover == 1) R.string.glcn_home_cover_app else R.string.glcn_home_cover_art),
+            chip = stringResource(when (homeCover) { 1 -> R.string.glcn_home_cover_app; 2 -> R.string.glcn_home_cover_mine; else -> R.string.glcn_home_cover_art }),
             chipTone = TileTone.PRIMARY,
-            onClick = { settingsVm.cycleHomeCover() },
+            onClick = { if (settingsVm.cycleHomeCover() == 2) showHomePicker = true },
         ),
         RootRow(
             "glcn_home_dim", TileTone.SECONDARY, OwnTVIcon.GLOW,
@@ -1537,6 +1538,25 @@ fun SettingsScreen(
                 showBgRemote = false
             },
             onDismiss = { showBgRemote = false; showBgImageChooser = true }, // back one level
+        )
+    }
+    if (showHomePicker) {
+        val context = LocalContext.current
+        StorageBrowser(
+            title = stringResource(R.string.glcn_pick_home_image),
+            mode = BrowseMode.FILE,
+            fileExtensions = setOf("png", "jpg", "jpeg", "webp", "bmp"),
+            onPick = { file ->
+                val destDir = File(context.filesDir, "home_picture")
+                ingestScope.launch {
+                    val path = withContext(Dispatchers.IO) {
+                        runCatching { ingestBackgroundImage(file, destDir) }.getOrNull()
+                    }
+                    if (path != null) settingsVm.setHomeImage(path)
+                }
+                showHomePicker = false
+            },
+            onDismiss = { showHomePicker = false },
         )
     }
     if (showBgPicker) {

@@ -34,6 +34,7 @@
 8	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	·
 1	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	–
 2	app/src/main/java/tv/own/owntv/features/home/HomeGlcn.kt	★ %.1f
+1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	backdropCalm
 1	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	glcn-greeting
 2	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	·
@@ -72,6 +73,7 @@
 1	app/src/main/java/tv/own/owntv/features/settings/OpenSubtitlesViewModel.kt	OpenSubtitles
 1	app/src/main/java/tv/own/owntv/features/settings/OpenSubtitlesViewModel.kt	manual refresh failed: ${it.javaClass.simpleName}: ${it.message}
 1	app/src/main/java/tv/own/owntv/features/settings/OpenSubtitlesViewModel.kt	sign-in failed: ${e.javaClass.simpleName}: ${e.message}
+1	app/src/main/java/tv/own/owntv/features/settings/SettingsViewModel.kt	\0
 1	app/src/main/java/tv/own/owntv/features/settings/SettingsViewModel.kt	UnknownHostException
 1	app/src/main/java/tv/own/owntv/features/settings/SettingsViewModel.kt	dns.google
 1	app/src/main/java/tv/own/owntv/features/settings/SettingsViewModel.kt	refused
@@ -89,6 +91,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/LiveEpgCard.kt	·
 1	app/src/main/java/tv/own/owntv/features/shell/components/MediaDetailsScreen.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	$safeArea %
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	bmp
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	github.com/carlosglcn/OwnTV-Fanart
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_auto_skip_intro
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_back_window
@@ -104,7 +107,12 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_style
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	group_fanart
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	home_picture
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	jpeg
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	jpg
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	logo_plate
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	png
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	webp
 1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	?
 1	app/src/main/java/tv/own/owntv/features/shell/components/ZapPosters.kt	·

@@ -384,7 +384,8 @@ fun HomeScreen(
     // glcn: 1 = the app's own background behind Home, no cover; the strength fades the cover back.
     val homeCover by seasonSettings.homeCover.collectAsStateWithLifecycle(initialValue = 0)
     val homeCoverDim by seasonSettings.homeCoverDim.collectAsStateWithLifecycle(initialValue = 0)
-    val coverArt = if (homeCover == 1) null else focusArt
+    val homeImage by seasonSettings.homeImage.collectAsStateWithLifecycle(initialValue = "")
+    val coverArt = if (homeCover != 0) null else focusArt
     // The full-screen styles take over only where Home has no hero of its own.
     val backdropStyle = if (trendingItem == null && posterItem == null && !fullBleed) backdropSetting else 0
     val reminders by vm.reminderRows.collectAsStateWithLifecycle()
@@ -395,7 +396,7 @@ fun HomeScreen(
         val panelCardWidth = if (backdropStyle == 2) ((maxWidth - PANEL_WIDTH - 48.mpx - contentStart - 40.mpx) / 3).coerceIn(220.mpx, 400.mpx) else null
         if (trendingItem == null && posterItem == null) when (backdropStyle) {
             // Before anything has focus, the first featured title stands in the picture.
-            1 -> HomeCinemaBackdrop(if (homeCover == 1) null else (focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }), focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
+            1 -> HomeCinemaBackdrop(if (homeCover != 0) null else (focusArt ?: state.featured.firstOrNull()?.art?.takeIf { it.isNotBlank() }), focusInfo ?: state.featured.firstOrNull()?.let(::featuredInfo), greeting = {
                 HomeGreeting(state.profileName, 0.mpx, mark = if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.mark(season) else null)
             }, start = contentStart)
             2 -> HomePanelBackdrop(coverArt)
@@ -405,6 +406,20 @@ fun HomeScreen(
                 val calm by androidx.compose.animation.core.animateFloatAsState(if (billboardFocused) 0f else if (scrolledAway) 0.4f else 1f, label = "backdropCalm")
                 HomeFocusBackdrop(coverArt, Modifier.graphicsLayer { alpha = calm })
             }
+        }
+        // glcn: "My picture" — the user's own image behind Home, under a calming veil.
+        if (homeCover == 2 && homeImage.isNotBlank()) {
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val req = remember(homeImage) {
+                coil3.request.ImageRequest.Builder(ctx).data(android.net.Uri.fromFile(java.io.File(homeImage))).build()
+            }
+            coil3.compose.AsyncImage(req, null, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+            Box(
+                Modifier.fillMaxSize().background(
+                    tv.own.owntv.ui.theme.stageTone(Color(0xFF070B0E), tv.own.owntv.ui.theme.LocalStagePalette.current.page)
+                        .copy(alpha = if (homeCoverDim == 0) 0.25f else if (homeCoverDim == 1) 0.45f else 0.7f),
+                ),
+            )
         }
         // glcn: Cover strength — a veil over the cover (not Cinema, whose words sit in the same layer).
         if (homeCover == 0 && homeCoverDim > 0 && backdropStyle != 1) {

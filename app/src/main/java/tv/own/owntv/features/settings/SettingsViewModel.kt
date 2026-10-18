@@ -1004,7 +1004,9 @@ class SettingsViewModel(
     fun applyGlcnStyle(style: tv.own.owntv.core.theme.GlcnStyle?) { viewModelScope.launch { settings.applyGlcnStyle(style) } }
     fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
     val homeCover: StateFlow<Int> = settings.homeCover.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
-    fun cycleHomeCover() { viewModelScope.launch { settings.setHomeCover((homeCover.value + 1) % 2) } }
+    fun cycleHomeCover(): Int { val next = (homeCover.value + 1) % 3; viewModelScope.launch { settings.setHomeCover(next) }; return next }
+    val homeImage: StateFlow<String> = settings.homeImage.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+    fun setHomeImage(path: String) { viewModelScope.launch { settings.setHomeImage(path) } }
     val homeCoverDim: StateFlow<Int> = settings.homeCoverDim.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun cycleHomeCoverDim() { viewModelScope.launch { settings.setHomeCoverDim((homeCoverDim.value + 1) % 3) } }
     val osdSeconds: StateFlow<Int> = settings.osdSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
