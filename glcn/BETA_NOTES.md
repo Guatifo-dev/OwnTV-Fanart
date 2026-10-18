@@ -7,3 +7,5 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 📐 **Top bar: size Compact (icons only), Normal, Wide or Extra wide**
 - 🫥 **Top bar: fixed or floating, hides by itself and comes back with ▲**
 - 🛡️ **Top bar: drops to Compact on its own when it would reach the clock**
+- 🏷️ **You may like: each card shows its channel and time; the same channel in SD or HD is skipped**
+- 📏 **Live TV Cinema: more room at the bottom**
