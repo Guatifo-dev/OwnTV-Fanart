@@ -1026,8 +1026,11 @@ fun MoviesScreen(
     // Windowed TMDB details popup — read-only, Back exits.
     detailsMovie?.let { m ->
         val cache = selectedMovieMeta?.takeIf { it.movieId == m.id }?.cache
+        val related by androidx.compose.runtime.produceState(emptyList<tv.own.owntv.features.shell.components.RelatedUi>(), m.id) {
+            value = runCatching { vm.relatedTo(m) }.getOrDefault(emptyList())
+        }
         MediaDetailsScreen(
-            details = buildMovieDetails(m, cache, metadataMode.tmdbWins),
+            details = buildMovieDetails(m, cache, metadataMode.tmdbWins).copy(related = related),
             onExit = { detailsMovie = null },
         )
     }

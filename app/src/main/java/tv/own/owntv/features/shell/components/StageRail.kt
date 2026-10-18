@@ -1,5 +1,7 @@
 package tv.own.owntv.features.shell.components
 
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -496,6 +498,8 @@ fun StageTopBar(
     nowPlaying: NowPlayingRail?,
     onNowPlaying: () -> Unit,
     modifier: Modifier = Modifier,
+    /** glcn: where the bar ends on screen, so the status pills keep clear of it. */
+    onBarBounds: (androidx.compose.ui.geometry.Rect) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     var hasFocus by remember { mutableStateOf(false) }
@@ -519,6 +523,7 @@ fun StageTopBar(
                 .align(Alignment.TopStart)
                 .offset(x = 40.mpx, y = 34.mpx)
                 .height(68.mpx)
+                .onGloballyPositioned { onBarBounds(it.boundsInWindow()) }
                 .onFocusChanged {
                     val entered = it.hasFocus && !hasFocus
                     hasFocus = it.hasFocus
