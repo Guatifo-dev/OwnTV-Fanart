@@ -627,11 +627,7 @@ fun SettingsScreen(
             title = stringResource(R.string.glcn_logo_plate_title),
             desc = stringResource(R.string.glcn_logo_plate_desc),
             chip = stringResource(
-                when (logoPlate) {
-                    1 -> R.string.glcn_logo_plate_classic
-                    2 -> R.string.glcn_logo_plate_none
-                    else -> R.string.glcn_logo_plate_soft
-                },
+                if (logoPlate == 1) R.string.glcn_logo_plate_none else R.string.glcn_logo_plate_classic,
             ),
             chipTone = TileTone.PRIMARY,
             onClick = { settingsVm.cycleLogoPlate() },

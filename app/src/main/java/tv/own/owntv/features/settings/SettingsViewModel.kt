@@ -1012,7 +1012,7 @@ class SettingsViewModel(
     val animStyle: StateFlow<Int> = settings.animStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun cycleAnimStyle() { viewModelScope.launch { settings.setAnimStyle((animStyle.value + 1) % 2) } }
     val logoPlate: StateFlow<Int> = settings.logoPlate.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
-    fun cycleLogoPlate() { viewModelScope.launch { settings.setLogoPlate((logoPlate.value + 1) % 3) } }
+    fun cycleLogoPlate() { viewModelScope.launch { settings.setLogoPlate((logoPlate.value + 1) % 2) } }
     val uiSounds: StateFlow<Int> = settings.uiSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     // glcn: one Sounds setting — the opening chime goes with the menu sounds.
     fun cycleUiSounds() { viewModelScope.launch { val next = (uiSounds.value + 1) % 3; settings.setUiSounds(next); settings.setStartupSound(next > 0) } }
