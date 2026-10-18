@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -75,8 +74,6 @@ fun StageStatusCluster(
     modifier: Modifier = Modifier,
     playlistDownFocusRequester: FocusRequester? = null,
     onPlaylistPillBounds: (Rect) -> Unit = {},
-    /** glcn: the room the "Last channel" pill has before it would run under the top bar; null = no limit. */
-    continueMaxWidth: androidx.compose.ui.unit.Dp? = null,
 ) {
     Row(
         modifier.padding(end = 64.mpx, top = 34.mpx),
@@ -88,14 +85,13 @@ fun StageStatusCluster(
         Row(Modifier.padding(top = 6.mpx), horizontalArrangement = Arrangement.spacedBy(12.mpx), verticalAlignment = Alignment.Top) {
             when {
                 audioBar != null -> audioBar()
-                continuePill != null && (continueMaxWidth == null || continueMaxWidth.value >= 150f) -> StagePill(
+                continuePill != null -> StagePill(
                     text = continuePill.title,
                     small = continuePill.action,
                     icon = continuePill.icon,
                     iconFilled = continuePill.iconFilled,
                     onClick = continuePill.onClick,
-                    modifier = (if (continueMaxWidth != null) Modifier.widthIn(max = continueMaxWidth) else Modifier)
-                        .focusProperties { canFocus = pillsFocusable },
+                    modifier = Modifier.focusProperties { canFocus = pillsFocusable },
                 )
             }
             StagePill(
