@@ -10,3 +10,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🏷️ **You may like: each card shows its channel and time; the same channel in SD or HD is skipped**
 - 📏 **Live TV Cinema: more room at the bottom**
 - ⬆️ **You may like: ▲ goes back to the channel it was built for**
+- 🧊 **You may like: ▼ always reaches the strip, even after scrolling it**

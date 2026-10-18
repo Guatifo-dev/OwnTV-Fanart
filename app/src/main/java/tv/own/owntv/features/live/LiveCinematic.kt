@@ -46,6 +46,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import androidx.tv.material3.Text
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
@@ -148,6 +149,17 @@ internal fun LiveCinematicPane(
     val similarFirst = remember { androidx.compose.ui.focus.FocusRequester() }
     // ▲ from a suggestion goes back to the card of the channel the strip was built for.
     val returnTo = remember { androidx.compose.ui.focus.FocusRequester() }
+    // The strip may have been scrolled, so its first card may not exist yet: scroll back, wait a frame, then focus it.
+    val similarState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val enterScope = androidx.compose.runtime.rememberCoroutineScope()
+    val enterSimilar: () -> Unit = {
+        enterScope.launch {
+            runCatching { similarState.scrollToItem(0) }
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { similarFirst.requestFocus() }
+        }
+        Unit
+    }
 
     val focusedProgrammes = previewChannel?.let { programmes[it.id] }.orEmpty()
     val heroArt = nowNext?.nowDetails?.imageUrl
@@ -204,7 +216,7 @@ internal fun LiveCinematicPane(
                                         onClick = { onClick(channel) },
                                         onLongClick = { onLongClick(channel) },
                                         modifier = Modifier
-                                            .onDownToSimilar(similar.isNotEmpty(), similarFirst)
+                                            .onDownToSimilar(similar.isNotEmpty(), enterSimilar)
                                             .then(if (channel.id == previewChannel?.id) Modifier.focusRequester(returnTo) else Modifier)
                                             .then(cardModifier(index, channel))
                                             .onFocusChanged { if (it.hasFocus) onFocus(channel) },
@@ -225,6 +237,7 @@ internal fun LiveCinematicPane(
                         modifier = Modifier.padding(start = 64.mpx, top = 2.mpx),
                     )
                     LazyRow(
+                        state = similarState,
                         horizontalArrangement = Arrangement.spacedBy(18.mpx),
                         contentPadding = PaddingValues(start = 64.mpx, end = 64.mpx, top = 6.mpx, bottom = 40.mpx),
                         modifier = Modifier.fillMaxWidth().focusGroup(),
@@ -251,11 +264,11 @@ internal fun LiveCinematicPane(
 }
 
 /** glcn: Down from a channel card goes to the "You may like" strip when there is one. */
-private fun Modifier.onDownToSimilar(has: Boolean, target: androidx.compose.ui.focus.FocusRequester): Modifier =
+private fun Modifier.onDownToSimilar(has: Boolean, enter: () -> Unit): Modifier =
     androidx.compose.ui.Modifier.onPreviewKeyEvent { e ->
         if (has && e.type == androidx.compose.ui.input.key.KeyEventType.KeyDown &&
             e.key == androidx.compose.ui.input.key.Key.DirectionDown
-        ) { runCatching { target.requestFocus() }.isSuccess } else false
+        ) { enter(); true } else false
     }.then(this)
 
 private const val SIM_W = 250
