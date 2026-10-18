@@ -1271,7 +1271,7 @@ private fun KeepWatchingRow(
     val h = if (big) 216 else 189
     Column(modifier) {
         HomeRowHeader(title, small = if (big) null else items.size.toString(), start = start, big = big)
-        LazyRow(
+        HomeLazyRow(
             horizontalArrangement = Arrangement.spacedBy((if (big) 24 else 20).mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),
@@ -1421,7 +1421,7 @@ private fun ContinuePosterRow(
     val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
+        HomeLazyRow(
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),
@@ -1464,7 +1464,7 @@ private fun <T> FavoritePosterRow(
     val setArt = LocalHomeFocusArt.current
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
+        HomeLazyRow(
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),
@@ -1514,7 +1514,7 @@ private fun TrendingPosterRow(
     Column {
         HomeRowHeader(title, small = null, start = start)
         Spacer(Modifier.height(headerGap))
-        LazyRow(
+        HomeLazyRow(
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),

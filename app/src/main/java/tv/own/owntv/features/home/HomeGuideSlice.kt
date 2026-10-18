@@ -79,7 +79,7 @@ fun HomeLiveRow(
         // instead of the row holding its old place and leaving it half off the left edge.
         val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
         LaunchedEffect(shown.firstOrNull()?.id) { runCatching { rowState.scrollToItem(0) } }
-        LazyRow(
+        HomeLazyRow(
             state = rowState,
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),

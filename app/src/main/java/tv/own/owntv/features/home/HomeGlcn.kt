@@ -342,7 +342,7 @@ internal fun ArtLiveRow(
         // instead of the row holding its old place and leaving it half off the left edge.
         val rowState = androidx.compose.foundation.lazy.rememberLazyListState()
         LaunchedEffect(channels.firstOrNull()?.id) { runCatching { rowState.scrollToItem(0) } }
-        LazyRow(
+        HomeLazyRow(
             state = rowState,
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
@@ -384,7 +384,7 @@ internal fun TonightRow(
     val now = remember(items) { System.currentTimeMillis() }
     Column(modifier) {
         HomeRowHeader(title, small = stringResource(R.string.content_remind_me), start = start)
-        LazyRow(
+        HomeLazyRow(
             horizontalArrangement = Arrangement.spacedBy(20.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
             modifier = Modifier.focusRestorer().focusGroup(),
@@ -739,3 +739,30 @@ internal fun HomeInfoPanel(url: String?, info: HomeFocusInfo?, modifier: Modifie
 }
 
 internal val PANEL_WIDTH = 560.mpx
+
+/**
+ * glcn: a Home row. Home's own scroll rule (it keeps room under the last vertical row) must not reach the
+ * horizontal rows: it put a card flush to the screen edge when focus came back to the start, past the
+ * row's left padding. Rows scroll with the edge rule, which leaves a card of room and so rests at the start.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@androidx.compose.runtime.Composable
+internal fun HomeLazyRow(
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    state: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    contentPadding: androidx.compose.foundation.layout.PaddingValues = androidx.compose.foundation.layout.PaddingValues(androidx.compose.ui.unit.Dp(0f)),
+    horizontalArrangement: androidx.compose.foundation.layout.Arrangement.Horizontal = androidx.compose.foundation.layout.Arrangement.Start,
+    content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
+) {
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides tv.own.owntv.features.live.edgeScrollSpec,
+    ) {
+        androidx.compose.foundation.lazy.LazyRow(
+            modifier = modifier,
+            state = state,
+            contentPadding = contentPadding,
+            horizontalArrangement = horizontalArrangement,
+            content = content,
+        )
+    }
+}
