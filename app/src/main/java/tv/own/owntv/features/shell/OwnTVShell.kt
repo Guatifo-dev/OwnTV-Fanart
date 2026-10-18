@@ -1137,11 +1137,9 @@ fun OwnTVShell(
                                     start = when {
                                         navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED ->
                                             tv.own.owntv.features.shell.components.railDockedReserve(navSize)
-                                        stageScreen -> 0.dp
-                                        else -> 6.dp
+                                        else -> 0.dp
                                     },
                                     top = when {
-                                        !stageScreen -> tv.own.owntv.features.shell.components.StageContentTop
                                         // glcn: the top bar takes the band the clock sits in; Home already starts below it.
                                         navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP && selectedSection != MainSection.HOME -> 96.mpx
                                         else -> 0.dp

@@ -1,7 +1,7 @@
 package tv.own.owntv.features.home
 
 import tv.own.owntv.ui.components.trapAllFocusExit
-import tv.own.owntv.ui.components.modalScrim
+import tv.own.owntv.glcn.modalScrim
 import tv.own.owntv.ui.components.longPressMenuGuard
 import tv.own.owntv.ui.theme.stageTone
 import tv.own.owntv.ui.stage.backdropLeftWash
