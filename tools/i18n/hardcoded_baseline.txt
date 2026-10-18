@@ -116,6 +116,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	webp
 1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	\0
 1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	?
+1	app/src/main/java/tv/own/owntv/features/shell/components/StageRail.kt	topBarShown
 1	app/src/main/java/tv/own/owntv/features/shell/components/ZapPosters.kt	·
 1	app/src/main/java/tv/own/owntv/features/shell/components/ZapPosters.kt	▲
 2	app/src/main/java/tv/own/owntv/features/sports/SportsSettingsViewModel.kt	\0

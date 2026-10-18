@@ -1693,11 +1693,17 @@ private fun NavigationPopupHost(settingsVm: SettingsViewModel, onDismiss: () -> 
     val navHideAfterMs by settingsVm.navHideAfterMs.collectAsStateWithLifecycle()
     val navMenuMode by settingsVm.navMenuMode.collectAsStateWithLifecycle()
     val navMenuHidden by settingsVm.navMenuHidden.collectAsStateWithLifecycle()
+    val topSize by settingsVm.topSize.collectAsStateWithLifecycle()
+    val topFloating by settingsVm.topFloating.collectAsStateWithLifecycle()
+    val onTop = navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP
     tv.own.owntv.features.settings.NavigationSettingsPopup(
         style = navStyle,
         onStyle = settingsVm::setNavStyle,
-        size = navSize,
-        onSize = settingsVm::setNavSize,
+        // glcn: the top bar keeps its own size, so changing the rail's does not shrink it.
+        size = if (onTop) topSize else navSize,
+        onSize = if (onTop) settingsVm::setTopSize else settingsVm::setNavSize,
+        topFloating = topFloating,
+        onTopFloating = settingsVm::setTopFloating,
         length = navLength,
         onLength = settingsVm::setNavLength,
         widen = navWiden,

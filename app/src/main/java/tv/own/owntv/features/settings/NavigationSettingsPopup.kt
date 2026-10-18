@@ -43,6 +43,8 @@ fun NavigationSettingsPopup(
     onStyle: (NavStyle) -> Unit,
     size: NavSize,
     onSize: (NavSize) -> Unit,
+    topFloating: Boolean,
+    onTopFloating: (Boolean) -> Unit,
     length: NavLength,
     onLength: (NavLength) -> Unit,
     widen: NavSize?,
@@ -80,8 +82,7 @@ fun NavigationSettingsPopup(
                 leading = { focused -> StagePopupRadio(on = value == style, focused = focused) },
             )
         }
-        // glcn: the bar along the top has no size or length to set.
-        if (style != NavStyle.TOP) {
+        // glcn: the bar along the top has a size (Compact = icons only) and a floating mode of its own, but no length.
         StagePopupDivider()
         StagePopupOption(
             title = stringResource(R.string.settings_size),
@@ -90,6 +91,16 @@ fun NavigationSettingsPopup(
             onClick = { onSize(NavSize.entries[(size.ordinal + 1) % NavSize.entries.size]) },
             leading = { OwnTVIcon(OwnTVIcon.EXPAND, StageColors.Text, Modifier.size(21.mpx)) },
         )
+        if (style == NavStyle.TOP) {
+            StagePopupOption(
+                title = stringResource(R.string.glcn_nav_top_floating),
+                subtitle = stringResource(R.string.glcn_nav_top_floating_desc),
+                value = stringResource(if (topFloating) R.string.common_on else R.string.common_off),
+                onClick = { onTopFloating(!topFloating) },
+                leading = { OwnTVIcon(OwnTVIcon.CLOCK, StageColors.Text, Modifier.size(21.mpx)) },
+            )
+        }
+        if (style != NavStyle.TOP) {
         StagePopupOption(
             title = stringResource(R.string.settings_nav_length),
             subtitle = stringResource(R.string.settings_nav_length_desc),
@@ -136,7 +147,7 @@ fun NavigationSettingsPopup(
                 }
             }
         }
-        if (style == NavStyle.FLOATING) {
+        if (style == NavStyle.FLOATING || (style == NavStyle.TOP && topFloating)) {
             StagePopupOption(
                 title = stringResource(R.string.settings_nav_hide_after),
                 subtitle = stringResource(R.string.settings_nav_hide_after_desc),

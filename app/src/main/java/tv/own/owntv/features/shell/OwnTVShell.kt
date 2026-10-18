@@ -217,6 +217,8 @@ fun OwnTVShell(
     val navSize by settingsRepo.navSize.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT)
     val navWiden by settingsRepo.navWiden.collectAsStateWithLifecycle(initialValue = null)
     val navLength by settingsRepo.navLength.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavLength.FIT)
+    val topSize by settingsRepo.topSize.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.SettingsRepository.NavSize.NORMAL)
+    val topFloating by settingsRepo.topFloating.collectAsStateWithLifecycle(initialValue = false)
     val navHideAfterMs by settingsRepo.navHideAfterMs.collectAsStateWithLifecycle(
         initialValue = tv.own.owntv.core.settings.SettingsRepository.NavHideAfter.DEFAULT_MS,
     )
@@ -240,6 +242,17 @@ fun OwnTVShell(
     var playlistPillBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     // glcn: where the top bar ends, so the "Last channel" pill never runs under it.
     var topBarBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    // glcn: when a bigger bar would reach the playlist pill and the clock, it drops to Compact by itself.
+    var topCompactForced by remember(topSize, visibleSections) { mutableStateOf(false) }
+    val topGapPx = with(androidx.compose.ui.platform.LocalDensity.current) { 16.mpx.toPx() }
+    LaunchedEffect(topBarBounds, playlistPillBounds, navStyle, topCompactForced) {
+        val bar = topBarBounds
+        val pl = playlistPillBounds
+        if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP && bar != null && pl != null &&
+            !topCompactForced && topSize != tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT &&
+            bar.right > pl.left - topGapPx
+        ) topCompactForced = true
+    }
     var miniHasFocus by remember { mutableStateOf(false) }
     val subtitleController = koinInject<tv.own.owntv.core.subtitles.SubtitleController>()
     val subtitleContext by subtitleController.current.collectAsStateWithLifecycle()
@@ -675,9 +688,14 @@ fun OwnTVShell(
     LaunchedEffect(railHasFocus, railKeyAt) {
         railFocused = railHasFocus && android.os.SystemClock.uptimeMillis() - railKeyAt <= RAIL_KEY_WINDOW_MS
     }
-    LaunchedEffect(railFocused, navStyle, navHideAfterMs) {
+    // glcn: the top bar floats too when asked: it hides after the same delay once focus is out of it.
+    val topBarFocused = railHasFocus
+    LaunchedEffect(railFocused, navStyle, navHideAfterMs, topFloating, topBarFocused) {
         railIdleHidden = false
-        if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.FLOATING && !railFocused) {
+        if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP && topFloating && !topBarFocused) {
+            kotlinx.coroutines.delay(navHideAfterMs.toLong())
+            railIdleHidden = true
+        } else if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.FLOATING && !railFocused) {
             kotlinx.coroutines.delay(navHideAfterMs.toLong())
             railIdleHidden = true
         }
@@ -1468,6 +1486,8 @@ fun OwnTVShell(
                 nowPlaying = nowPlayingRail,
                 onNowPlaying = enterNowPlaying,
                 onBarBounds = { topBarBounds = it },
+                size = if (topCompactForced) tv.own.owntv.core.settings.SettingsRepository.NavSize.COMPACT else topSize,
+                hidden = railIdleHidden,
             ) else tv.own.owntv.features.shell.components.StageRail(
                 state = railState,
                 size = railSize,

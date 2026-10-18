@@ -856,6 +856,14 @@ class SettingsViewModel(
         settings.navWiden.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     fun setNavWiden(size: tv.own.owntv.core.settings.SettingsRepository.NavSize?) { viewModelScope.launch { settings.setNavWiden(size) } }
 
+    // glcn: the top bar's own size (Compact = icons only) and its floating mode.
+    val topSize: StateFlow<tv.own.owntv.core.settings.SettingsRepository.NavSize> =
+        settings.topSize.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.settings.SettingsRepository.NavSize.NORMAL)
+    fun setTopSize(size: tv.own.owntv.core.settings.SettingsRepository.NavSize) { viewModelScope.launch { settings.setTopSize(size) } }
+    val topFloating: StateFlow<Boolean> =
+        settings.topFloating.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    fun setTopFloating(on: Boolean) { viewModelScope.launch { settings.setTopFloating(on) } }
+
     val navHideAfterMs: StateFlow<Int> =
         settings.navHideAfterMs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.settings.SettingsRepository.NavHideAfter.DEFAULT_MS)
     fun setNavHideAfterMs(ms: Int) {

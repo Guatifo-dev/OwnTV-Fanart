@@ -1,5 +1,6 @@
 package tv.own.owntv.features.shell.components
 
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.draw.clip
@@ -500,9 +501,20 @@ fun StageTopBar(
     modifier: Modifier = Modifier,
     /** glcn: where the bar ends on screen, so the status pills keep clear of it. */
     onBarBounds: (androidx.compose.ui.geometry.Rect) -> Unit = {},
+    /** glcn: the bar's size (Compact = icons only, the open section keeps its name) and its Floating state. */
+    size: NavSize = NavSize.NORMAL,
+    hidden: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
     var hasFocus by remember { mutableStateOf(false) }
+    val compact = size == NavSize.COMPACT
+    // 1.0 at Normal; Wide and Extra wide grow the bar and its type.
+    val k = when (size) { NavSize.WIDE -> 1.14f; NavSize.EXTRA_WIDE -> 1.28f; else -> 1f }
+    fun sc(v: Int) = (v * k).toInt()
+    // Floating: slides up and fades once idle, but stays where focus can reach it with ▲.
+    val shown by androidx.compose.animation.core.animateFloatAsState(
+        if (hidden && !hasFocus) 0f else 1f, label = "topBarShown",
+    )
     val focusSection = when {
         selected == MainSection.SETTINGS || selected == MainSection.MORE -> MainSection.MORE
         selected == MainSection.SEARCH || selected in visibleSections -> selected
@@ -522,7 +534,8 @@ fun StageTopBar(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .offset(x = 40.mpx, y = 34.mpx)
-                .height(68.mpx)
+                .graphicsLayer { alpha = shown; translationY = -(1f - shown) * 60.dp.toPx() }
+                .height(sc(68).mpx)
                 .onGloballyPositioned { onBarBounds(it.boundsInWindow()) }
                 .onFocusChanged {
                     val entered = it.hasFocus && !hasFocus
@@ -549,53 +562,66 @@ fun StageTopBar(
             horizontalArrangement = Arrangement.spacedBy(4.mpx),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BrandMark(rememberAppliedIcon(), 44.mpx, Modifier.padding(start = 6.mpx, end = 10.mpx))
+            BrandMark(rememberAppliedIcon(), sc(44).mpx, Modifier.padding(start = 6.mpx, end = 10.mpx))
             TopIcon(OwnTVIcon.SEARCH, selected == MainSection.SEARCH, { onSelect(MainSection.SEARCH) },
-                if (focusSection == MainSection.SEARCH) Modifier.focusRequester(selectedItemFocusRequester) else Modifier)
-            if (nowPlaying != null) TopIcon(if (nowPlaying.audioMode) OwnTVIcon.EQ else OwnTVIcon.PLAY, false, onNowPlaying, accentIcon = true)
+                if (focusSection == MainSection.SEARCH) Modifier.focusRequester(selectedItemFocusRequester) else Modifier, k = k)
+            if (nowPlaying != null) TopIcon(if (nowPlaying.audioMode) OwnTVIcon.EQ else OwnTVIcon.PLAY, false, onNowPlaying, accentIcon = true, k = k)
             named.forEach { section ->
                 val active = section == selected
-                StageSurface(
-                    onClick = { onSelect(section) },
-                    radius = 24.mpx,
-                    modifier = Modifier.height(50.mpx)
-                        .then(if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier),
-                    idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape(24.mpx)) else Modifier,
-                    contentAlignment = Alignment.Center,
-                ) { focused ->
-                    Text(
-                        stringResource(section.labelRes),
-                        style = stageText(19, if (active) 700 else 600),
-                        color = when { focused -> a.onAccent; active -> a.accent; else -> StageColors.NavText },
-                        maxLines = 1,
-                        modifier = Modifier.padding(horizontal = 18.mpx),
-                    )
+                val focusMod = if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier
+                if (compact && !active) {
+                    // Compact: the section is its icon; only the open one shows its name.
+                    TopIcon(section.stageIcon, false, { onSelect(section) }, focusMod, k = k)
+                } else {
+                    StageSurface(
+                        onClick = { onSelect(section) },
+                        radius = sc(24).mpx,
+                        modifier = Modifier.height(sc(50).mpx).then(focusMod),
+                        idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape(sc(24).mpx)) else Modifier,
+                        contentAlignment = Alignment.Center,
+                    ) { focused ->
+                        val tint = when { focused -> a.onAccent; active -> a.accent; else -> StageColors.NavText }
+                        Row(
+                            Modifier.padding(horizontal = sc(if (compact) 14 else 18).mpx),
+                            horizontalArrangement = Arrangement.spacedBy(sc(8).mpx),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (compact) OwnTVIcon(section.stageIcon, tint, Modifier.size(sc(25).mpx))
+                            Text(
+                                stringResource(section.labelRes),
+                                style = stageText(sc(19), if (active) 700 else 600),
+                                color = tint,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
             }
             TopIcon(OwnTVIcon.TILES, selected == MainSection.MORE || selected == MainSection.SETTINGS, { onSelect(MainSection.MORE) },
-                if (focusSection == MainSection.MORE) Modifier.focusRequester(selectedItemFocusRequester) else Modifier)
+                if (focusSection == MainSection.MORE) Modifier.focusRequester(selectedItemFocusRequester) else Modifier, k = k)
             StageSurface(
                 onClick = onSwitchProfile,
                 onLongClick = onPickAvatar,
-                radius = 23.mpx,
-                modifier = Modifier.padding(start = 4.mpx).size(46.mpx),
+                radius = sc(23).mpx,
+                modifier = Modifier.padding(start = 4.mpx).size(sc(46).mpx),
                 focusStyle = StageFocus.POSTER,
                 contentAlignment = Alignment.Center,
-            ) { RailAvatar(profileName.trim().take(1).uppercase().ifEmpty { "?" }, avatarId = avatarId, imagePath = avatarPath) }
+            ) { RailAvatar(profileName.trim().take(1).uppercase().ifEmpty { "?" }, size = sc(46), avatarId = avatarId, imagePath = avatarPath) }
         }
     }
 }
 
 @Composable
-private fun TopIcon(icon: OwnTVIcon, active: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, accentIcon: Boolean = false) {
+private fun TopIcon(icon: OwnTVIcon, active: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, accentIcon: Boolean = false, k: Float = 1f) {
     val a = stageAccent
+    val box = (50 * k).toInt()
     StageSurface(
         onClick = onClick,
-        radius = 25.mpx,
-        modifier = modifier.size(50.mpx),
-        idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape(25.mpx)) else Modifier,
+        radius = (box / 2).mpx,
+        modifier = modifier.size(box.mpx),
+        idle = if (active) Modifier.background(a.accent.copy(alpha = 0.14f), RoundedCornerShape((box / 2).mpx)) else Modifier,
         contentAlignment = Alignment.Center,
     ) { focused ->
-        OwnTVIcon(icon, when { focused -> a.onAccent; active || accentIcon -> a.accent; else -> StageColors.NavText }, Modifier.size(25.mpx))
+        OwnTVIcon(icon, when { focused -> a.onAccent; active || accentIcon -> a.accent; else -> StageColors.NavText }, Modifier.size((25 * k).toInt().mpx))
     }
 }
