@@ -325,6 +325,7 @@ fun SettingsScreen(
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
     val safeArea by settingsVm.safeArea.collectAsStateWithLifecycle()
     val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
+    val habitLearning by settingsVm.habitLearning.collectAsStateWithLifecycle()
     val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
     var showGlcnStyle by remember { mutableStateOf(false) }
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
@@ -568,6 +569,14 @@ fun SettingsScreen(
             chip = stringResource(if (autoSkipIntro) R.string.common_on else R.string.common_off),
             chipTone = if (autoSkipIntro) TileTone.PRIMARY else TileTone.SECONDARY,
             onClick = { settingsVm.toggleAutoSkipIntro() },
+        ),
+        RootRow(
+            "glcn_habits", TileTone.SECONDARY, OwnTVIcon.BELL,
+            title = stringResource(R.string.glcn_habits_title),
+            desc = stringResource(R.string.glcn_habits_desc),
+            chip = stringResource(if (habitLearning) R.string.common_on else R.string.common_off),
+            chipTone = if (habitLearning) TileTone.PRIMARY else TileTone.SECONDARY,
+            onClick = { settingsVm.toggleHabitLearning() },
         ),
         RootRow(
             "glcn_dialogue", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,

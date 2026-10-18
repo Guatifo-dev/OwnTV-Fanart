@@ -883,6 +883,16 @@ fun OwnTVShell(
         }
     }
 
+    // glcn: what the viewer usually watches becomes reminders for its coming showings — on start and every two hours.
+    val habitTracker = koinInject<tv.own.owntv.core.reminder.HabitTracker>()
+    LaunchedEffect(activeProfileId) {
+        val pid = activeProfileId?.takeIf { it >= 0 } ?: return@LaunchedEffect
+        while (true) {
+            runCatching { habitTracker.refresh(pid) }
+            kotlinx.coroutines.delay(2 * 3_600_000L)
+        }
+    }
+
     // The section a Search result opened ("Go to"), so the first Back there returns to Search. Leaving
     // that section any other way forgets it. The series page closes itself on Back (its own handler),
     // so for a series the return follows the show closing.

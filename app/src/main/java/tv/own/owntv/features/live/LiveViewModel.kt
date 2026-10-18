@@ -1652,7 +1652,20 @@ class LiveViewModel(
             }
             runCatching { launcherIntegrationRepository.refreshRecentLive(pid) }
         }
+        // glcn: learn what is usually watched — logged only after the viewer stays a few minutes.
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            runCatching {
+                habitTracker.watching(pid, channel.id, channel.name, channel.epgChannelId) {
+                    epgReader.nowNext(channel, custom.value, epgOffset.value)?.now
+                        ?.let { tv.own.owntv.core.reminder.HabitTracker.Now(it.title, it.startMs, it.stopMs) }
+                }
+            }
+        }
     }
+
+    /** glcn: habit learning (see [tv.own.owntv.core.reminder.HabitTracker]). */
+    private val habitTracker by lazy { org.koin.core.context.GlobalContext.get().get<tv.own.owntv.core.reminder.HabitTracker>() }
 
     // ---- Catch-up from Live TV: pick a recent programme to replay from the archive (#proposal) ----
 
@@ -1975,6 +1988,7 @@ class LiveViewModel(
     }
 
     fun stopPreview() {
+        runCatching { habitTracker.stopped() }
         live.stop() // both engines, every watcher and the give-up alarm, and the reconnect link
         _previewChannel.value = null
     }

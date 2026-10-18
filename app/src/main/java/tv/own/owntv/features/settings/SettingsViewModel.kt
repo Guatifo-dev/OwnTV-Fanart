@@ -1003,6 +1003,8 @@ class SettingsViewModel(
     val glcnStyle: StateFlow<tv.own.owntv.core.theme.GlcnStyle?> = settings.glcnStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     fun applyGlcnStyle(style: tv.own.owntv.core.theme.GlcnStyle?) { viewModelScope.launch { settings.applyGlcnStyle(style) } }
     fun toggleAutoSkipIntro() { viewModelScope.launch { settings.setAutoSkipIntro(!autoSkipIntro.value) } }
+    val habitLearning: StateFlow<Boolean> = settings.habitLearning.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+    fun toggleHabitLearning() { viewModelScope.launch { settings.setHabitLearning(!habitLearning.value) } }
 
     // glcn: Kodi-style extras.
     val dialogueBoost: StateFlow<Boolean> = settings.dialogueBoost.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)

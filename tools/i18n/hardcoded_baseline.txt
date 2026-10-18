@@ -92,6 +92,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_auto_skip_intro
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_back_window
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_dialogue
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_habits
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_home_backdrop
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_mpv_passthrough
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_safe_area
