@@ -230,6 +230,15 @@ fun LiveScreen(
         mutableStateOf<Pair<ChannelEntity, tv.own.owntv.core.database.entity.EpgProgrammeEntity>?>(null)
     }
     var contextChannel by remember { mutableStateOf<ChannelEntity?>(null) } // long-press quick menu
+    // glcn: multi-select. null = not selecting; otherwise the marked channels, in the order they were marked.
+    var selecting by remember { mutableStateOf<List<ChannelEntity>?>(null) }
+    var batchActions by remember { mutableStateOf(false) }
+    var batchMove by remember { mutableStateOf(false) }
+    fun toggleSelected(ch: ChannelEntity) {
+        val cur = selecting ?: return
+        selecting = if (cur.any { it.id == ch.id }) cur.filterNot { it.id == ch.id } else cur + ch
+    }
+    androidx.activity.compose.BackHandler(enabled = selecting != null && !batchActions && !batchMove) { selecting = null }
     // Multiview: whether the menu offers it at all, how many tiles the grid has, and the confirmation
     // after a channel is kept (null = nothing to say).
     val liveSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
@@ -698,7 +707,7 @@ fun LiveScreen(
                     ).focusRequester(rowFocus(index)).onPreviewKeyEvent { e ->
                         if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         when (e.key) {
-                            androidx.compose.ui.input.key.Key.Menu -> { contextChannel = channel; contextChannelId = channel.id; true }
+                            androidx.compose.ui.input.key.Key.Menu -> { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id }; true }
                             // ◀ from the first card opens the categories sheet; otherwise one card back.
                             androidx.compose.ui.input.key.Key.DirectionLeft -> (stepTarget ?: index).let { from ->
                                 if (from > 0) { stepTo(from - 1); true } else { categoriesOpen = true; true }
@@ -717,10 +726,12 @@ fun LiveScreen(
                     if (rememberLive) perCategoryChannelIds[selectedKey] = channel.id
                 },
                 onClick = { channel ->
-                    vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
-                    if (!externalPlayerOn) onFullscreen()
+                    if (selecting != null) toggleSelected(channel) else {
+                        vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
+                        if (!externalPlayerOn) onFullscreen()
+                    }
                 },
-                onLongClick = { channel -> contextChannel = channel; contextChannelId = channel.id },
+                onLongClick = { channel -> if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id } },
                 modifier = Modifier
                     .fillMaxSize()
                     .then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.4f } else Modifier),
@@ -911,7 +922,7 @@ fun LiveScreen(
                                         if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                         when (e.key) {
                                             // The remote's Menu key opens the same menu as holding OK.
-                                            androidx.compose.ui.input.key.Key.Menu -> { contextChannel = channel; contextChannelId = channel.id; true }
+                                            androidx.compose.ui.input.key.Key.Menu -> { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id }; true }
                                             // ◀ Categories: the sheet (Stage) or the column (Separate); pinned lists have none.
                                             androidx.compose.ui.input.key.Key.DirectionLeft -> when {
                                                 lockedKey != null -> false
@@ -932,10 +943,19 @@ fun LiveScreen(
                                         if (rememberLive) perCategoryChannelIds[selectedKey] = channel.id
                                     },
                                     onClick = {
-                                        vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
-                                        if (!externalPlayerOn) onFullscreen()
+                                        if (selecting != null) toggleSelected(channel) else {
+                                            vm.watchFullscreen(channel, channels.itemSnapshotList.items.filterNotNull())
+                                            if (!externalPlayerOn) onFullscreen()
+                                        }
                                     },
-                                    onLongClick = { contextChannel = channel; contextChannelId = channel.id },
+                                    onLongClick = { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id } },
+                                    trailing = selecting?.let { sel ->
+                                        {
+                                            androidx.compose.foundation.layout.Box(Modifier.size(26.mpx), contentAlignment = Alignment.Center) {
+                                                if (sel.any { it.id == channel.id }) OwnTVIcon(OwnTVIcon.CHECK, tv.own.owntv.ui.theme.stageAccent.accent, Modifier.size(24.mpx))
+                                            }
+                                        }
+                                    },
                                 )
                             }
                         }
@@ -1162,9 +1182,55 @@ fun LiveScreen(
                 contextChannel = null
             },
             onRemoveFromHistory = { vm.removeFromHistory(ch.id); contextChannel = null },
+            onSelectMany = if (cinematic) null else { { selecting = listOf(ch); contextChannel = null } },
             onRemoveFromCategory = (selectedKey as? LiveKey.Custom)?.let { k -> { vm.removeFromCustomCategory(ch, k); contextChannel = null } },
             onDismiss = { contextChannel = null },
         )
+    }
+
+    // glcn: actions for the marked channels.
+    if (batchActions) {
+        val sel = selecting.orEmpty()
+        val inFavs = selectedKey == LiveKey.Favorites
+        val inCustom = selectedKey as? LiveKey.Custom
+        tv.own.owntv.ui.stage.StagePopup(
+            onDismiss = { batchActions = false },
+            title = stringResource(R.string.glcn_selected_count, sel.size),
+            width = 620.mpx,
+        ) {
+            if (sel.isNotEmpty()) {
+                tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_move_to_category),
+                    onClick = {
+                        moveOriginKey = when (val k = selectedKey) {
+                            is LiveKey.Folder -> vm.folderKey(k.id)
+                            is LiveKey.Custom -> k.id
+                            LiveKey.Favorites -> ContentOrderEntity.FAV_CONTEXT
+                            else -> null
+                        }
+                        moveOriginName = railItems.firstOrNull { it.key == selectedKey }?.title
+                        batchActions = false
+                        batchMove = true
+                    },
+                )
+                if (!inFavs) tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_add_favourite),
+                    onClick = { vm.setFavorites(sel, true); batchActions = false; selecting = null },
+                )
+                tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_remove_favourite),
+                    onClick = { vm.setFavorites(sel, false); batchActions = false; selecting = null },
+                )
+                if (inCustom != null) tv.own.owntv.ui.stage.StagePopupOption(
+                    title = stringResource(R.string.content_remove_from_category),
+                    onClick = { vm.removeManyFromCustomCategory(sel, inCustom); batchActions = false; selecting = null },
+                )
+            }
+            tv.own.owntv.ui.stage.StagePopupOption(
+                title = stringResource(R.string.glcn_select_done),
+                onClick = { batchActions = false; selecting = null },
+            )
+        }
     }
 
     val scheduledDay = tv.own.owntv.ui.format.rememberBestDateFormatter("EEEMMMd")
@@ -1197,6 +1263,23 @@ fun LiveScreen(
             onDismiss = { creatingCategory = false },
         )
     } else {
+        if (batchMove) {
+            val originKey = moveOriginKey
+            val sel = selecting.orEmpty()
+            if (originKey != null) {
+                MoveToCategoryDialog(
+                    moveTargets = moveTargets.filterNot { it.id == originKey },
+                    originName = moveOriginName ?: stringResource(R.string.settings_customize_this_category),
+                    onNewCategory = { creatingCategory = true },
+                    onMove = { targetId, keepInOrigin ->
+                        vm.moveManyToCategory(sel, originKey, targetId, keepInOrigin)
+                        batchMove = false
+                        selecting = null
+                    },
+                    onDismiss = { batchMove = false; batchActions = true },
+                )
+            } else batchMove = false
+        }
         moveItem?.let { ch ->
             val originKey = moveOriginKey
             if (originKey != null) {
@@ -1292,6 +1375,8 @@ private fun ChannelContextMenu(
     // "Move to category…": send this channel into a user's combined category.
     onMoveToCategory: () -> Unit,
     onRemoveFromHistory: () -> Unit,
+    // glcn: start multi-select (null where the layout can't show marks).
+    onSelectMany: (() -> Unit)?,
     // Only inside a custom category: take the channel out of that category alone.
     onRemoveFromCategory: (() -> Unit)?,
     onDismiss: () -> Unit,
@@ -1326,6 +1411,9 @@ private fun ChannelContextMenu(
         if (canMove) {
             add(MenuAction("move", stringResource(R.string.content_move), OwnTVIcon.MOVE, group = organise, onClick = onMove))
             add(MenuAction("move_to_category", stringResource(R.string.content_move_to_category), OwnTVIcon.FOLDER, group = organise, onClick = onMoveToCategory))
+        }
+        if (canMove && onSelectMany != null) {
+            add(MenuAction("select_many", stringResource(R.string.glcn_select_many), OwnTVIcon.CHECK, group = organise, onClick = onSelectMany))
         }
         if (onRemoveFromCategory != null) {
             add(MenuAction("remove_from_category", stringResource(R.string.content_remove_from_category), OwnTVIcon.CLOSE, group = organise, onClick = onRemoveFromCategory))

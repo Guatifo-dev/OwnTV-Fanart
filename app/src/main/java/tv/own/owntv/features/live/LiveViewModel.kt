@@ -586,6 +586,44 @@ class LiveViewModel(
         }
     }
 
+    /** glcn: [moveToCategory] for several channels at once, sequentially so the tail positions don't race. */
+    fun moveManyToCategory(channels: List<ChannelEntity>, originKey: String, targetId: String, keepInOrigin: Boolean) {
+        if (targetId == originKey || channels.isEmpty()) return
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            for (ch in channels) {
+                customCategoryDao.appendItem(pid, MediaType.LIVE, targetId, ch.id)
+                if (!keepInOrigin) {
+                    when {
+                        originKey == ContentOrderEntity.FAV_CONTEXT -> userDataWriter.removeFavorite(pid, MediaType.LIVE, ch.id)
+                        CustomizeKeys.isCustom(originKey) -> userDataWriter.removeCustomCategoryMember(pid, MediaType.LIVE, originKey, ch.id)
+                        else -> customize.setItemMovedFromOrigin(pid, MediaType.LIVE, CustomizeKeys.channel(ch), originKey, moved = true)
+                    }
+                }
+            }
+        }
+    }
+
+    /** glcn: favourite or un-favourite several channels at once. */
+    fun setFavorites(channels: List<ChannelEntity>, favorite: Boolean) {
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            for (ch in channels) {
+                val isFav = favoriteIds.value.contains(ch.id)
+                if (favorite && !isFav) favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = ch.id))
+                if (!favorite && isFav) userDataWriter.removeFavorite(pid, MediaType.LIVE, ch.id)
+            }
+        }
+    }
+
+    /** glcn: take several channels out of one custom category. */
+    fun removeManyFromCustomCategory(channels: List<ChannelEntity>, key: LiveKey.Custom) {
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            for (ch in channels) userDataWriter.removeCustomCategoryMember(pid, MediaType.LIVE, key.id, ch.id)
+        }
+    }
+
     /**
      * Category DB ids of the profile's hidden categories. Hiding a category used to only drop its rail
      * folder — its channels still showed in "All Channels", search and recently-watched (so hiding the
