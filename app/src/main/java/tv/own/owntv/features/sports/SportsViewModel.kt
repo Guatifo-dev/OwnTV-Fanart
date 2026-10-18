@@ -208,14 +208,13 @@ class SportsViewModel(
         val search = combine(config, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
             val c = cv as SportsConfig
             val has = hv as Boolean
-            val asked = av as Boolean
-            if (!has) return@transformLatest emit(ChannelSearch.NotSearched)
+                        if (!has) return@transformLatest emit(ChannelSearch.NotSearched)
             if (w == null) return@transformLatest emit(ChannelSearch.Checking)
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
             val found = watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
             when {
                 found != null -> emit(ChannelSearch.Found(found))
-                !asked -> emit(ChannelSearch.NotSearched)
+                // glcn: no button first — once the window is open the match's channels are searched by themselves.
                 else -> {
                     emit(ChannelSearch.Searching)
                     emit(ChannelSearch.Found(watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()))
