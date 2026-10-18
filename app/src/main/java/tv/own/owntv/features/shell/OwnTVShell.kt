@@ -238,6 +238,8 @@ fun OwnTVShell(
     var settingsStart by remember { mutableStateOf<tv.own.owntv.features.shell.components.SettingsStart?>(null) }
     // The playlist pill's place on screen, where the playlist menu redraws it above its scrim.
     var playlistPillBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    // glcn: where the top bar ends, so the "Last channel" pill never runs under it.
+    var topBarBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     var miniHasFocus by remember { mutableStateOf(false) }
     val subtitleController = koinInject<tv.own.owntv.core.subtitles.SubtitleController>()
     val subtitleContext by subtitleController.current.collectAsStateWithLifecycle()
@@ -1403,7 +1405,16 @@ fun OwnTVShell(
                 }
             }
           }
+            val clusterDensity = androidx.compose.ui.platform.LocalDensity.current
+            val continueMax: androidx.compose.ui.unit.Dp? = run {
+                val bar = topBarBounds
+                val pl = playlistPillBounds
+                if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.TOP && bar != null && pl != null) {
+                    with(clusterDensity) { ((pl.left - bar.right) - 28.mpx.toPx()).toDp() }
+                } else null
+            }
             tv.own.owntv.features.shell.components.StageStatusCluster(
+                continueMaxWidth = continueMax,
                 continuePill = continueTarget?.let { target ->
                     val live = target.kind == tv.own.owntv.features.home.ContinueKind.LIVE
                     tv.own.owntv.features.shell.components.ContinuePill(
@@ -1456,6 +1467,7 @@ fun OwnTVShell(
                 onFocused = { focusedLayer = ShellLayer.SIDEBAR },
                 nowPlaying = nowPlayingRail,
                 onNowPlaying = enterNowPlaying,
+                onBarBounds = { topBarBounds = it },
             ) else tv.own.owntv.features.shell.components.StageRail(
                 state = railState,
                 size = railSize,

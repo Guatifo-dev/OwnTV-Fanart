@@ -1024,11 +1024,8 @@ private fun SeriesGrid(
     }
     detailsSeries?.let { s ->
         val cache = selectedSeriesMeta?.takeIf { it.seriesId == s.id }?.cache
-        val related by androidx.compose.runtime.produceState(emptyList<tv.own.owntv.features.shell.components.RelatedUi>(), s.id) {
-            value = runCatching { vm.relatedTo(s) }.getOrDefault(emptyList())
-        }
         tv.own.owntv.features.shell.components.MediaDetailsScreen(
-            details = buildSeriesDetails(s, cache, metadataMode.tmdbWins).copy(related = related),
+            details = buildSeriesDetails(s, cache, metadataMode.tmdbWins),
             onExit = { detailsSeries = null },
         )
     }
@@ -1814,11 +1811,8 @@ private fun EpisodeView(
         runCatching { moreFocus.requestFocus() }
     }
     if (showSeriesDetails) {
-        val related by androidx.compose.runtime.produceState(emptyList<tv.own.owntv.features.shell.components.RelatedUi>(), series.id) {
-            value = runCatching { vm.relatedTo(series) }.getOrDefault(emptyList())
-        }
         tv.own.owntv.features.shell.components.MediaDetailsScreen(
-            details = buildSeriesDetails(series, seriesMeta, metadataMode.tmdbWins).copy(related = related),
+            details = buildSeriesDetails(series, seriesMeta, metadataMode.tmdbWins),
             onExit = { showSeriesDetails = false },
         )
     }
