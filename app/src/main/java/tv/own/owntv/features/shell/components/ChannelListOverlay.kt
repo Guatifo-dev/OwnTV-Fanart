@@ -143,7 +143,7 @@ fun ChannelListOverlay(
         Column(
             modifier = Modifier
                 .align(if (alignEnd) Alignment.CenterEnd else Alignment.CenterStart)
-                .padding(horizontal = 20.mpx, vertical = 22.mpx)
+                .padding(horizontal = 14.mpx, vertical = 8.mpx)
                 .fillMaxHeight()
                 .width(if (history) 760.mpx else 720.mpx)
                 .stageGlass(StageRadii.Sheet, overContent = true)
@@ -161,7 +161,7 @@ fun ChannelListOverlay(
                         true
                     } else false
                 }
-                .padding(horizontal = 16.mpx, vertical = 26.mpx),
+                .padding(horizontal = 16.mpx, vertical = 20.mpx),
         ) {
             // "Catch-up · 978 channels        Live TV", as the Live TV header and category sheet have it.
             Row(
@@ -384,8 +384,8 @@ private fun ZapSchedulePanel(
             .fillMaxHeight()
             .width(560.mpx)
             .stageGlass(StageRadii.Sheet, overContent = true)
-            .padding(horizontal = 22.mpx, vertical = 26.mpx),
-        verticalArrangement = Arrangement.spacedBy(4.mpx),
+            .padding(horizontal = 22.mpx, vertical = 20.mpx),
+        verticalArrangement = Arrangement.spacedBy(5.mpx),
     ) {
         Text(
             stringResource(R.string.glcn_zap_schedule_title, ProviderTags.parse(ch.name).name),
@@ -399,16 +399,16 @@ private fun ZapSchedulePanel(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.mpx))
                     .background(if (onAir) accent.copy(alpha = 0.16f) else Color.Transparent)
-                    .padding(horizontal = 12.mpx, vertical = 9.mpx),
+                    .padding(horizontal = 12.mpx, vertical = 13.mpx),
                 horizontalArrangement = Arrangement.spacedBy(14.mpx),
             ) {
                 Text(
                     fmt.format(java.util.Date(p.startMs)),
-                    style = stageText(17, 700), color = if (onAir) accent else StageColors.Muted, maxLines = 1,
-                    modifier = Modifier.width(70.mpx),
+                    style = stageText(19, 700), color = if (onAir) accent else StageColors.Muted, maxLines = 1,
+                    modifier = Modifier.width(78.mpx),
                 )
                 Column(Modifier.weight(1f)) {
-                    Text(p.title, style = stageText(18, if (onAir) 800 else 600), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(p.title, style = stageText(20, if (onAir) 800 else 600), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (onAir) {
                         val span = (p.stopMs - p.startMs).coerceAtLeast(1L)
                         val f = ((now - p.startMs).toFloat() / span).coerceIn(0f, 1f)
