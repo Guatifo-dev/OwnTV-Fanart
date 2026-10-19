@@ -16,3 +16,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🖼️ **Series seasons page shows the title logo**
 - 🎵 **Menu sound styles: Crystal, Wood and Bubble**
 - 📐 **Zapping list: taller panels and a larger schedule**
+- 🕒 **Zapping list: current programmes refresh when they end**

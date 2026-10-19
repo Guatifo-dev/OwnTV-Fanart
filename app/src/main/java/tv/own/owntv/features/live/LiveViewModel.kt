@@ -2105,7 +2105,10 @@ class LiveViewModel(
     fun ensureNowPlaying(loaded: List<ChannelEntity>) {
         if (loaded.isEmpty()) return
         val known = cachedNowPlaying()
-        val missing = loaded.filter { it.id !in known }
+        // glcn: a remembered programme that has since ended is as good as missing — the zapping list, opened
+        // from the player, has no Live screen ticking over the minute for it and kept showing "0 min left".
+        val now = System.currentTimeMillis()
+        val missing = loaded.filter { ch -> ch.id !in known || known[ch.id]?.let { it.stopMs <= now } == true }
         if (missing.isEmpty()) return
         nowPlayingJob?.cancel()
         nowPlayingJob = viewModelScope.launch {
