@@ -143,7 +143,10 @@ internal fun guideSportLabel(sport: GuideSport): String = stringResource(
 )
 
 /** The competition's brand name from the catalogue ("Bundesliga"), else ESPN's ("German Bundesliga"). */
-internal fun leagueName(m: Match): String = SportsCatalog.league(League.keyOf(m.sport, m.leagueSlug))?.name ?: m.leagueName
+internal fun leagueName(m: Match): String =
+    // glcn: in tennis the competition is the tournament; the brand ("ATP") would hide which one it is.
+    if (m.sport == Sport.TENNIS && m.leagueName.isNotBlank()) m.leagueName
+    else SportsCatalog.league(League.keyOf(m.sport, m.leagueSlug))?.name ?: m.leagueName
 
 /** A side's score as shown: tennis as its set games ("6 3"), everything else as ESPN's text. */
 internal fun scoreText(sport: Sport, score: Score?): String = when {
