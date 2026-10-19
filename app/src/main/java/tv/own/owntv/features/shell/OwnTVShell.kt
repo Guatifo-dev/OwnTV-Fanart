@@ -766,6 +766,7 @@ fun OwnTVShell(
             focusRail()
         }
     }
+    val allPlaylistsLabel = stringResource(R.string.content_all_playlists)
     val dispatchRemoteShortcut: (RemoteShortcutAction) -> Unit = { action ->
         when (action) {
             RemoteShortcutAction.OPEN_HOME -> openShortcutSection(MainSection.HOME)
@@ -785,6 +786,13 @@ fun OwnTVShell(
                 if (playlists.size > 1) showPlaylistPicker = true
             }
             RemoteShortcutAction.CONTINUE_LAST_WATCHED -> continueLastWatched()
+            RemoteShortcutAction.NEXT_PLAYLIST -> if (playlists.size > 1) {
+                // All → each playlist in turn → All again; the name is said, so a blind press is understood.
+                val ids = listOf(-1L) + playlists.map { it.id }
+                val next = ids[(ids.indexOf(if (activePlaylistId > 0L) activePlaylistId else -1L) + 1).mod(ids.size)]
+                onSelectPlaylist(next)
+                localSubToast.show(if (next < 0L) allPlaylistsLabel else playlists.firstOrNull { it.id == next }?.name.orEmpty())
+            }
             RemoteShortcutAction.FOCUS_NOW_PLAYING -> enterNowPlaying()
             RemoteShortcutAction.EXPAND_NOW_PLAYING -> if (playerMode == PlayerMode.MINI || playerMode == PlayerMode.AUDIO) expandPlayer()
             RemoteShortcutAction.ENTER_MINI_PLAYER -> if (playerMode == PlayerMode.FULLSCREEN) dockPlayer()

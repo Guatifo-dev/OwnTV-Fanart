@@ -949,6 +949,16 @@ class LiveViewModel(
     }
 
     init {
+        // glcn: a folder of the list just left does not exist in the list just chosen — the grid stayed empty
+        // until another group was picked. Back to All when the selected folder is gone from the rail.
+        viewModelScope.launch {
+            railItems.collect { items ->
+                val key = _selected.value
+                if (lockedKey == null && key is LiveKey.Folder && items.isNotEmpty() && items.none { it.key == key }) {
+                    _selected.value = LiveKey.All
+                }
+            }
+        }
         // Persist the selected category (debounced — the rail fires select() on focus as you scroll).
         viewModelScope.launch {
             _selected.drop(1).debounce(800).distinctUntilChanged().collect {

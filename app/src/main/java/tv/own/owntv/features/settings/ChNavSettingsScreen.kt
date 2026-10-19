@@ -401,6 +401,7 @@ private fun remoteActionLabel(action: RemoteShortcutAction): String = stringReso
         RemoteShortcutAction.TOGGLE_ENGINE -> R.string.glcn_remote_engine
         RemoteShortcutAction.NEXT_AUDIO_TRACK -> R.string.glcn_remote_next_audio
         RemoteShortcutAction.TOGGLE_SUBTITLES -> R.string.glcn_remote_subtitles
+        RemoteShortcutAction.NEXT_PLAYLIST -> R.string.glcn_remote_next_playlist
     },
 )
 
@@ -435,6 +436,7 @@ private fun remoteActionIcon(action: RemoteShortcutAction): OwnTVIcon = when (ac
     RemoteShortcutAction.TOGGLE_ENGINE -> OwnTVIcon.SWAP
     RemoteShortcutAction.NEXT_AUDIO_TRACK -> OwnTVIcon.AUDIO
     RemoteShortcutAction.TOGGLE_SUBTITLES -> OwnTVIcon.SUBTITLE
+    RemoteShortcutAction.NEXT_PLAYLIST -> OwnTVIcon.PLAYLIST
 }
 
 private const val CAPTURE_LONG_PRESS_MS = 600L
