@@ -13,3 +13,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🧊 **You may like: ▼ always reaches the strip, even after scrolling it**
 - 📖 **Full synopsis** (channel menu or Info key on a card)
 - 🔎 **Info key enlarges the mini player**
+- 🖼️ **Series seasons page shows the title logo**

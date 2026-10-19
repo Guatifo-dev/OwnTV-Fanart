@@ -1430,7 +1430,20 @@ private fun EpisodeView(
         Column(Modifier.padding(start = fx(84), top = 104.mpx).width(fx(980))) {
             // At most 170 high, the room the films' hero gives its title, so two lines shrink rather than
             // push the episodes down.
-            tv.own.owntv.features.shell.components.VodHeroTitle(series.name, Modifier.heightIn(max = 170.mpx))
+            // glcn: the title art, as on the series' first page (the name in text only when there is none).
+            var logoFailed by remember(info.logoUrl) { mutableStateOf(false) }
+            if (!info.logoUrl.isNullOrBlank() && !logoFailed) {
+                Box(Modifier.fillMaxWidth().height(150.mpx), contentAlignment = Alignment.BottomStart) {
+                    tv.own.owntv.ui.stage.StageTitleArt(
+                        url = info.logoUrl,
+                        contentDescription = null,
+                        onFailed = { logoFailed = true },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            } else {
+                tv.own.owntv.features.shell.components.VodHeroTitle(series.name, Modifier.heightIn(max = 170.mpx))
+            }
             VodMeta(
                 parts = listOfNotNull(
                     info.year?.toString(),
