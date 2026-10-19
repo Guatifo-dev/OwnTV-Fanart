@@ -334,6 +334,7 @@ fun SettingsScreen(
     val glcnStyle by settingsVm.glcnStyle.collectAsStateWithLifecycle()
     var showGlcnStyle by remember { mutableStateOf(false) }
     val uiSounds by settingsVm.uiSounds.collectAsStateWithLifecycle()
+    val uiSoundStyle by settingsVm.uiSoundStyle.collectAsStateWithLifecycle()
     val startupSound by settingsVm.startupSound.collectAsStateWithLifecycle()
     val dialogueBoost by settingsVm.dialogueBoost.collectAsStateWithLifecycle()
     val mpvPassthrough by settingsVm.mpvPassthrough.collectAsStateWithLifecycle()
@@ -662,6 +663,21 @@ fun SettingsScreen(
                     if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.current() else tv.own.owntv.core.theme.Season.NONE,
                 )
             },
+        ),
+        RootRow(
+            "glcn_ui_sound_style", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,
+            title = stringResource(R.string.glcn_ui_sound_style_title),
+            desc = stringResource(R.string.glcn_ui_sound_style_desc),
+            chip = stringResource(
+                when (uiSoundStyle) {
+                    1 -> R.string.glcn_ui_sound_style_crystal
+                    2 -> R.string.glcn_ui_sound_style_wood
+                    3 -> R.string.glcn_ui_sound_style_bubble
+                    else -> R.string.glcn_ui_sound_style_classic
+                },
+            ),
+            chipTone = TileTone.SECONDARY,
+            onClick = { settingsVm.cycleUiSoundStyle() },
         ),
         RootRow(
             "animations", TileTone.SECONDARY, OwnTVIcon.MOTION,

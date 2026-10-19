@@ -14,3 +14,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 📖 **Full synopsis** (channel menu or Info key on a card)
 - 🔎 **Info key enlarges the mini player**
 - 🖼️ **Series seasons page shows the title logo**
+- 🎵 **Menu sound styles: Crystal, Wood and Bubble**

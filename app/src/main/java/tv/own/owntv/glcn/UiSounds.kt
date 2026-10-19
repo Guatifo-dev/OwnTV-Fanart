@@ -31,6 +31,21 @@ object UiSounds {
     /** True while something plays: no sounds then. */
     @Volatile var suppressed: Boolean = false
 
+    /** 0 classic, 1 crystal, 2 wood, 3 bubble. Changing it drops the cached sounds so the next ones are built in the new style. */
+    @Volatile var style: Int = 0
+        set(value) {
+            if (value == field) return
+            field = value
+            listOf(move, select, back).forEach { runCatching { it?.release() } }
+            move = null; select = null; back = null
+        }
+
+    /** Plays the OK sound once, so a new style is heard as soon as it is chosen. */
+    fun preview() {
+        if (level == 0) return
+        play(select ?: build { pop() }.also { select = it })
+    }
+
     private var move: AudioTrack? = null
     private var select: AudioTrack? = null
     private var back: AudioTrack? = null
@@ -133,6 +148,22 @@ object UiSounds {
             }
         }
 
+        /** A drop of water: a sine whose pitch glides [from] → [to] while it fades. */
+        fun drop(atSec: Double, from: Double, to: Double, durSec: Double, amp: Double, decay: Double) {
+            val start = (atSec * RATE).toInt()
+            val n = (durSec * RATE).toInt()
+            var phase = 0.0
+            for (i in 0 until n) {
+                val idx = start + i
+                if (idx >= buf.size) break
+                val t = i.toDouble() / RATE
+                val f = from + (to - from) * (t / durSec)
+                phase += 2 * PI * f / RATE
+                val env = (t / 0.003).coerceAtMost(1.0) * exp(-decay * t)
+                buf[idx] += (amp * env * sin(phase)).toFloat()
+            }
+        }
+
         /** A sliding tone with vibrato — the theremin of an old horror film. */
         fun glide(atSec: Double, from: Double, to: Double, durSec: Double, amp: Double) {
             val start = (atSec * RATE).toInt()
@@ -157,9 +188,26 @@ object UiSounds {
         }
     }
 
-    private fun tick() = Mix(0.03).apply { bell(0.0, 1900.0, 0.03, 0.18, decay = 160.0, partials = doubleArrayOf(1.0)) }.pcm()
-    private fun pop() = Mix(0.09).apply { bell(0.0, 1250.0, 0.09, 0.3, decay = 45.0); bell(0.012, 1870.0, 0.07, 0.15, decay = 60.0) }.pcm()
-    private fun swoosh() = Mix(0.09).apply { glide(0.0, 1100.0, 650.0, 0.09, 0.22) }.pcm()
+    private fun tick() = when (style) {
+        1 -> Mix(0.04).apply { bell(0.0, 3200.0, 0.04, 0.14, decay = 200.0, partials = doubleArrayOf(1.0, 0.22)) }
+        2 -> Mix(0.05).apply { bell(0.0, 620.0, 0.05, 0.3, decay = 90.0, partials = doubleArrayOf(1.0, 0.4, 0.15)) }
+        3 -> Mix(0.04).apply { drop(0.0, 900.0, 1500.0, 0.04, 0.24, decay = 70.0) }
+        else -> Mix(0.03).apply { bell(0.0, 1900.0, 0.03, 0.18, decay = 160.0, partials = doubleArrayOf(1.0)) }
+    }.pcm()
+
+    private fun pop() = when (style) {
+        1 -> Mix(0.22).apply { bell(0.0, 1568.0, 0.2, 0.2, decay = 24.0, partials = doubleArrayOf(1.0, 0.25)); bell(0.05, 2349.0, 0.17, 0.17, decay = 28.0, partials = doubleArrayOf(1.0, 0.2)) }
+        2 -> Mix(0.16).apply { bell(0.0, 392.0, 0.15, 0.34, decay = 28.0, partials = doubleArrayOf(1.0, 0.45, 0.2)); bell(0.045, 587.0, 0.12, 0.28, decay = 34.0, partials = doubleArrayOf(1.0, 0.4, 0.15)) }
+        3 -> Mix(0.12).apply { drop(0.0, 600.0, 1500.0, 0.1, 0.32, decay = 26.0) }
+        else -> Mix(0.09).apply { bell(0.0, 1250.0, 0.09, 0.3, decay = 45.0); bell(0.012, 1870.0, 0.07, 0.15, decay = 60.0) }
+    }.pcm()
+
+    private fun swoosh() = when (style) {
+        1 -> Mix(0.16).apply { bell(0.0, 1175.0, 0.15, 0.18, decay = 32.0, partials = doubleArrayOf(1.0, 0.22)) }
+        2 -> Mix(0.14).apply { bell(0.0, 330.0, 0.13, 0.34, decay = 36.0, partials = doubleArrayOf(1.0, 0.45, 0.2)) }
+        3 -> Mix(0.12).apply { drop(0.0, 1300.0, 520.0, 0.1, 0.28, decay = 26.0) }
+        else -> Mix(0.09).apply { glide(0.0, 1100.0, 650.0, 0.09, 0.22) }
+    }.pcm()
 
     private fun note(semitonesFromA4: Int) = 440.0 * Math.pow(2.0, semitonesFromA4 / 12.0)
 

@@ -107,6 +107,7 @@
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_safe_area
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_season
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_style
+1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sound_style
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	glcn_ui_sounds
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	group_fanart
 1	app/src/main/java/tv/own/owntv/features/shell/components/SettingsScreen.kt	home_picture

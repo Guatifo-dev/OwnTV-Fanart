@@ -228,6 +228,16 @@ open class MainActivity : ComponentActivity() {
                 quietSystemClicks()
             }
         }
+        // glcn: the menu sounds' style; a change made while running is heard once straight away.
+        lifecycleScope.launch {
+            var first = true
+            glcnSettings.uiSoundStyle.collect {
+                val changed = it != tv.own.owntv.glcn.UiSounds.style
+                tv.own.owntv.glcn.UiSounds.style = it
+                if (!first && changed) tv.own.owntv.glcn.UiSounds.preview()
+                first = false
+            }
+        }
         // glcn: the SHIELD-remote shortcut set, laid once over what the user already has.
         lifecycleScope.launch {
             runCatching { glcnSettings.applyGlcnRemoteDefaultsOnce() }
