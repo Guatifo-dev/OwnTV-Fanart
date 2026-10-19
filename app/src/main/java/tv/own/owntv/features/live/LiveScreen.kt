@@ -230,6 +230,7 @@ fun LiveScreen(
         mutableStateOf<Pair<ChannelEntity, tv.own.owntv.core.database.entity.EpgProgrammeEntity>?>(null)
     }
     var contextChannel by remember { mutableStateOf<ChannelEntity?>(null) } // long-press quick menu
+    var synopsisChannel by remember { mutableStateOf<ChannelEntity?>(null) } // glcn: full synopsis popup
     // glcn: multi-select. null = not selecting; otherwise the marked channels, in the order they were marked.
     var selecting by remember { mutableStateOf<List<ChannelEntity>?>(null) }
     var batchActions by remember { mutableStateOf(false) }
@@ -708,6 +709,7 @@ fun LiveScreen(
                     ).focusRequester(rowFocus(index)).onPreviewKeyEvent { e ->
                         if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
                         when (e.key) {
+                            androidx.compose.ui.input.key.Key.Info -> { synopsisChannel = channel; true }
                             androidx.compose.ui.input.key.Key.Menu -> { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id }; true }
                             // ◀ from the first card opens the categories sheet; otherwise one card back.
                             androidx.compose.ui.input.key.Key.DirectionLeft -> (stepTarget ?: index).let { from ->
@@ -923,7 +925,8 @@ fun LiveScreen(
                                         if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
                                         when (e.key) {
                                             // The remote's Menu key opens the same menu as holding OK.
-                                            androidx.compose.ui.input.key.Key.Menu -> { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id }; true }
+                                            androidx.compose.ui.input.key.Key.Info -> { synopsisChannel = channel; true }
+                            androidx.compose.ui.input.key.Key.Menu -> { if (selecting != null) batchActions = true else { contextChannel = channel; contextChannelId = channel.id }; true }
                                             // ◀ Categories: the sheet (Stage) or the column (Separate); pinned lists have none.
                                             androidx.compose.ui.input.key.Key.DirectionLeft -> when {
                                                 lockedKey != null -> false
@@ -1132,6 +1135,8 @@ fun LiveScreen(
         )
     }
 
+    synopsisChannel?.let { ch -> SynopsisPopup(ch, load = { vm.nowFull(it) }, onDismiss = { synopsisChannel = null }) }
+
     // Long-press a channel → quick actions.
     contextChannel?.let { ch ->
         ChannelContextMenu(
@@ -1143,6 +1148,7 @@ fun LiveScreen(
             epgShiftMinutes = vm.currentEpgShift(ch),
             canMove = selectedKey is LiveKey.Folder || selectedKey is LiveKey.Custom || selectedKey == LiveKey.Favorites,
             isHistory = selectedKey == LiveKey.History,
+            onSynopsis = { synopsisChannel = ch; contextChannel = null },
             onToggleFavorite = { vm.toggleFavorite(ch); contextChannel = null },
             onRename = { renaming = ch; contextChannel = null },
             onHide = { vm.hideChannel(ch); contextChannel = null },
@@ -1359,6 +1365,7 @@ private fun ChannelContextMenu(
     isHistory: Boolean,
     epgMatchManual: Boolean,
     epgShiftMinutes: Int?,
+    onSynopsis: () -> Unit,
     onToggleFavorite: () -> Unit,
     onRename: () -> Unit,
     onHide: () -> Unit,
@@ -1391,6 +1398,7 @@ private fun ChannelContextMenu(
     // Group ids = the four groups, in their order.
     val watch = 0; val chan = 1; val guide = 2; val organise = 3
     val actions = buildList {
+        add(MenuAction("synopsis", stringResource(R.string.glcn_synopsis_full), OwnTVIcon.INFO, group = watch, onClick = onSynopsis))
         if (channel.catchup) add(MenuAction("catchup", stringResource(R.string.content_catchup), OwnTVIcon.REWIND, group = watch, onClick = onCatchup))
         // Record this channel from now. The guide's Record needs a programme, so a channel
         // the provider publishes no guide for can only be recorded from here. While it records, the

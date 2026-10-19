@@ -1018,7 +1018,10 @@ fun OwnTVShell(
                         it.action != RemoteShortcutAction.JUMP_TO_FIRST &&
                         it.action != RemoteShortcutAction.JUMP_TO_LAST &&
                         // glcn: a player action with no player leaves the button free (it was swallowed).
-                        (it.action !in glcnPlayerActions || playerMode != PlayerMode.NONE)
+                        (it.action !in glcnPlayerActions || playerMode != PlayerMode.NONE) &&
+                        // glcn: "enlarge" only takes its button while there is something to enlarge.
+                        (it.action != RemoteShortcutAction.EXPAND_NOW_PLAYING ||
+                            playerMode == PlayerMode.MINI || playerMode == PlayerMode.AUDIO)
                 }
                 if (remoteShortcutsEnabled && shellBindings.isNotEmpty()) {
                     when (e.type) {
