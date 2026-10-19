@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -140,13 +141,20 @@ fun ChannelListOverlay(
                 else arrayOf(0f to shade.copy(alpha = 0.72f), 0.38f to shade.copy(alpha = 0.45f), 0.62f to Color.Transparent)),
             ),
     ) {
-        Column(
-            modifier = Modifier
+        // glcn: with the schedule beside it, list and schedule are one piece of glass, not two bubbles.
+        val unified = loadSchedule != null && !alignEnd
+        Row(
+            Modifier
                 .align(if (alignEnd) Alignment.CenterEnd else Alignment.CenterStart)
                 .padding(horizontal = 14.mpx, vertical = 8.mpx)
                 .fillMaxHeight()
+                .then(if (unified) Modifier.stageGlass(StageRadii.Sheet, overContent = true) else Modifier),
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
                 .width(if (history) 760.mpx else 720.mpx)
-                .stageGlass(StageRadii.Sheet, overContent = true)
+                .then(if (unified) Modifier else Modifier.stageGlass(StageRadii.Sheet, overContent = true))
                 .onPreviewKeyEvent { e ->
                     if (onCyclePanel != null && !alignEnd && e.type == KeyEventType.KeyDown &&
                         e.key.horizontalDirection(layoutDirection) == HorizontalDirection.END
@@ -273,7 +281,17 @@ fun ChannelListOverlay(
                 modifier = Modifier.padding(start = 14.mpx, top = 14.mpx),
             )
         }
-        if (loadSchedule != null) {
+        if (unified && loadSchedule != null) {
+            ZapSchedulePanel(
+                channel = channels.getOrNull(focusedIndex),
+                loadSchedule = loadSchedule,
+                loadNow = loadNow,
+                joined = true,
+                modifier = Modifier,
+            )
+        }
+        }
+        if (loadSchedule != null && !unified) {
             ZapSchedulePanel(
                 channel = channels.getOrNull(focusedIndex),
                 loadSchedule = loadSchedule,
@@ -307,6 +325,8 @@ private fun ZapPreviewPanel(
     channel: ChannelEntity?,
     loadNow: suspend (ChannelEntity) -> Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>,
     modifier: Modifier = Modifier,
+    /** glcn: false inside the joined panel — no glass or width of its own, a wider, shorter picture. */
+    framed: Boolean = true,
 ) {
     var programme by remember { mutableStateOf<Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>?>(null) }
     LaunchedEffect(channel?.id) {
@@ -319,9 +339,7 @@ private fun ZapPreviewPanel(
     val fmt = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
     Column(
         modifier
-            .width(620.mpx)
-            .stageGlass(StageRadii.Sheet, overContent = true)
-            .padding(18.mpx),
+            .then(if (framed) Modifier.width(620.mpx).stageGlass(StageRadii.Sheet, overContent = true).padding(18.mpx) else Modifier),
         verticalArrangement = Arrangement.spacedBy(8.mpx),
     ) {
         p.imageUrl?.takeIf { it.isNotBlank() }?.let { url ->
@@ -329,7 +347,7 @@ private fun ZapPreviewPanel(
                 url = url,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
+                    .aspectRatio(if (framed) 16f / 9f else 21f / 9f)
                     .clip(RoundedCornerShape(StageRadii.Sheet)),
             )
         }
@@ -345,7 +363,7 @@ private fun ZapPreviewPanel(
             Box(Modifier.fillMaxWidth(f).height(4.mpx).background(stageAccent.accent))
         }
         p.description?.takeIf { it.isNotBlank() }?.let {
-            Text(it, style = stageText(16, 400), color = StageColors.Dim, maxLines = 4, overflow = TextOverflow.Ellipsis)
+            Text(it, style = stageText(16, 400), color = StageColors.Dim, maxLines = if (framed) 4 else 2, overflow = TextOverflow.Ellipsis)
         }
         // glcn: and what follows it.
         next?.let { n ->
@@ -367,6 +385,10 @@ private fun ZapSchedulePanel(
     channel: ChannelEntity?,
     loadSchedule: suspend (ChannelEntity) -> List<EpgProgrammeEntity>,
     modifier: Modifier = Modifier,
+    /** glcn: the programme on air with its picture, shown under the schedule in the joined panel. */
+    loadNow: (suspend (ChannelEntity) -> Pair<EpgProgrammeEntity?, EpgProgrammeEntity?>)? = null,
+    /** glcn: part of the list's own glass, not a panel of its own: a thin line on its left, no box. */
+    joined: Boolean = false,
 ) {
     var rows by remember { mutableStateOf<List<EpgProgrammeEntity>>(emptyList()) }
     LaunchedEffect(channel?.id) {
@@ -379,11 +401,17 @@ private fun ZapSchedulePanel(
     val fmt = remember { java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT) }
     val now = remember(rows) { System.currentTimeMillis() }
     val accent = stageAccent.accent
+    val line = StageColors.Ink.copy(alpha = 0.12f)
     Column(
         modifier
             .fillMaxHeight()
             .width(560.mpx)
-            .stageGlass(StageRadii.Sheet, overContent = true)
+            .then(
+                if (joined) Modifier.drawBehind {
+                    val inset = 26.mpx.toPx()
+                    drawLine(line, androidx.compose.ui.geometry.Offset(0f, inset), androidx.compose.ui.geometry.Offset(0f, size.height - inset), strokeWidth = 1.mpx.toPx())
+                } else Modifier.stageGlass(StageRadii.Sheet, overContent = true),
+            )
             .padding(horizontal = 22.mpx, vertical = 20.mpx),
         verticalArrangement = Arrangement.spacedBy(5.mpx),
     ) {
@@ -392,7 +420,11 @@ private fun ZapSchedulePanel(
             style = stageText(22, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(bottom = 12.mpx),
         )
-        rows.forEach { p ->
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            // Only as many rows as fit above the programme card, so none is cut in half.
+            val fit = if (joined) ((maxHeight - 130.mpx) / 56.mpx).toInt().coerceAtLeast(3) else rows.size
+            Column(verticalArrangement = Arrangement.spacedBy(5.mpx)) {
+            rows.take(fit).forEach { p ->
             val onAir = now in p.startMs until p.stopMs
             Row(
                 Modifier
@@ -409,7 +441,7 @@ private fun ZapSchedulePanel(
                 )
                 Column(Modifier.weight(1f)) {
                     Text(p.title, style = stageText(20, if (onAir) 800 else 600), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (onAir) {
+                    if (onAir && !joined) {
                         val span = (p.stopMs - p.startMs).coerceAtLeast(1L)
                         val f = ((now - p.startMs).toFloat() / span).coerceIn(0f, 1f)
                         Box(Modifier.padding(top = 6.mpx).fillMaxWidth().height(4.mpx).clip(RoundedCornerShape(2.mpx)).background(StageColors.Ink.copy(alpha = 0.12f))) {
@@ -421,6 +453,11 @@ private fun ZapSchedulePanel(
                     }
                 }
             }
+        }
+            }
+        }
+        if (joined && loadNow != null) {
+            ZapPreviewPanel(channel = channel, loadNow = loadNow, modifier = Modifier.fillMaxWidth(), framed = false)
         }
     }
 }

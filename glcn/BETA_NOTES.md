@@ -20,3 +20,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🔁 **Next playlist shortcut** (Settings › Remote shortcuts)
 - 🧭 **Switching playlist no longer leaves Live TV empty**
 - 🎾 **Tennis cards show the tournament name**
+- 🪟 **Zapping list: list and schedule as one piece, with the programme card under the schedule**
