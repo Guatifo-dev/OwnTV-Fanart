@@ -329,12 +329,17 @@ internal fun PlatformBadgeChip(tmdbId: Int?, isTv: Boolean) {
         value = runCatching { repo.get(tmdbId, isTv) }.getOrNull()
     }
     val b = badge ?: return
-    val url = MetadataImages.logo(b.logoPath, "w92")
+    val url = MetadataImages.logo(b.logoPath, "w185")
     if (url != null) {
-        AsyncImage(
-            model = url, contentDescription = b.name, contentScale = ContentScale.Fit,
-            modifier = Modifier.size(30.mpx).clip(RoundedCornerShape(7.mpx)),
-        )
+        // Studio and network logos come in any colour; a light plate keeps every one of them readable.
+        Box(
+            Modifier.clip(RoundedCornerShape(6.mpx)).background(Color.White.copy(alpha = 0.92f)).padding(horizontal = 8.mpx, vertical = 4.mpx),
+        ) {
+            AsyncImage(
+                model = url, contentDescription = b.name, contentScale = ContentScale.Fit,
+                modifier = Modifier.height(24.mpx).widthIn(max = 96.mpx),
+            )
+        }
     } else {
         StageTag(b.name)
     }
