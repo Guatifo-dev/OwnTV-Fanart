@@ -1182,7 +1182,6 @@ private fun buildSeriesDetails(
         genres = jsonStringList(meta?.genresJson),
         plot = plot,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
-        tmdbId = meta?.tmdbId, isTv = true,
     )
 }
 
@@ -1935,6 +1934,7 @@ internal fun seriesTitleInfo(
         tags = cinematicQualityBadges(series.qualityRank, series.advertisedCapabilities),
         plot = if (tmdbWins) meta?.overview ?: providerPlot else providerPlot ?: meta?.overview,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
+        tmdbId = meta?.tmdbId, isTv = true,
     )
 }
 
