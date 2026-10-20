@@ -185,7 +185,7 @@ fun rememberBillboardSlides(items: List<tv.own.owntv.core.home.FeaturedItem>): L
             val width = ArtColor.widthOf(context, item.art)
             val good = width != null && width >= MIN_BILLBOARD_WIDTH && !ArtColor.isPlain(context, item.art)
             if (good) item to item.art
-            else runCatching { resolver.infoFor(item.programme.title)?.backdropUrl }.getOrNull()?.let { item to it }
+            else runCatching { resolver.infoFor(item.programme)?.backdropUrl }.getOrNull()?.let { item to it }
         }
     }
     return slides
