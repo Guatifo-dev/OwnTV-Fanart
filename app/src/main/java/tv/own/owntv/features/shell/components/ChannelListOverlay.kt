@@ -303,7 +303,8 @@ fun ChannelListOverlay(
                         end = if (alignEnd) (20 + (if (history) 760 else 720) + 4).mpx else 0.mpx,
                     ),
             )
-        } else if (loadNow != null) {
+        } else if (loadSchedule == null && loadNow != null) {
+            // The joined schedule view carries its own programme card; a second one would double it.
             ZapPreviewPanel(
                 channel = channels.getOrNull(focusedIndex),
                 loadNow = loadNow,
