@@ -24,3 +24,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - ⚡ **Faster title logos when browsing movies and series**
 - 🧹 **Zapping list: no duplicate programme card beside the schedule view**
 - 🪟 **Choose which zapping list views you switch between (schedule and posters by default)**
+- 🔎 **Rewind clock trace in the playback report (to track down the live rewind drift)**
