@@ -27,3 +27,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🔎 **Rewind clock trace in the playback report (to track down the live rewind drift)**
 - 🗂️ **Playlists inside the category selector: Live TV and the in-player list (several playlists)**
 - 🔊 **Menu sounds no longer go silent after using the player**
+- 🎛️ **Live TV playlist filter: choosing a playlist in the category sheet no longer empties Home, Movies and Series**

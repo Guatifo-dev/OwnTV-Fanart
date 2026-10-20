@@ -985,12 +985,17 @@ fun OwnTVShell(
         else -> null
     }
 
+    // glcn: the Live category sheets list the playlists that carry channels inside the app-wide scope.
+    val liveSheetPlaylists = remember(playlists, activePlaylistId) {
+        playlists.filter { it.syncLive && (activePlaylistId <= 0L || it.id == activePlaylistId) }
+    }
+    val liveOnlyId by tv.own.owntv.glcn.LiveListFilter.id.collectAsStateWithLifecycle()
     CompositionLocalProvider(
         LocalRemoteShortcuts provides remoteShortcutEnvironment,
         tv.own.owntv.features.shell.components.LocalClockWeather provides (weatherInfo to weatherFahrenheit),
         // glcn: the category sheets list the playlists when there are several.
         tv.own.owntv.features.live.LocalCategoryPlaylists provides (
-            if (playlists.size > 1) tv.own.owntv.features.live.CategoryPlaylists(playlists, activePlaylistId, onSelectPlaylist) else null
+            liveSheetPlaylists.takeIf { it.size > 1 }?.let { tv.own.owntv.features.live.CategoryPlaylists(it, liveOnlyId.takeIf { id -> it.any { p -> p.id == id } } ?: -1L, tv.own.owntv.glcn.LiveListFilter::set) }
         ),
     ) {
     Box(
