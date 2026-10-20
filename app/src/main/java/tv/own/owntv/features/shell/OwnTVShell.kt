@@ -988,6 +988,10 @@ fun OwnTVShell(
     CompositionLocalProvider(
         LocalRemoteShortcuts provides remoteShortcutEnvironment,
         tv.own.owntv.features.shell.components.LocalClockWeather provides (weatherInfo to weatherFahrenheit),
+        // glcn: the category sheets list the playlists when there are several.
+        tv.own.owntv.features.live.LocalCategoryPlaylists provides (
+            if (playlists.size > 1) tv.own.owntv.features.live.CategoryPlaylists(playlists, activePlaylistId, onSelectPlaylist) else null
+        ),
     ) {
     Box(
         modifier = modifier.fillMaxSize().background(shellBase)

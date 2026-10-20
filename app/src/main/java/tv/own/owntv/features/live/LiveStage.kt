@@ -404,6 +404,20 @@ internal val edgeScrollSpec = object : androidx.compose.foundation.gestures.Brin
     }
 }
 
+/**
+ * glcn: the playlists the category sheet offers above the categories (several playlists only) and how
+ * to switch to one. Provided once by the shell, read by [LiveCategories] where `showPlaylists` is set.
+ */
+@androidx.compose.runtime.Immutable
+internal data class CategoryPlaylists(
+    val playlists: List<tv.own.owntv.core.database.entity.SourceEntity>,
+    /** The active playlist's id; 0 or below means all playlists. */
+    val activeId: Long,
+    val onSelect: (Long) -> Unit,
+)
+
+internal val LocalCategoryPlaylists = androidx.compose.runtime.staticCompositionLocalOf<CategoryPlaylists?> { null }
+
 /** A category as the Stage sheet / column shows it: the rail item, its parsed name and its count. */
 internal data class LiveCategoryEntry(
     val item: LiveRailItem,
@@ -483,6 +497,8 @@ internal fun LiveCategories(
     onSearchQueryChange: ((String) -> Unit)? = null,
     /** The category search is being typed in (the player's sheet then leaves ◀ to the text cursor). */
     onSearchEditingChange: (Boolean) -> Unit = {},
+    /** glcn: list the playlists (when there are several) with the active one opened onto its categories. */
+    showPlaylists: Boolean = false,
 ) {
     var localQuery by remember { mutableStateOf("") }
     val query = searchQuery ?: localQuery
@@ -493,13 +509,24 @@ internal fun LiveCategories(
     }
     val rowFocusers = remember(visible.size) { List(visible.size) { FocusRequester() } }
     val searchFocus = remember { FocusRequester() }
+    // glcn: playlist rows — "All playlists" then each playlist; the active one sits open above its categories.
+    val switcher = if (showPlaylists) LocalCategoryPlaylists.current?.takeIf { it.playlists.size > 1 } else null
+    val allPlaylistsText = stringResource(R.string.content_all_playlists)
+    val playlistRows = remember(switcher?.playlists, allPlaylistsText) {
+        switcher?.let { listOf(-1L to allPlaylistsText) + it.playlists.map { src -> src.id to src.name } }.orEmpty()
+    }
+    val activePlaylist = if (switcher != null && switcher.activeId > 0L) switcher.activeId else -1L
+    val activeRow = playlistRows.indexOfFirst { it.first == activePlaylist }.coerceAtLeast(0)
+    // Items above the first category: the search field and the playlist rows down to the open one.
+    val headerCount = if (playlistRows.isEmpty()) 1 else 1 + activeRow + 1
+    val playlistFocusers = remember(playlistRows.size) { List(playlistRows.size) { FocusRequester() } }
     val scope = rememberCoroutineScope()
     // CH+/− in the categories changes the selection; the highlight follows it there.
     var hasFocus by remember { mutableStateOf(false) }
     LaunchedEffect(selectedIndex) {
         val pos = visible.indexOf(selectedIndex)
         if (!hasFocus || pos < 0) return@LaunchedEffect
-        runCatching { listState.scrollToItem(pos + 1) } // +1: the search field is item 0
+        runCatching { listState.scrollToItem(pos + headerCount) } // the search field and playlist rows come first
         withFrameNanos { }
         runCatching { rowFocusers[pos].requestFocus() }
     }
@@ -508,7 +535,7 @@ internal fun LiveCategories(
         visible.indexOf(target).takeIf { it >= 0 }?.let { pos ->
             // A row further than the screen (a CH± jump) is not composed yet: scroll to it first.
             if (!runCatching { rowFocusers[pos].requestFocus() }.getOrDefault(false)) {
-                runCatching { listState.scrollToItem(pos + 1) } // +1: the search field is item 0
+                runCatching { listState.scrollToItem(pos + headerCount) } // the search field and playlist rows come first
                 withFrameNanos { }
                 runCatching { rowFocusers[pos].requestFocus() }
             }
@@ -560,7 +587,7 @@ internal fun LiveCategories(
                         val target = if (pos in rowFocusers.indices) rowFocusers[pos] else searchFocus
                         if (!runCatching { target.requestFocus() }.getOrDefault(false)) {
                             scope.launch {
-                                runCatching { listState.scrollToItem(if (pos >= 0) pos + 1 else 0) }
+                                runCatching { listState.scrollToItem(if (pos >= 0) pos + headerCount else 0) }
                                 withFrameNanos { }
                                 runCatching { target.requestFocus() }
                             }
@@ -588,6 +615,27 @@ internal fun LiveCategories(
                     horizontalPadding = if (sheet) 16.mpx else 18.mpx,
                 )
             }
+            fun playlistItem(row: Int) {
+                val (id, name) = playlistRows[row]
+                val open = id == activePlaylist
+                item(key = "__playlist_$id") {
+                    StageSheetItem(
+                        text = name,
+                        onClick = { if (!open) switcher?.onSelect?.invoke(id) },
+                        icon = OwnTVIcon.LAYERS,
+                        selected = open,
+                        trailing = { focused ->
+                            OwnTVIcon(
+                                if (open) OwnTVIcon.CHEVRON_UP else OwnTVIcon.CHEVRON_DOWN,
+                                if (focused) a.onAccent else StageColors.Muted,
+                                Modifier.size(20.mpx),
+                            )
+                        },
+                        modifier = Modifier.padding(bottom = 2.mpx).focusRequester(playlistFocusers[row]).then(rightKey),
+                    )
+                }
+            }
+            for (row in 0..activeRow) if (row < playlistRows.size) playlistItem(row)
             visible.forEachIndexed { pos, index ->
                 val entry = entries[index]
                 if (index == firstGroup && query.isBlank()) {
@@ -623,6 +671,7 @@ internal fun LiveCategories(
                     }
                 }
             }
+            for (row in activeRow + 1 until playlistRows.size) playlistItem(row)
         }
         }
     }

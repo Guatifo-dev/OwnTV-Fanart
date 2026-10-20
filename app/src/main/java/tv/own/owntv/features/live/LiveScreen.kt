@@ -628,6 +628,7 @@ fun LiveScreen(
 
         if (separate) {
             LiveCategories(
+                showPlaylists = true,
                 entries = categoryEntries,
                 selectedIndex = selectedIndex,
                 groupsHeading = groupsHeading,
@@ -1016,6 +1017,7 @@ fun LiveScreen(
 
         if (categoriesOpen) {
             LiveCategories(
+                showPlaylists = true,
                 entries = categoryEntries,
                 selectedIndex = selectedIndex,
                 groupsHeading = groupsHeading,

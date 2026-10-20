@@ -90,6 +90,7 @@ fun CategoryBrowserOverlay(
             .gradientWash(false, 0f to shade.copy(alpha = 0.72f), 0.38f to shade.copy(alpha = 0.45f), 0.62f to Color.Transparent),
     ) {
         LiveCategories(
+            showPlaylists = true,
             entries = entries,
             selectedIndex = selectedIndex,
             groupsHeading = groupsHeading,
