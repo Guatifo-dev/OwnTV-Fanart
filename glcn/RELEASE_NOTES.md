@@ -1,26 +1,25 @@
 ## What's new
 
 ### ✨ New
-- 🏠 **Home background: cover, app background or your own picture**
-- 🌫️ **Cover transparency on Home**
-- ⏱️ **On-screen info duration**
-- 🔔 **Habits: reminders for what you usually watch**
-- ✅ **Select several channels to move, favourite or remove them**
-- ⭐ **Favourites page: move channels to a category, one or several**
-- 🖼️ **Image previews in the background picker**
-- 🏷️ **Logo background: Classic or None**
-- ⏪ **Pause and rewind live TV on this device (off by default)**
-- 🎾 **Sports: tennis finals and players found in the guide**
-- 🔎 **Sports: a match's channels are searched by themselves, a day ahead**
-- 🏍️ **Sports: MotoGP**
-- 🏀 **Sports: Liga ACB**
-- ⭐ **My teams: any team can be found, its league is followed with it**
-- 🗣️ **Club nicknames in the guide (Barça, Atleti, Betis, Athletic…)**
+- 🎯 **You may like: similar programmes on soon, in Live TV Cinema**
+- 🎬 **Related: other titles of the same category on movie and series details**
+- 🏷️ **Network or studio logo beside the details of a film or series**
+- 🪟 **Zapping list: choose its views (list, schedule, posters)**
+- 🗂️ **Playlists inside the category selector**
+- 🔁 **Next playlist shortcut**
+- 📐 **Top bar: size and floating options**
+- 📖 **Full synopsis**
+- 🎵 **Menu sound styles: Crystal, Wood and Bubble**
+- 🖼️ **Series seasons page shows the title logo**
 
 ### 🔧 Fixes
-- ⏩ **«Go to live» on ExoPlayer after a pause returns to now**
-- ⏪ **Saved copy: ◀ ▶ step back and forward after «Go to live»**
-- ↔️ **Home rows come back aligned after scrolling right**
-- 🔄 **Update check no longer fails with HTTP 403**
-- 🏷️ **Clearer names for the Home settings**
-- 🗑️ **Holding OK on a favourite no longer removes it by itself**
+- 🔊 **Menu sounds no longer go silent after using the player**
+- 🎛️ **Live TV playlist filter no longer empties Home, Movies and Series**
+- 🧭 **Switching playlist no longer leaves Live TV empty**
+- ⚡ **Faster title logos when browsing movies and series**
+- 🖼️ **Guide pictures: the right film or series when two share a title**
+- 📺 **Live channels whose saved copy will not play now open directly**
+- 🧹 **Zapping list: no duplicate programme card**
+- 🕒 **Zapping list: current programmes refresh when they end**
+- 📏 **Top bar: the Last channel pill no longer runs under it**
+- 🎾 **Tennis cards show the tournament name**
