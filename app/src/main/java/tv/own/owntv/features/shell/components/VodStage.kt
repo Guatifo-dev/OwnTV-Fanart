@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import org.koin.compose.koinInject
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -119,6 +121,9 @@ internal data class VodTitleInfo(
     val tags: List<String>,
     val plot: String?,
     val cast: List<CastMember>,
+    /** glcn: the TMDB id and kind, for the platform badge beside the details. */
+    val tmdbId: Int? = null,
+    val isTv: Boolean = false,
 )
 
 /** A rating as the design writes it: one decimal, in the user's number format ("8.4", "8,4"). */
@@ -244,6 +249,7 @@ internal fun VodHero(info: VodTitleInfo, modifier: Modifier = Modifier) {
             parts = listOfNotNull(info.year?.toString(), info.genres.takeIf { it.isNotEmpty() }?.joinToString(", "), info.runtimeSecs?.let { vodRuntime(it) }),
             rating = info.rating, tags = info.tags, size = 20,
             modifier = Modifier.padding(top = 18.mpx, bottom = 12.mpx),
+            trailing = { PlatformBadgeChip(info.tmdbId, info.isTv) },
         )
         info.plot?.takeIf { it.isNotBlank() }?.let {
             Text(
@@ -275,7 +281,10 @@ internal fun VodHeroTitle(title: String, modifier: Modifier = Modifier) {
 /** `metaHtml`: "2026 • Animation, Family • 1 h 42 min • ★ 8.4 [4K] [HDR]", 600 weight, dots at 40%. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun VodMeta(parts: List<String>, rating: Double?, tags: List<String>, size: Int, modifier: Modifier = Modifier) {
+internal fun VodMeta(
+    parts: List<String>, rating: Double?, tags: List<String>, size: Int, modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+) {
     val text = stageTone(Color(0xFFD3DCD8), StageColors.Body)
     val items = parts + listOfNotNull(rating?.let { "★" })
     FlowRow(
@@ -299,6 +308,35 @@ internal fun VodMeta(parts: List<String>, rating: Double?, tags: List<String>, s
             }
         }
         tags.forEach { StageTag(it) }
+        trailing?.invoke()
+    }
+}
+
+/**
+ * glcn: the platform behind a title (Netflix, HBO…) as a small logo beside its details; nothing while
+ * unknown, so the line never jumps for a title without one.
+ */
+@Composable
+internal fun PlatformBadgeChip(tmdbId: Int?, isTv: Boolean) {
+    if (tmdbId == null || tmdbId <= 0) return
+    val repo = koinInject<tv.own.owntv.core.metadata.PlatformBadgeRepository>()
+    val badge by produceState<tv.own.owntv.core.metadata.PlatformBadge?>(null, tmdbId, isTv) {
+        val known = repo.peek(tmdbId, isTv)
+        if (known is tv.own.owntv.core.metadata.PlatformBadgeRepository.Known.Value) { value = known.badge; return@produceState }
+        value = null
+        // Only a title that stays in view is asked for, so browsing quickly costs nothing.
+        kotlinx.coroutines.delay(1_200)
+        value = runCatching { repo.get(tmdbId, isTv) }.getOrNull()
+    }
+    val b = badge ?: return
+    val url = MetadataImages.logo(b.logoPath, "w92")
+    if (url != null) {
+        AsyncImage(
+            model = url, contentDescription = b.name, contentScale = ContentScale.Fit,
+            modifier = Modifier.size(30.mpx).clip(RoundedCornerShape(7.mpx)),
+        )
+    } else {
+        StageTag(b.name)
     }
 }
 

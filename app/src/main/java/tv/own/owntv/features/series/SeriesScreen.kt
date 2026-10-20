@@ -1182,6 +1182,7 @@ private fun buildSeriesDetails(
         genres = jsonStringList(meta?.genresJson),
         plot = plot,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
+        tmdbId = meta?.tmdbId, isTv = true,
     )
 }
 
@@ -1453,6 +1454,7 @@ private fun EpisodeView(
                 ),
                 rating = info.rating, tags = info.tags, size = 20,
                 modifier = Modifier.padding(top = 18.mpx, bottom = 12.mpx),
+                trailing = { tv.own.owntv.features.shell.components.PlatformBadgeChip(info.tmdbId, info.isTv) },
             )
             info.plot?.takeIf { it.isNotBlank() }?.let {
                 Text(

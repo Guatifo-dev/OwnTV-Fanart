@@ -1227,5 +1227,6 @@ internal fun movieTitleInfo(
         tags = cinematicQualityBadges(movie.qualityRank, movie.advertisedCapabilities),
         plot = if (tmdbWins) meta?.overview ?: providerPlot else providerPlot ?: meta?.overview,
         cast = tv.own.owntv.core.metadata.MetadataCast.parse(meta?.castJson),
+        tmdbId = meta?.tmdbId,
     )
 }
