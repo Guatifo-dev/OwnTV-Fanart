@@ -30,20 +30,30 @@ object UiSounds {
 
     /** True while something plays: no sounds then. */
     @Volatile var suppressed: Boolean = false
+        set(value) {
+            // A player coming and going can change the audio route (HDMI, Dolby) and leave a kept track
+            // dead and silent; the next sounds are rebuilt once the player is gone.
+            if (field && !value) dropTracks()
+            field = value
+        }
 
     /** 0 classic, 1 crystal, 2 wood, 3 bubble. Changing it drops the cached sounds so the next ones are built in the new style. */
     @Volatile var style: Int = 0
         set(value) {
             if (value == field) return
             field = value
-            listOf(move, select, back).forEach { runCatching { it?.release() } }
-            move = null; select = null; back = null
+            dropTracks()
         }
+
+    private fun dropTracks() {
+        listOf(move, select, back).forEach { runCatching { it?.release() } }
+        move = null; select = null; back = null
+    }
 
     /** Plays the OK sound once, so a new style is heard as soon as it is chosen. */
     fun preview() {
         if (level == 0) return
-        play(select ?: build { pop() }.also { select = it })
+        play(Kind.SELECT)
     }
 
     private var move: AudioTrack? = null
@@ -61,12 +71,12 @@ object UiSounds {
                     val now = SystemClock.uptimeMillis()
                     if (now - lastMove < 70) return
                     lastMove = now
-                    play(move ?: build { tick() }.also { move = it })
+                    play(Kind.MOVE)
                 }
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER ->
-                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(select ?: build { pop() }.also { select = it })
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(Kind.SELECT)
             KeyEvent.KEYCODE_BACK ->
-                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(back ?: build { swoosh() }.also { back = it })
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) play(Kind.BACK)
         }
     }
 
@@ -93,15 +103,44 @@ object UiSounds {
 
     private fun build(make: () -> ShortArray): AudioTrack? = trackOf(make(), gain = 1f)
 
-    private fun play(track: AudioTrack?) {
-        val t = track ?: return
+    private enum class Kind { MOVE, SELECT, BACK }
+
+    private fun trackFor(kind: Kind): AudioTrack? = when (kind) {
+        Kind.MOVE -> move ?: build { tick() }.also { move = it }
+        Kind.SELECT -> select ?: build { pop() }.also { select = it }
+        Kind.BACK -> back ?: build { swoosh() }.also { back = it }
+    }
+
+    private fun forget(kind: Kind) {
+        when (kind) {
+            Kind.MOVE -> { runCatching { move?.release() }; move = null }
+            Kind.SELECT -> { runCatching { select?.release() }; select = null }
+            Kind.BACK -> { runCatching { back?.release() }; back = null }
+        }
+    }
+
+    /**
+     * Plays a kept sound. A kept AudioTrack can die under us (the audio server restarted, the route changed
+     * after a player): then every later call failed inside runCatching and the sounds were simply gone
+     * until the app restarted. Now a failed or dead track is rebuilt and tried once more.
+     */
+    private fun play(kind: Kind) {
+        if (!tryPlay(trackFor(kind))) {
+            forget(kind)
+            tryPlay(trackFor(kind))
+        }
+    }
+
+    private fun tryPlay(t: AudioTrack?): Boolean {
+        if (t == null || t.state != AudioTrack.STATE_INITIALIZED) return false
         val gain = if (level == 1) 0.35f else 0.7f
-        runCatching {
+        return runCatching {
             t.setVolume(gain)
             if (t.playState == AudioTrack.PLAYSTATE_PLAYING) t.stop()
-            t.reloadStaticData()
+            if (t.reloadStaticData() != AudioTrack.SUCCESS) return false
             t.play()
-        }
+            true
+        }.getOrDefault(false)
     }
 
     private fun trackOf(pcm: ShortArray, gain: Float): AudioTrack? = runCatching {

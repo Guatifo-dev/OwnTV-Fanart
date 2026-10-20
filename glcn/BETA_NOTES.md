@@ -26,3 +26,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🪟 **Choose which zapping list views you switch between (schedule and posters by default)**
 - 🔎 **Rewind clock trace in the playback report (to track down the live rewind drift)**
 - 🗂️ **Playlists inside the category selector: Live TV and the in-player list (several playlists)**
+- 🔊 **Menu sounds no longer go silent after using the player**
