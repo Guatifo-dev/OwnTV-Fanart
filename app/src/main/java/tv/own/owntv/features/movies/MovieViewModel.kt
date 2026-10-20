@@ -296,6 +296,13 @@ class MovieViewModel(
         .transformLatest { (m, _) ->
             if (m == null) { emit(null); return@transformLatest }
             resolvedMeta[m.id]?.let { emit(MovieMeta(m.id, it)); return@transformLatest }
+            // Already in the local cache: a database read, shown at once. Only a title nobody has
+            // looked up yet waits the focus debounce before going to TMDB.
+            runCatching { metadata.cachedMovie(m) }.getOrNull()?.let {
+                resolvedMeta[m.id] = it
+                emit(MovieMeta(m.id, it))
+                return@transformLatest
+            }
             delay(tv.own.owntv.core.metadata.MetadataRepository.FOCUS_DEBOUNCE_MS)
             val cache = runCatching { metadata.resolveMovie(m) }.getOrNull()
             if (cache != null) {
