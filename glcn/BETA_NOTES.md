@@ -30,3 +30,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🎛️ **Live TV playlist filter: choosing a playlist in the category sheet no longer empties Home, Movies and Series**
 - 🎬 **Network or studio logo (HBO, Netflix, Warner, Paramount…) beside the details of a film or series**
 - 🖼️ **Guide pictures: the right film or series when two share a title (Aquaman)**
+- 🖼️ **Live TV lists always show the guide's own picture**
