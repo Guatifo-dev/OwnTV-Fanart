@@ -673,7 +673,7 @@ fun SettingsScreen(
                 R.string.glcn_zap_panel_preview to 1,
                 R.string.glcn_zap_panel_schedule to 2,
                 R.string.glcn_zap_view_posters to 4,
-            ).filter { zapViews and it.second != 0 }.joinToString(" · ") { stringResource(it.first) },
+            ).filter { zapViews and it.second != 0 }.map { stringResource(it.first) }.joinToString(" · "),
             chipTone = TileTone.SECONDARY,
             onClick = { settingsVm.cycleZapViews() },
         ),
