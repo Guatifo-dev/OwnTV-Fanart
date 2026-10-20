@@ -323,6 +323,7 @@ fun SettingsScreen(
     val logoPlate by settingsVm.logoPlate.collectAsStateWithLifecycle()
     val homeBackdrop by settingsVm.homeBackdropStyle.collectAsStateWithLifecycle()
     val zapPanel by settingsVm.zapPanel.collectAsStateWithLifecycle()
+    val zapViews by settingsVm.zapViews.collectAsStateWithLifecycle()
     val backToWindow by settingsVm.backToWindow.collectAsStateWithLifecycle()
     val safeArea by settingsVm.safeArea.collectAsStateWithLifecycle()
     val autoSkipIntro by settingsVm.autoSkipIntro.collectAsStateWithLifecycle()
@@ -663,6 +664,18 @@ fun SettingsScreen(
                     if (seasonMode > 0) tv.own.owntv.core.theme.Seasons.current() else tv.own.owntv.core.theme.Season.NONE,
                 )
             },
+        ),
+        RootRow(
+            "glcn_zap_views", TileTone.SECONDARY, OwnTVIcon.LIST,
+            title = stringResource(R.string.glcn_zap_views_title),
+            desc = stringResource(R.string.glcn_zap_views_desc),
+            chip = listOf(
+                R.string.glcn_zap_panel_preview to 1,
+                R.string.glcn_zap_panel_schedule to 2,
+                R.string.glcn_zap_view_posters to 4,
+            ).filter { zapViews and it.second != 0 }.joinToString(" · ") { stringResource(it.first) },
+            chipTone = TileTone.SECONDARY,
+            onClick = { settingsVm.cycleZapViews() },
         ),
         RootRow(
             "glcn_ui_sound_style", TileTone.SECONDARY, OwnTVIcon.VOLUME_HIGH,

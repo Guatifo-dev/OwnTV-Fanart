@@ -23,3 +23,4 @@ Versión de pruebas de OwnTV Fanart. Se instala al lado de la normal.
 - 🪟 **Zapping list: list and schedule as one piece, with the programme card under the schedule**
 - ⚡ **Faster title logos when browsing movies and series**
 - 🧹 **Zapping list: no duplicate programme card beside the schedule view**
+- 🪟 **Choose which zapping list views you switch between (schedule and posters by default)**

@@ -1002,6 +1002,9 @@ class SettingsViewModel(
     fun cycleHomeBackdropStyle() { viewModelScope.launch { settings.setHomeBackdropStyle((homeBackdropStyle.value + 1) % 3) } }
 
     val zapPanel: StateFlow<Int> = settings.zapPanel.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val zapViews: StateFlow<Int> = settings.zapViews.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.settings.ZapViews.DEFAULT)
+    /** Steps through every non-empty combination of the three views. */
+    fun cycleZapViews() { viewModelScope.launch { settings.setZapViews(zapViews.value % 7 + 1) } }
     fun cycleZapPanel() { viewModelScope.launch { settings.setZapPanel((zapPanel.value + 1) % 2) } }
     val backToWindow: StateFlow<Boolean> = settings.backToWindow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     fun toggleBackToWindow() { viewModelScope.launch { settings.setBackToWindow(!backToWindow.value) } }

@@ -191,7 +191,10 @@ fun OwnTVShell(
     val ambientGlowEnabled by settingsRepo.ambientGlowEnabled.collectAsStateWithLifecycle(initialValue = false)
     // glcn: the animation style, and menu sounds silent while anything plays.
     val glcnAnimStyle by settingsRepo.animStyle.collectAsStateWithLifecycle(initialValue = 0)
-    val glcnZapPanel by settingsRepo.zapPanel.collectAsStateWithLifecycle(initialValue = 0)
+    val glcnZapPanelSaved by settingsRepo.zapPanel.collectAsStateWithLifecycle(initialValue = 0)
+    val glcnZapViews by settingsRepo.zapViews.collectAsStateWithLifecycle(initialValue = tv.own.owntv.core.settings.ZapViews.DEFAULT)
+    // The saved view may have been switched off in Settings; show the next enabled one instead.
+    val glcnZapPanel = tv.own.owntv.core.settings.ZapViews.effective(glcnZapPanelSaved, glcnZapViews)
     LaunchedEffect(glcnAnimStyle) { tv.own.owntv.ui.stage.GlcnMotion.subtle = glcnAnimStyle == 1 }
     val glcnLogoPlate by settingsRepo.logoPlate.collectAsStateWithLifecycle(initialValue = 0)
     LaunchedEffect(glcnLogoPlate) { tv.own.owntv.ui.components.LogoPlate.mode = glcnLogoPlate }
@@ -2020,7 +2023,7 @@ fun OwnTVShell(
                             title = zapOverlayTitle,
                             loadNow = { liveVm.nowMany(it) },
                             onSelect = { liveVm.ensurePlaying(it); showChannelList = false },
-                            onListView = { scope.launch { settingsRepo.setZapPanel(0) } },
+                            onListView = { scope.launch { settingsRepo.setZapPanel(tv.own.owntv.core.settings.ZapViews.next(2, glcnZapViews)) } },
                             onDismiss = { showChannelList = false },
                             modifier = Modifier.fillMaxSize(),
                         ) else tv.own.owntv.features.shell.components.ChannelListOverlay(
@@ -2037,7 +2040,7 @@ fun OwnTVShell(
                             onOpenCategories = { liveVm.showCategories() },
                             loadNow = { liveVm.nowFull(it) },
                             loadSchedule = if (glcnZapPanel == 1) ({ liveVm.scheduleFor(it) }) else null,
-                            onCyclePanel = { scope.launch { settingsRepo.setZapPanel((glcnZapPanel + 1) % 3) } },
+                            onCyclePanel = if (glcnZapViews and (glcnZapViews - 1) == 0) null else ({ scope.launch { settingsRepo.setZapPanel(tv.own.owntv.core.settings.ZapViews.next(glcnZapPanel, glcnZapViews)) } }),
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
