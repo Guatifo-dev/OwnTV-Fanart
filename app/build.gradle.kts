@@ -237,6 +237,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 }
 
@@ -354,6 +355,7 @@ dependencies {
     // https://github.com/ahXN00/OwnTV_Core. Set owntv.corePath in ~/.gradle/gradle.properties to
     // build against its source instead of this pinned version.
     implementation(libs.owntv.core)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
     // The shared playback engine. The TV HUD in app/player/** drives it; it renders nothing itself,
     // so the mobile shell drives the same engine. Always on the same version as core.
