@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     
-    <uses-sdk tools:overrideLibrary="tv.own.owntv.playercore,tv.own.owntv.core" />
+    <uses-sdk tools:overrideLibrary="tv.own.owntv.playercore,tv.own.owntv.core,dev.jdtech.mpv" />
     
     <!-- INTERNET, ACCESS_NETWORK_STATE, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC and
          POST_NOTIFICATIONS are declared by :core, together with WorkManager's foreground-service
