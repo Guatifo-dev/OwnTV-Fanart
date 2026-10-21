@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+    
+    <uses-sdk tools:overrideLibrary="tv.own.owntv.playercore" />
+    
     <!-- INTERNET, ACCESS_NETWORK_STATE, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC and
          POST_NOTIFICATIONS are declared by :core, together with WorkManager's foreground-service
          host: core is what does the networking and runs the sync/download worker. They merge in
