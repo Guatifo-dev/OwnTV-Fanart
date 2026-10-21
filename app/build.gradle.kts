@@ -52,7 +52,7 @@ android {
         val glcnBeta = providers.gradleProperty("glcn.beta").orNull == "true"
         if (glcnBeta) resValue("string", "app_name", "OwnTV Fanart Beta")
         buildConfigField("boolean", "GLCN_BETA", glcnBeta.toString())
-        minSdk = 26
+        minSdk = 25
         targetSdk = 36
         // CI injects these from the git tag (see .github/workflows/android.yml) so releases never
         // need a manual edit here. The fallbacks are only used for local/debug builds — pinned HIGH
