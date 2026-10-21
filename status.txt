@@ -1,0 +1,4 @@
+status=success
+app=e6c5748af1d86a16d373a3e60d6fca6a11932b6e
+core=05a69e296cdc511d6dc08fe344319a097cf50e04
+run=https://github.com/Guatifo-dev/OwnTV-Fanart/actions/runs/39616099728
